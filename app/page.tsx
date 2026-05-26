@@ -33,34 +33,22 @@ export default async function HomePage() {
             <span>tu tabla</span>
           </div>
         </div>
+        <div className="home-note">
+          Tocás una opción, ajustás si querés y cerrás la ronda.
+        </div>
       </section>
 
       <QuickPlayDeck matches={featuredMatches} />
 
-      <section className="round-rules">
-        <div className="rule-chip">
-          <strong>1</strong>
-          <span>Elegís</span>
-        </div>
-        <div className="rule-chip">
-          <strong>2</strong>
-          <span>Ajustás</span>
-        </div>
-        <div className="rule-chip">
-          <strong>3</strong>
-          <span>Subís</span>
-        </div>
-      </section>
-
       <section className="stack">
         <div className="section-title section-title-compact">
-          <h2>Más partidos</h2>
+          <h2>Después</h2>
           <Link className="subtle" href="/matches">
             Ver todos
           </Link>
         </div>
         <div className="list">
-          {featuredMatches.slice(0, 3).map((match) => (
+          {featuredMatches.slice(0, 2).map((match) => (
             <MatchCard key={match.id} match={match} />
           ))}
         </div>

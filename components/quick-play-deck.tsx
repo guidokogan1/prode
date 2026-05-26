@@ -22,6 +22,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
   const match = deck[index] ?? deck[0];
   const isLast = index === deck.length - 1;
+  const progress = `${index + 1} / ${deck.length}`;
 
   function handlePick(label: string) {
     const preset = buildFocusedAllocation(
@@ -42,18 +43,20 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
   return (
     <section className="quick-play">
-      <div className="quick-play-copy">
-        <p className="eyebrow">Jugá ahora</p>
-        <h2 className="quick-play-title">¿Qué sale?</h2>
-        <p className="quick-play-subtitle">{match.kickoffLabel}</p>
-      </div>
-
       <article className="card quick-play-card">
+        <div className="quick-play-topline">
+          <div>
+            <p className="eyebrow quick-play-eyebrow">Jugá ahora</p>
+            <h2 className="quick-play-title">¿Qué sale?</h2>
+          </div>
+          <span className="quick-play-progress">{progress}</span>
+        </div>
+
         <div className="quick-play-stage">
           <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
             {match.statusLabel}
           </span>
-          <span className="game-clock">{match.stage}</span>
+          <span className="game-clock">{match.kickoffLabel}</span>
         </div>
 
         <div className="quick-play-scoreboard">
@@ -83,10 +86,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         </div>
 
         <div className="quick-play-footer">
-          <span className="match-state-chip">{match.userStateLabel}</span>
+          <span className="match-state-chip">{match.stage}</span>
           {deck.length > 1 ? (
             <button className="text-link-button" type="button" onClick={goNext}>
-              {isLast ? "Volver al primero" : "Siguiente partido"}
+              {isLast ? "Volver" : "Saltá este"}
             </button>
           ) : null}
         </div>
