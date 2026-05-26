@@ -11,12 +11,12 @@ export default async function ProfilePage() {
   return (
     <main className="stack page-narrow">
       <section className="card profile-hero">
-        <p className="eyebrow">Perfil</p>
+        <p className="eyebrow">Yo</p>
         <h1 className="page-title">{profile.name}</h1>
         <div className="quick-stats">
           <div className="quick-stat">
             <strong>{profile.netLabel}</strong>
-            <span>neto</span>
+            <span>tabla</span>
           </div>
           <div className="quick-stat">
             <strong>{profile.positiveTickets}</strong>
@@ -35,14 +35,14 @@ export default async function ProfilePage() {
 
       <section className="card compact-summary">
         <strong>Campeón: {profile.championPick}</strong>
-        <span className="subtle">Se liquida al final del torneo.</span>
+        <span className="subtle">Tu bomba larga del torneo.</span>
       </section>
 
       <section className="card card-grid">
         <div className="section-title section-title-compact">
           <div>
             <p className="eyebrow">Cuenta</p>
-            <h2>Entrar rápido</h2>
+            <h2>Entrás fácil</h2>
           </div>
         </div>
         <div className="stat-grid">

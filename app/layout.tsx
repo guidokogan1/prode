@@ -1,7 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
 import { SessionProvider } from "@/components/session-provider";
 import "./globals.css";
+
+const barlow = Barlow({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-barlow",
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-barlow-condensed",
+});
 
 export const metadata: Metadata = {
   title: "Mundial Pool",
@@ -9,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f4f0e8",
+  themeColor: "#0c1710",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -22,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>
+      <body className={`${barlow.variable} ${barlowCondensed.variable}`}>
         <SessionProvider>
           <div className="app-shell">
             {children}

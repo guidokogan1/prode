@@ -10,7 +10,7 @@ export default async function MatchesPage() {
       <section className="section-title section-title-compact match-list-head">
         <div>
           <p className="eyebrow">Modo maratón</p>
-          <h1 className="page-title">Completá grupos</h1>
+          <h1 className="page-title">Cargá grupos</h1>
         </div>
         <div className="home-status-row home-status-row-minimal">
           <span className="home-status-pill">
@@ -27,7 +27,7 @@ export default async function MatchesPage() {
               <p className="eyebrow">{group.label}</p>
               <h2>{group.stage}</h2>
             </div>
-            <span className="subtle">{group.matches.length}</span>
+            <span className="subtle">{group.matches.length} partidos</span>
           </div>
           <div className="list">
             {group.matches.map((match) => (
