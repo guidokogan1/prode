@@ -17,24 +17,21 @@ export default async function HomePage() {
         <div>
           <p className="eyebrow">Ronda de hoy</p>
           <h1 className="home-title">Poné tu jugada.</h1>
-          <p className="home-subtitle">Repartí 10.000 créditos antes del arranque.</p>
+          <p className="home-subtitle">10.000 créditos. Cierra al arranque.</p>
         </div>
-        <div className="quick-stats">
-          <div className="quick-stat">
+        <div className="home-status-row">
+          <span className="home-status-pill">
             <strong>{summary.pendingPicks}</strong>
             <span>sin jugar</span>
-          </div>
-          <div className="quick-stat">
+          </span>
+          <span className="home-status-pill">
             <strong>{summary.liveMatches}</strong>
             <span>en juego</span>
-          </div>
-          <div className="quick-stat">
+          </span>
+          <span className="home-status-pill">
             <strong>{summary.yourNet}</strong>
             <span>tu tabla</span>
-          </div>
-        </div>
-        <div className="home-note">
-          Tocás una opción, ajustás si querés y cerrás la ronda.
+          </span>
         </div>
       </section>
 
@@ -47,8 +44,8 @@ export default async function HomePage() {
             Ver todos
           </Link>
         </div>
-        <div className="list">
-          {featuredMatches.slice(0, 2).map((match) => (
+        <div className="list compact-list">
+          {featuredMatches.slice(0, 1).map((match) => (
             <MatchCard key={match.id} match={match} />
           ))}
         </div>
@@ -56,12 +53,12 @@ export default async function HomePage() {
 
       <section className="stack">
         <div className="section-title section-title-compact">
-          <h2>Top 3</h2>
+          <h2>Tabla</h2>
           <Link className="subtle" href="/ranking">
             Abrir
           </Link>
         </div>
-        <RankingList items={leaderboardPreview.slice(0, 3)} compact />
+        <RankingList items={leaderboardPreview.slice(0, 2)} compact />
       </section>
     </main>
   );
