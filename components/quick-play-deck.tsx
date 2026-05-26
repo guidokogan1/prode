@@ -1,14 +1,11 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useMotionValue, useTransform } from "motion/react";
 import {
   ArrowLeft,
   ArrowRight,
-  ArrowUp,
-  RotateCcw,
-  SkipForward,
   Sparkles,
   Zap,
 } from "lucide-react";
@@ -24,15 +21,15 @@ type PlayStep = "pick" | "intensity";
 type SwipeOutcome = "home" | "draw" | "away";
 
 const INTENSITY_OPTIONS = [
-  { id: "hard", label: "Fuerte", hint: "7.000 al pick", amount: 7000, icon: Zap },
-  { id: "medium", label: "Media", hint: "5.500 al pick", amount: 5500, icon: Sparkles },
-  { id: "soft", label: "Suave", hint: "4.000 al pick", amount: 4000, icon: ArrowRight },
+  { id: "soft", label: "Suave", hint: "4.000 cr", amount: 4000, icon: ArrowRight },
+  { id: "medium", label: "Media", hint: "5.500 cr", amount: 5500, icon: Sparkles },
+  { id: "hard", label: "Fuerte", hint: "7.000 cr", amount: 7000, icon: Zap },
 ];
 
 const OUTCOME_COLORS: Record<SwipeOutcome, string> = {
-  home: "#d4a64b",
+  home: "#3d9b5f",
   draw: "#5b8ff0",
-  away: "#3d9b5f",
+  away: "#e8413a",
 };
 
 export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
@@ -54,9 +51,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   }
 
   const match = deck[index] ?? deck[0];
-  const nextMatch = deck[index + 1] ?? null;
   const canDraw = match.allocation.length === 3;
-  const progress = `${index + 1} / ${deck.length}`;
   const homePick = match.allocation[0]?.label ?? "";
   const drawPick = canDraw ? match.allocation[1]?.label ?? "" : "";
   const awayPick = match.allocation[match.allocation.length - 1]?.label ?? "";
@@ -110,34 +105,63 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
     chooseOutcome(outcome);
   }
 
-  const dragState: SwipeOutcome | null =
-    y.get() < -90 && canDraw ? "draw" : x.get() > 90 ? "home" : x.get() < -90 ? "away" : null;
-
   return (
     <section
       style={{
         width: "100%",
-        display: "grid",
-        gap: 18,
-        justifyItems: "center",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        flex: 1,
       }}
     >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          minHeight: 12,
+        }}
+      >
+        {deck.map((_, dotIndex) => (
+          <span
+            key={`dot-${dotIndex}`}
+            style={{
+              width: dotIndex === index ? 20 : 6,
+              height: 6,
+              borderRadius: 999,
+              background:
+                dotIndex < index
+                  ? "#3d9b5f"
+                  : dotIndex === index
+                    ? "#d4a64b"
+                    : "rgba(255,255,255,.12)",
+              transition: "all 220ms ease",
+            }}
+          />
+        ))}
+      </div>
+
       <div
         style={{
           position: "relative",
           width: "100%",
           maxWidth: 440,
-          padding: "8px 0 16px",
+          minHeight: 720,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
         }}
       >
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
-            inset: "18px 24px -8px",
+            inset: "16px 22px 84px",
             borderRadius: 34,
-            background: "rgba(9, 20, 9, 0.28)",
-            transform: "scale(.985)",
+            background: "rgba(255,255,255,.08)",
+            transform: "scale(.986)",
             zIndex: 0,
           }}
         />
@@ -145,16 +169,17 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
           aria-hidden="true"
           style={{
             position: "absolute",
-            inset: "32px 36px -16px",
+            inset: "28px 34px 96px",
             borderRadius: 34,
-            background: "rgba(9, 20, 9, 0.16)",
-            transform: "scale(.95)",
+            background: "rgba(255,255,255,.04)",
+            transform: "scale(.955)",
             zIndex: 0,
           }}
         />
 
-        <AnimatePresence mode="wait">
-          {step === "pick" ? (
+        <div style={{ position: "relative", flex: 1 }}>
+          <AnimatePresence mode="wait">
+            {step === "pick" ? (
             <motion.div
               key={`pick-${match.id}`}
               drag
@@ -180,19 +205,17 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                 rotate,
                 position: "relative",
                 zIndex: 2,
-                minHeight: 650,
+                minHeight: 620,
                 width: "100%",
                 borderRadius: 34,
                 overflow: "hidden",
-                padding: 16,
-                background:
-                  "radial-gradient(circle at top center, rgba(255,226,155,.18), transparent 24%), radial-gradient(circle at bottom right, rgba(72,176,120,.22), transparent 34%), linear-gradient(180deg, #183727 0%, #12281d 38%, #0f2219 100%)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                boxShadow: "0 30px 70px rgba(8,16,12,.36), 0 12px 24px rgba(8,16,12,.24)",
+                background: "linear-gradient(160deg, #1f3e28 0%, #0e1d13 100%)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                boxShadow: "0 32px 80px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.04)",
                 userSelect: "none",
                 touchAction: "pan-y",
-                display: "grid",
-                gap: 18,
+                display: "flex",
+                flexDirection: "column",
               }}
               initial={{ opacity: 0, scale: 0.94, y: 28 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -205,166 +228,125 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   opacity: homeOpacity,
                   position: "absolute",
                   inset: 0,
-                  background: "linear-gradient(135deg, rgba(212,166,75,.26) 0%, transparent 55%)",
+                  background: "linear-gradient(135deg, rgba(61,155,95,.55) 0%, transparent 55%)",
                   pointerEvents: "none",
                 }}
-              />
+              >
+                <div style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
+                  <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.home.flag}</span>
+                  <span style={{ color: "#3d9b5f", fontSize: ".72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".14em" }}>
+                    gana local
+                  </span>
+                </div>
+              </motion.div>
               <motion.div
                 style={{
                   opacity: awayOpacity,
                   position: "absolute",
                   inset: 0,
-                  background: "linear-gradient(225deg, rgba(61,155,95,.22) 0%, transparent 55%)",
+                  background: "linear-gradient(225deg, rgba(232,65,58,.55) 0%, transparent 55%)",
                   pointerEvents: "none",
                 }}
-              />
+              >
+                <div style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
+                  <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.away.flag}</span>
+                  <span style={{ color: "#e8413a", fontSize: ".72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".14em" }}>
+                    visitante
+                  </span>
+                </div>
+              </motion.div>
               {canDraw ? (
                 <motion.div
                   style={{
                     opacity: drawOpacity,
                     position: "absolute",
                     inset: 0,
-                    background: "linear-gradient(180deg, rgba(91,143,240,.22) 0%, transparent 42%)",
+                    background: "linear-gradient(0deg, rgba(91,143,240,.5) 0%, transparent 50%)",
                     pointerEvents: "none",
                   }}
-                />
+                >
+                  <div style={{ position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
+                    <span style={{ fontSize: "2.25rem", lineHeight: 1 }}>🤝</span>
+                    <span style={{ color: "#5b8ff0", fontSize: ".72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".14em" }}>
+                      empate
+                    </span>
+                  </div>
+                </motion.div>
               ) : null}
 
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "40px 1fr auto",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={moveNext}
-                  style={topIconStyle}
-                  aria-label="Saltar al siguiente partido"
-                >
-                  <SkipForward size={16} />
-                </button>
-                <div style={{ display: "flex", justifyContent: "center", gap: 6 }}>
-                  {deck.map((_, dotIndex) => (
-                    <span
-                      key={`dot-${dotIndex}`}
-                      style={{
-                        width: dotIndex === index ? 20 : 10,
-                        height: 4,
-                        borderRadius: 999,
-                        background: dotIndex === index ? "#f3ca68" : "rgba(255,255,255,.14)",
-                      }}
-                    />
-                  ))}
-                </div>
-                <span style={progressPillStyle}>{progress}</span>
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  inset: "66px 16px auto",
                   display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "start",
-                  pointerEvents: "none",
+                  flexDirection: "column",
+                  height: "100%",
+                  padding: 24,
+                  position: "relative",
+                  zIndex: 1,
                 }}
               >
-                <GesturePill active={dragState === "home"} color={OUTCOME_COLORS.home} align="left">
-                  <ArrowRight size={13} />
-                  {homePick}
-                </GesturePill>
-                {canDraw ? (
-                  <GesturePill active={dragState === "draw"} color={OUTCOME_COLORS.draw} align="center" offset>
-                    <ArrowUp size={13} />
-                    {drawPick}
-                  </GesturePill>
-                ) : <span />}
-                <GesturePill active={dragState === "away"} color={OUTCOME_COLORS.away} align="right">
-                  <ArrowLeft size={13} />
-                  {awayPick}
-                </GesturePill>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gap: 18,
-                  minHeight: 372,
-                  padding: "18px 16px",
-                  borderRadius: 28,
-                  background:
-                    "radial-gradient(circle at top center, rgba(255,255,255,.09), transparent 36%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02))",
-                  border: "1px solid rgba(255,255,255,.08)",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                  <StatusPill label={match.statusLabel} live={match.status === "live"} />
-                  <span style={{ color: "rgba(247,241,230,.74)", fontSize: ".82rem", fontWeight: 700 }}>
-                    {match.kickoffLabel}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, gap: 10 }}>
+                  <span style={{ color: "#7a9a81", fontSize: ".72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".16em" }}>
+                    {match.stage}
                   </span>
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      padding: "8px 12px",
+                      borderRadius: 999,
+                      background: "rgba(0,0,0,.3)",
+                      border: "1px solid rgba(255,255,255,.06)",
+                    }}
+                  >
+                    <span style={{ color: "#d4a64b", fontSize: ".74rem", fontWeight: 700 }}>{match.kickoffLabel}</span>
+                  </div>
                 </div>
 
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "1fr auto 1fr",
-                    gap: 10,
+                    gridTemplateColumns: "1fr 48px 1fr",
                     alignItems: "center",
-                    paddingTop: 28,
+                    gap: 12,
+                    flex: 1,
                   }}
                 >
-                  <TeamColumn flag={match.home.flag} name={match.home.name} />
-                  <div style={vsPillStyle}>vs</div>
-                  <TeamColumn flag={match.away.flag} name={match.away.name} />
+                  <TeamColumn flag={match.home.flag} name={match.home.name} sideLabel="Local" />
+                  <div style={{ display: "flex", justifyContent: "center" }}>
+                    <span style={{ fontSize: "1.8rem", fontWeight: 900, fontFamily: "var(--font-barlow-condensed), var(--font-barlow), sans-serif", color: "rgba(255,255,255,.14)" }}>
+                      VS
+                    </span>
+                  </div>
+                  <TeamColumn flag={match.away.flag} name={match.away.name} sideLabel="Visitante" />
                 </div>
 
-                <div style={{ display: "grid", gap: 8, alignSelf: "end" }}>
-                  <p style={eyebrowStyle}>Swipe</p>
-                  <h2 style={titleStyle}>Elegí de una</h2>
-                  <p style={subtitleStyle}>Derecha local. Izquierda visita. Arriba empate.</p>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    paddingTop: 18,
+                    borderTop: "1px solid rgba(255,255,255,.05)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "#e8413a", fontSize: ".92rem", fontWeight: 700 }}>←</span>
+                    <span style={{ color: "#e8413a", fontSize: ".74rem", fontWeight: 700 }}>visita</span>
+                  </div>
+                  {canDraw ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ color: "#5b8ff0", fontSize: ".74rem", fontWeight: 700 }}>empate</span>
+                      <span style={{ color: "#5b8ff0", fontSize: ".92rem", fontWeight: 700 }}>↑</span>
+                    </div>
+                  ) : <span />}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ color: "#3d9b5f", fontSize: ".74rem", fontWeight: 700 }}>local</span>
+                    <span style={{ color: "#3d9b5f", fontSize: ".92rem", fontWeight: 700 }}>→</span>
+                  </div>
                 </div>
               </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: canDraw ? "48px 1fr 1fr 1fr" : "48px 1fr 1fr",
-                  gap: 10,
-                  alignItems: "center",
-                }}
-              >
-                <button type="button" onClick={moveNext} style={iconDockButtonStyle} aria-label="Pasar">
-                  <RotateCcw size={16} />
-                </button>
-                <button type="button" onClick={() => chooseOutcome("home")} style={{ ...pickDockButtonStyle, background: "linear-gradient(180deg,#f3ca68,#d9ab3d)", color: "#132116" }}>
-                  <span style={{ fontSize: "1.1rem" }}>{match.home.flag}</span>
-                </button>
-                {canDraw ? (
-                  <button type="button" onClick={() => chooseOutcome("draw")} style={{ ...pickDockButtonStyle, background: "rgba(255,255,255,.16)" }}>
-                    X
-                  </button>
-                ) : null}
-                <button type="button" onClick={() => chooseOutcome("away")} style={{ ...pickDockButtonStyle, background: "linear-gradient(180deg,#2d9f63,#227c4d)" }}>
-                  <span style={{ fontSize: "1.1rem" }}>{match.away.flag}</span>
-                </button>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                <span style={footerChipStyle}>{match.stage}</span>
-                <span style={footerNoteStyle}>Tocá o arrastrá</span>
-              </div>
-
-              {nextMatch ? (
-                <div style={{ display: "grid", gap: 2, padding: "0 4px" }}>
-                  <p style={eyebrowStyle}>Después</p>
-                  <strong style={{ color: "rgba(247,241,230,.86)", fontSize: ".92rem", letterSpacing: "-.03em" }}>
-                    {nextMatch.home.name} vs {nextMatch.away.name}
-                  </strong>
-                </div>
-              ) : null}
             </motion.div>
           ) : (
             <motion.div
@@ -375,24 +357,18 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
               exit={{ opacity: 0, scale: 0.98, y: -12 }}
               transition={{ type: "spring", stiffness: 240, damping: 24 }}
             >
-              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr auto", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr", alignItems: "center", gap: 10 }}>
                 <button type="button" onClick={resetCard} style={topIconStyle} aria-label="Volver">
                   <ArrowLeft size={16} />
                 </button>
-                <div />
-                <span style={progressPillStyle}>{progress}</span>
+                <span style={{ color: "rgba(247,241,230,.72)", fontSize: ".74rem", fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase" }}>
+                  Tu pick
+                </span>
               </div>
 
               <div style={heroShellStyle}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                  <StatusPill label={match.statusLabel} live={match.status === "live"} />
-                  <span style={{ color: "rgba(247,241,230,.74)", fontSize: ".82rem", fontWeight: 700 }}>
-                    {match.kickoffLabel}
-                  </span>
-                </div>
-
                 <div style={choiceBannerStyle}>
-                  <p style={eyebrowStyle}>Tu pick</p>
+                  <p style={{ ...eyebrowStyle, color: selectedOutcome ? OUTCOME_COLORS[selectedOutcome] : "#d4a64b" }}>Tu pick</p>
                   <strong
                     style={{
                       fontFamily: "var(--font-barlow-condensed), var(--font-barlow), sans-serif",
@@ -448,134 +424,93 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "52px 1fr", gap: 10, alignItems: "center" }}>
-                <button type="button" onClick={resetCard} style={iconDockButtonStyle} aria-label="Cambiar pick">
-                  <ArrowLeft size={16} />
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <button type="button" onClick={resetCard} style={{ color: "#4a6a4d", fontSize: ".78rem", fontWeight: 700, background: "transparent", border: 0 }}>
+                  ← cambiar pick
                 </button>
-                <button type="button" onClick={() => savePlay(7000)} style={jugarmelaButtonStyle}>
-                  Jugármela
-                </button>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                <span style={footerChipStyle}>Cierra al arranque</span>
-                <span style={footerNoteStyle}>Guardá y seguí</span>
               </div>
             </motion.div>
           )}
+          </AnimatePresence>
+        </div>
+
+        <AnimatePresence>
+          {step === "pick" ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 20,
+                marginTop: 18,
+                minHeight: 72,
+              }}
+            >
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.88 }}
+                onClick={() => chooseOutcome("away")}
+                style={awayDockButtonStyle}
+              >
+                <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>{match.away.flag}</span>
+                <span style={dockCodeStyle}>VIS</span>
+              </motion.button>
+              {canDraw ? (
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.88 }}
+                  onClick={() => chooseOutcome("draw")}
+                  style={drawDockButtonStyle}
+                >
+                  🤝
+                </motion.button>
+              ) : null}
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.88 }}
+                onClick={() => chooseOutcome("home")}
+                style={homeDockButtonStyle}
+              >
+                <span style={{ fontSize: "1.2rem", lineHeight: 1 }}>{match.home.flag}</span>
+                <span style={dockCodeStyle}>LOC</span>
+              </motion.button>
+            </motion.div>
+          ) : null}
         </AnimatePresence>
       </div>
     </section>
   );
 }
 
-function TeamColumn({ flag, name }: { flag: string; name: string }) {
+function TeamColumn({ flag, name, sideLabel }: { flag: string; name: string; sideLabel: string }) {
   return (
     <div style={{ display: "grid", justifyItems: "center", gap: 10, textAlign: "center" }}>
-      <span
-        style={{
-          width: 54,
-          height: 54,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: 999,
-          background: "rgba(255,255,255,.08)",
-          fontSize: "1.4rem",
-        }}
-      >
-        {flag}
-      </span>
+      <span style={{ fontSize: "5rem", lineHeight: 1 }}>{flag}</span>
       <strong
         style={{
           color: "#fff7ea",
-          fontSize: "2rem",
-          lineHeight: 0.96,
+          fontSize: "1.5rem",
+          lineHeight: 0.94,
           letterSpacing: "-.05em",
           fontFamily: "var(--font-barlow-condensed), var(--font-barlow), sans-serif",
+          textTransform: "uppercase",
         }}
       >
         {name}
       </strong>
-    </div>
-  );
-}
-
-function StatusPill({ label, live }: { label: string; live: boolean }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "8px 12px",
-        borderRadius: 999,
-        background: "rgba(255,255,255,.08)",
-        color: "rgba(247,241,230,.92)",
-        fontSize: ".8rem",
-        fontWeight: 800,
-      }}
-    >
       <span
         style={{
-          width: 8,
-          height: 8,
-          borderRadius: 999,
-          background: live ? "#ff6d5c" : "#f3ca68",
-          boxShadow: live ? "0 0 0 4px rgba(255,109,92,.18)" : "0 0 0 4px rgba(243,202,104,.12)",
-        }}
-      />
-      {label}
-    </span>
-  );
-}
-
-function GesturePill({
-  active,
-  color,
-  children,
-  offset = false,
-  align,
-}: {
-  active: boolean;
-  color: string;
-  children: ReactNode;
-  offset?: boolean;
-  align: "left" | "center" | "right";
-}) {
-  const justify =
-    align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center";
-
-  return (
-    <div style={{ display: "flex", justifyContent: justify, flex: 1 }}>
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 6,
-          minHeight: 34,
-          padding: "0 11px",
-          marginTop: offset ? 10 : 0,
-          borderRadius: 999,
-          background: active ? `${color}30` : "rgba(255,255,255,.08)",
-          color: active ? "#fff7ea" : "rgba(247,241,230,.72)",
-          fontSize: ".7rem",
+          color: "rgba(122,154,129,.72)",
+          fontSize: ".66rem",
           fontWeight: 800,
-          letterSpacing: ".08em",
+          letterSpacing: ".16em",
           textTransform: "uppercase",
-          boxShadow: active ? `0 10px 22px ${color}22` : "none",
-          transform:
-            active && align === "left"
-              ? "translateX(4px)"
-              : active && align === "right"
-                ? "translateX(-4px)"
-                : active && align === "center"
-                  ? "translateY(-4px)"
-                  : "none",
-          transition: "all 140ms ease",
         }}
       >
-        {children}
+        {sideLabel}
       </span>
     </div>
   );
@@ -593,101 +528,26 @@ const topIconStyle: CSSProperties = {
   color: "#f7f1e6",
 };
 
-const progressPillStyle: CSSProperties = {
-  padding: "7px 10px",
-  borderRadius: 999,
-  background: "rgba(255,255,255,.08)",
-  color: "rgba(247,241,230,.92)",
-  fontSize: ".72rem",
-  fontWeight: 800,
-};
-
-const titleStyle: CSSProperties = {
-  margin: 0,
-  color: "#fff7ea",
-  fontSize: "clamp(2.2rem, 9vw, 3.2rem)",
-  lineHeight: 0.92,
-  letterSpacing: "-.06em",
-  fontFamily: "var(--font-barlow-condensed), var(--font-barlow), sans-serif",
-};
-
-const subtitleStyle: CSSProperties = {
-  margin: 0,
-  color: "rgba(247,241,230,.8)",
-  fontSize: ".95rem",
-};
-
 const eyebrowStyle: CSSProperties = {
   margin: 0,
-  color: "rgba(243,202,104,.92)",
+  color: "rgba(122,154,129,.92)",
   fontSize: ".74rem",
   fontWeight: 800,
   textTransform: "uppercase",
   letterSpacing: ".16em",
 };
 
-const vsPillStyle: CSSProperties = {
-  padding: "8px 12px",
-  borderRadius: 16,
-  background: "rgba(255,255,255,.08)",
-  color: "rgba(247,241,230,.92)",
-  fontSize: ".82rem",
-  fontWeight: 800,
-  letterSpacing: ".14em",
-  textTransform: "uppercase",
-};
-
-const iconDockButtonStyle: CSSProperties = {
-  minHeight: 52,
-  border: 0,
-  borderRadius: 999,
-  background: "rgba(255,255,255,.1)",
-  color: "#fff7ea",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,.08)",
-};
-
-const pickDockButtonStyle: CSSProperties = {
-  minHeight: 52,
-  border: 0,
-  borderRadius: 999,
-  color: "#fff7ea",
-  fontSize: "1rem",
-  fontWeight: 900,
-  boxShadow: "inset 0 0 0 1px rgba(255,255,255,.08)",
-};
-
-const footerChipStyle: CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "8px 12px",
-  borderRadius: 999,
-  background: "rgba(255,255,255,.08)",
-  color: "rgba(247,241,230,.92)",
-  fontSize: ".8rem",
-  fontWeight: 800,
-};
-
-const footerNoteStyle: CSSProperties = {
-  color: "rgba(247,241,230,.7)",
-  fontSize: ".78rem",
-  fontWeight: 700,
-};
-
 const intensityCardStyle: CSSProperties = {
   position: "relative",
   zIndex: 2,
-  minHeight: 650,
+  minHeight: 620,
   width: "100%",
   borderRadius: 34,
   overflow: "hidden",
   padding: 16,
-  background:
-    "radial-gradient(circle at top center, rgba(255,226,155,.2), transparent 26%), radial-gradient(circle at bottom right, rgba(243,202,104,.16), transparent 32%), linear-gradient(180deg, #183727 0%, #12281d 38%, #0f2219 100%)",
-  border: "1px solid rgba(255,255,255,0.06)",
-  boxShadow: "0 30px 70px rgba(8,16,12,.36), 0 12px 24px rgba(8,16,12,.24)",
+  background: "linear-gradient(160deg, rgba(61,155,95,.08) 0%, #0e1d13 45%)",
+  border: "1px solid rgba(61,155,95,.18)",
+  boxShadow: "0 32px 80px rgba(0,0,0,.65), 0 0 50px rgba(61,155,95,.12)",
   display: "grid",
   gap: 18,
 };
@@ -735,4 +595,54 @@ const jugarmelaButtonStyle: CSSProperties = {
   color: "#132116",
   fontSize: ".98rem",
   fontWeight: 900,
+};
+
+const dockCodeStyle: CSSProperties = {
+  fontSize: ".5rem",
+  fontWeight: 800,
+  letterSpacing: ".16em",
+  textTransform: "uppercase",
+};
+
+const homeDockButtonStyle: CSSProperties = {
+  width: 58,
+  height: 58,
+  borderRadius: 999,
+  border: "1.5px solid rgba(61,155,95,.35)",
+  background: "rgba(61,155,95,.12)",
+  boxShadow: "0 4px 20px rgba(61,155,95,.18)",
+  color: "#3d9b5f",
+  display: "inline-flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 2,
+};
+
+const awayDockButtonStyle: CSSProperties = {
+  width: 58,
+  height: 58,
+  borderRadius: 999,
+  border: "1.5px solid rgba(232,65,58,.35)",
+  background: "rgba(232,65,58,.12)",
+  boxShadow: "0 4px 20px rgba(232,65,58,.18)",
+  color: "#e8413a",
+  display: "inline-flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 2,
+};
+
+const drawDockButtonStyle: CSSProperties = {
+  width: 48,
+  height: 48,
+  borderRadius: 999,
+  border: "1.5px solid rgba(91,143,240,.35)",
+  background: "rgba(91,143,240,.12)",
+  boxShadow: "0 4px 20px rgba(91,143,240,.16)",
+  color: "#5b8ff0",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
 };

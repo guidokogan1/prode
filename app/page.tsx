@@ -13,36 +13,33 @@ export default async function HomePage() {
   const me = leaderboardPreview.find((entry) => entry.name === "Vos") ?? leaderboardPreview[0] ?? null;
 
   return (
-    <main className="stack page-narrow home-main">
-      <section className="home-screen-shell">
-        <div className="home-screen-header">
+    <main className="page-narrow home-playground">
+      <section className="home-shell">
+        <div className="home-shell-header">
           <div className="home-brand">
             <span className="home-brand-ball">⚽</span>
             <span className="home-brand-label">Mundial 26</span>
           </div>
-          <div className="home-screen-header-side">
+          <div className="home-shell-side">
             {queueRemaining ? (
-              <span className="home-header-badge">{queueRemaining} sin jugar</span>
+              <span className="home-badge">{queueRemaining} sin jugar</span>
             ) : null}
-            <span className="home-avatar-pill">{me?.name?.slice(0, 1) ?? "V"}</span>
+            <span className="home-avatar">{me?.name?.slice(0, 1) ?? "V"}</span>
           </div>
         </div>
 
-        <div className="home-head home-head-game home-head-inside">
+        <div className="home-intro">
           <div>
-            <p className="eyebrow">Jugá de una</p>
-            <h1 className="home-title home-title-game">Swipe y seguí</h1>
+            <p className="eyebrow">Jugada rápida</p>
+            <h1 className="home-intro-title">¿Qué sale?</h1>
+            <p className="home-intro-copy">Deslizá o tocá. Elegís el resultado y seguís al próximo.</p>
           </div>
-          <div className="home-status-row home-status-row-minimal">
-            <span className="home-status-pill">
-              <strong>{summary.pendingPicks}</strong>
-              <span>sin jugar</span>
-            </span>
-            <span className="home-status-pill">
+          <div className="home-queue-pills">
+            <span className="home-queue-pill">
               <strong>{summary.liveMatches}</strong>
               <span>live</span>
             </span>
-            <span className="home-status-pill">
+            <span className="home-queue-pill">
               <strong>{summary.yourNet}</strong>
               <span>tu tabla</span>
             </span>
@@ -51,7 +48,7 @@ export default async function HomePage() {
 
         <QuickPlayDeck matches={featuredMatches} />
 
-        <div className="home-bottom-strip">
+        <div className="home-footer-stack">
           <Link className="home-bottom-card" href="/matches">
             <div>
               <strong>Cargá grupos de una</strong>
@@ -82,17 +79,6 @@ export default async function HomePage() {
             </Link>
           )}
         </div>
-      </section>
-
-      <section className="home-secondary-strip home-secondary-strip-muted">
-        <Link className="card home-shortcut-card" href="/ranking">
-          <strong>Tabla</strong>
-          <span>Mirá quién pica arriba</span>
-        </Link>
-        <Link className="card home-shortcut-card" href="/profile">
-          <strong>Yo</strong>
-          <span>Tu torneo hasta ahora</span>
-        </Link>
       </section>
     </main>
   );
