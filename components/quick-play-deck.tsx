@@ -32,6 +32,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
   const match = deck[index] ?? deck[0];
   const isLast = index === deck.length - 1;
+  const nextMatch = isLast ? null : deck[index + 1];
   const progress = `${index + 1} / ${deck.length}`;
   const canDraw = match.allocation.length === 3;
   const leadingOutcome = match.allocation[0]?.label ?? "";
@@ -139,6 +140,16 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
             ? trailingOutcome
             : null
       : null;
+  const dragDirection =
+    step === "pick"
+      ? drag.y < -80 && canDraw
+        ? "draw"
+        : drag.x > 80
+          ? "home"
+          : drag.x < -80
+            ? "away"
+            : null
+      : null;
 
   return (
     <section className="quick-play">
@@ -146,7 +157,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         <div className="quick-play-deck-shadow" aria-hidden="true" />
         <div className="quick-play-deck-shadow quick-play-deck-shadow-back" aria-hidden="true" />
         <article
-          className={`card quick-play-card quick-play-card-${step}`}
+          className={`card quick-play-card quick-play-card-${step}${dragDirection ? ` drag-${dragDirection}` : ""}`}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -173,6 +184,22 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
             </div>
             <span className="quick-play-progress">{progress}</span>
           </div>
+
+          {step === "pick" ? (
+            <div className="quick-swipe-overlay" aria-hidden="true">
+              <span className={`quick-swipe-lane quick-swipe-lane-home${dragDirection === "home" ? " active" : ""}`}>
+                → {leadingOutcome}
+              </span>
+              {drawOutcome ? (
+                <span className={`quick-swipe-lane quick-swipe-lane-draw${dragDirection === "draw" ? " active" : ""}`}>
+                  ↑ {drawOutcome}
+                </span>
+              ) : null}
+              <span className={`quick-swipe-lane quick-swipe-lane-away${dragDirection === "away" ? " active" : ""}`}>
+                ← {trailingOutcome}
+              </span>
+            </div>
+          ) : null}
 
           {step === "pick" && dragLabel ? <div className="drag-label">{dragLabel}</div> : null}
 
@@ -236,6 +263,12 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
             </>
           ) : (
             <>
+              <div className="quick-choice-banner">
+                <span className="eyebrow">Tu pick</span>
+                <strong>{selectedOutcome}</strong>
+                <small>Ahora decí qué tan fuerte entrás.</small>
+              </div>
+
               <div className="quick-intensity-grid quick-intensity-grid-game">
                 {INTENSITY_OPTIONS.map((option) => (
                   <button
@@ -265,6 +298,15 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
             <span className="match-state-chip">{step === "pick" ? match.stage : "Cierra al arranque"}</span>
             <span className="quick-play-footer-note">{step === "pick" ? "Tocá o arrastrá" : "Guardá y seguí"}</span>
           </div>
+
+          {nextMatch ? (
+            <div className="quick-next-up">
+              <span className="eyebrow">Después</span>
+              <strong>
+                {nextMatch.home.name} vs {nextMatch.away.name}
+              </strong>
+            </div>
+          ) : null}
         </article>
       </div>
     </section>
