@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
 
@@ -8,61 +8,148 @@ type RevealBoardProps = {
   tickets: MatchViewModel["revealedTickets"];
 };
 
+type OutcomeGroup = {
+  label: string;
+  totalAmount: number;
+  tickets: MatchViewModel["revealedTickets"];
+};
+
 export function RevealBoard({ tickets }: RevealBoardProps) {
   const session = useContext(SessionContext);
   const sessionName = session?.displayName ?? null;
 
-  const orderedTickets = [...tickets].sort((a, b) => {
-    if (sessionName && a.userName === sessionName) {
-      return -1;
+  const groupedOutcomes = useMemo(() => {
+    const groups = new Map<string, OutcomeGroup>();
+
+    for (const ticket of tickets) {
+      const sortedAllocations = [...ticket.allocations].sort(
+        (left, right) => Number(right.amount.replace(/\./g, "")) - Number(left.amount.replace(/\./g, "")),
+      );
+      const dominant = sortedAllocations[0];
+      if (!dominant) {
+        continue;
+      }
+
+      const totalAmount = ticket.allocations.reduce(
+        (sum, allocation) => sum + Number(allocation.amount.replace(/\./g, "")),
+        0,
+      );
+
+      const existing = groups.get(dominant.label);
+      if (existing) {
+        existing.totalAmount += totalAmount;
+        existing.tickets.push(ticket);
+      } else {
+        groups.set(dominant.label, {
+          label: dominant.label,
+          totalAmount,
+          tickets: [ticket],
+        });
+      }
     }
 
-    if (sessionName && b.userName === sessionName) {
-      return 1;
-    }
+    return [...groups.values()]
+      .sort((left, right) => right.totalAmount - left.totalAmount)
+      .map((group) => ({
+        ...group,
+        tickets: [...group.tickets].sort((a, b) => {
+          if (sessionName && a.userName === sessionName) {
+            return -1;
+          }
 
-    return 0;
-  });
+          if (sessionName && b.userName === sessionName) {
+            return 1;
+          }
+
+          const leftTop = Math.max(...a.allocations.map((allocation) => Number(allocation.amount.replace(/\./g, ""))));
+          const rightTop = Math.max(...b.allocations.map((allocation) => Number(allocation.amount.replace(/\./g, ""))));
+          return rightTop - leftTop;
+        }),
+      }));
+  }, [sessionName, tickets]);
+
+  const totalPot = useMemo(
+    () =>
+      tickets.reduce(
+        (sum, ticket) =>
+          sum +
+          ticket.allocations.reduce(
+            (ticketTotal, allocation) => ticketTotal + Number(allocation.amount.replace(/\./g, "")),
+            0,
+          ),
+        0,
+      ),
+    [tickets],
+  );
 
   return (
-    <div className="reveal-board">
-      {orderedTickets.map((ticket) => {
-        const isMe = sessionName ? ticket.userName === sessionName : false;
+    <div className="reveal-board reveal-board-groups">
+      <div className="reveal-pot-card">
+        <span className="eyebrow">Pozo de esta ronda</span>
+        <strong>{Math.round(totalPot).toLocaleString("es-AR")} créditos</strong>
+        <span className="subtle">Así está cayendo el grupo ahora mismo.</span>
+      </div>
 
-        return (
-          <article className={`reveal-card${isMe ? " reveal-card-me" : ""}`} key={ticket.userName}>
-            <div className="reveal-card-top">
-              <div className="reveal-identity">
-                <span className="reveal-avatar" aria-hidden="true">
-                  {ticket.userName.slice(0, 1).toUpperCase()}
-                </span>
-                <div>
-                  <strong>{isMe ? "Vos" : ticket.userName}</strong>
-                  <p className="subtle">
-                    {isMe ? "Tu jugada ya quedó cerrada" : "Jugada revelada"}
-                  </p>
-                </div>
-              </div>
-              {ticket.netLabel ? (
-                <strong className={ticket.netLabel.startsWith("-") ? "money-negative" : "money-positive"}>
-                  {ticket.netLabel}
-                </strong>
-              ) : (
-                <span className="pill">En juego</span>
-              )}
+      {groupedOutcomes.map((group) => (
+        <section className="reveal-group-card" key={group.label}>
+          <div className="reveal-group-head">
+            <div>
+              <p className="eyebrow">Pick dominante</p>
+              <h3>{group.label}</h3>
             </div>
+            <div className="reveal-group-meta">
+              <strong>{group.tickets.length}</strong>
+              <span>{group.tickets.length === 1 ? "jugada" : "jugadas"}</span>
+            </div>
+          </div>
 
-            <div className="reveal-picks">
-              {ticket.allocations.map((allocation) => (
-                <div className="reveal-pick" key={`${ticket.userName}-${allocation.label}`}>
-                  <span>{allocation.label}</span>
-                  <strong>{allocation.amount}</strong>
-                </div>
-              ))}
-            </div>
-          </article>
-        );
-      })}
+          <div className="reveal-board">
+            {group.tickets.map((ticket) => {
+              const isMe = sessionName ? ticket.userName === sessionName : false;
+              const mainPick = [...ticket.allocations].sort(
+                (left, right) => Number(right.amount.replace(/\./g, "")) - Number(left.amount.replace(/\./g, "")),
+              )[0];
+
+              return (
+                <article className={`reveal-card${isMe ? " reveal-card-me" : ""}`} key={`${group.label}-${ticket.userName}`}>
+                  <div className="reveal-card-top">
+                    <div className="reveal-identity">
+                      <span className="reveal-avatar" aria-hidden="true">
+                        {ticket.userName.slice(0, 1).toUpperCase()}
+                      </span>
+                      <div>
+                        <strong>{isMe ? "Vos" : ticket.userName}</strong>
+                        <p className="subtle">
+                          {mainPick ? `${mainPick.label} al frente` : "Jugada revelada"}
+                        </p>
+                      </div>
+                    </div>
+                    {ticket.netLabel ? (
+                      <strong className={ticket.netLabel.startsWith("-") ? "money-negative" : "money-positive"}>
+                        {ticket.netLabel}
+                      </strong>
+                    ) : (
+                      <span className="pill">En juego</span>
+                    )}
+                  </div>
+
+                  <div className="reveal-picks">
+                    {ticket.allocations.map((allocation) => (
+                      <div
+                        className={`reveal-pick${allocation.label === mainPick?.label ? " reveal-pick-main" : ""}`}
+                        key={`${ticket.userName}-${allocation.label}`}
+                      >
+                        <span>{allocation.label}</span>
+                        <strong>{allocation.amount}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

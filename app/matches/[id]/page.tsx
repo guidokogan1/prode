@@ -19,12 +19,12 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   return (
     <main className="stack page-narrow">
-      <section className="card detail-hero detail-hero-simple detail-hero-game">
+      <section className={`card detail-hero detail-hero-simple detail-hero-game${isRevealed ? " detail-hero-revealed" : ""}`}>
         <div className="match-top">
           <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
             {match.statusLabel}
           </span>
-          <span className="game-clock">{match.stage}</span>
+          <span className="game-clock">{isRevealed ? match.kickoffLabel : match.stage}</span>
         </div>
 
         <div className="headline-score">
@@ -42,8 +42,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
         </div>
 
         <div className="meta-row">
-          <span>{match.kickoffLabel}</span>
-          <span>{isRevealed ? "Grupo revelado" : match.userStateLabel}</span>
+          <span>{isRevealed ? "Se abrió la ronda" : match.kickoffLabel}</span>
+          <span>{isRevealed ? "Ahora ves cómo entró cada uno" : match.userStateLabel}</span>
         </div>
       </section>
 
@@ -52,15 +52,15 @@ export default async function MatchPage({ params }: MatchPageProps) {
       <section className="card card-grid">
         <div className="section-title section-title-compact">
           <div>
-            <p className="eyebrow">{match.revealedTickets.length ? "Grupo" : "Consenso"}</p>
-            <h2>{match.revealedTickets.length ? "Cómo entraron" : "Dónde cae la ronda"}</h2>
+            <p className="eyebrow">{match.revealedTickets.length ? "Reveal" : "Consenso"}</p>
+            <h2>{match.revealedTickets.length ? "Así entró el grupo" : "Dónde cae la ronda"}</h2>
           </div>
         </div>
         {match.revealedTickets.length ? (
           <>
             <div className="reveal-banner">
-              <strong>Se abrió la ronda</strong>
-              <span>Ahora ves lo tuyo y lo de todos.</span>
+              <strong>Ya está todo sobre la mesa</strong>
+              <span>Tu jugada y la del grupo ya se ven juntas.</span>
             </div>
             <RevealBoard tickets={match.revealedTickets} />
           </>
