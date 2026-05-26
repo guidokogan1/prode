@@ -34,6 +34,9 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const isLast = index === deck.length - 1;
   const progress = `${index + 1} / ${deck.length}`;
   const canDraw = match.allocation.length === 3;
+  const leadingOutcome = match.allocation[0]?.label ?? "";
+  const drawOutcome = canDraw ? match.allocation[1]?.label ?? "" : null;
+  const trailingOutcome = match.allocation[match.allocation.length - 1]?.label ?? "";
 
   function resetInteraction() {
     setStep("pick");
@@ -102,17 +105,17 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
     const absY = Math.abs(drag.y);
 
     if (drag.x > 110) {
-      chooseOutcome(match.allocation[0]?.label ?? "");
+      chooseOutcome(leadingOutcome);
       return;
     }
 
     if (drag.x < -110) {
-      chooseOutcome(match.allocation[match.allocation.length - 1]?.label ?? "");
+      chooseOutcome(trailingOutcome);
       return;
     }
 
     if (canDraw && drag.y < -110) {
-      chooseOutcome(match.allocation[1]?.label ?? "");
+      chooseOutcome(drawOutcome ?? "");
       return;
     }
 
@@ -129,117 +132,141 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const dragLabel =
     step === "pick"
       ? drag.y < -80 && canDraw
-        ? match.allocation[1]?.label
+        ? drawOutcome
         : drag.x > 80
-          ? match.allocation[0]?.label
+          ? leadingOutcome
           : drag.x < -80
-            ? match.allocation[match.allocation.length - 1]?.label
+            ? trailingOutcome
             : null
       : null;
 
   return (
     <section className="quick-play">
-      <article
-        className={`card quick-play-card quick-play-card-${step}`}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        style={
-          step === "pick"
-            ? {
-                transform: `translate3d(${drag.x}px, ${drag.y}px, 0) rotate(${drag.x / 22}deg)`,
-              }
-            : undefined
-        }
-      >
-        <div className="quick-play-topline">
-          <div>
-            <p className="eyebrow quick-play-eyebrow">{step === "pick" ? "Ronda rápida" : "Ahora sí"}</p>
-            <h2 className="quick-play-title">
-              {step === "pick" ? "¿Qué sale?" : selectedOutcome ?? "Tu pick"}
-            </h2>
-          </div>
-          <span className="quick-play-progress">{progress}</span>
-        </div>
-
-        {step === "pick" && dragLabel ? <div className="drag-label">{dragLabel}</div> : null}
-
-        <div className="quick-play-stage">
-          <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
-            {match.statusLabel}
-          </span>
-          <span className="game-clock">{match.kickoffLabel}</span>
-        </div>
-
-        <div className="quick-play-scoreboard">
-          <div className="quick-play-team">
-            <span className="flag">{match.home.flag}</span>
-            <strong>{match.home.name}</strong>
-          </div>
-          <span className="quick-play-vs">vs</span>
-          <div className="quick-play-team">
-            <span className="flag">{match.away.flag}</span>
-            <strong>{match.away.name}</strong>
-          </div>
-        </div>
-
-        {step === "pick" ? (
-          <>
-            <p className="quick-play-subtitle">Deslizá o tocá uno. Después elegís cuánto.</p>
-            <div className="quick-pick-grid quick-pick-grid-3">
-              {match.allocation.map((item) => (
-                <button
-                  key={item.label}
-                  className="quick-pick-button"
-                  type="button"
-                  onClick={() => chooseOutcome(item.label)}
-                >
-                  <span className="quick-pick-side">
-                    <span className="quick-pick-mark" aria-hidden="true" />
-                    <span className="quick-pick-label">{item.label}</span>
-                  </span>
-                  <span className="quick-pick-helper">Elegir</span>
-                </button>
+      <div className="quick-play-stage-shell">
+        <div className="quick-play-deck-shadow" aria-hidden="true" />
+        <div className="quick-play-deck-shadow quick-play-deck-shadow-back" aria-hidden="true" />
+        <article
+          className={`card quick-play-card quick-play-card-${step}`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          style={
+            step === "pick"
+              ? {
+                  transform: `translate3d(${drag.x}px, ${drag.y}px, 0) rotate(${drag.x / 22}deg)`,
+                }
+              : undefined
+          }
+        >
+          <div className="quick-play-topbar">
+            <button className="quick-top-icon" type="button" onClick={step === "pick" ? advanceDeck : resetInteraction}>
+              {step === "pick" ? "⟳" : "←"}
+            </button>
+            <div className="quick-play-dots" aria-hidden="true">
+              {deck.map((_, dotIndex) => (
+                <span
+                  key={`dot-${dotIndex}`}
+                  className={`quick-play-dot${dotIndex === index ? " active" : ""}`}
+                />
               ))}
             </div>
+            <span className="quick-play-progress">{progress}</span>
+          </div>
 
-            <div className="gesture-hint-row">
-              <span>→ {match.allocation[0]?.label}</span>
-              {canDraw ? <span>↑ {match.allocation[1]?.label}</span> : null}
-              <span>← {match.allocation[match.allocation.length - 1]?.label}</span>
+          {step === "pick" && dragLabel ? <div className="drag-label">{dragLabel}</div> : null}
+
+          <div className="quick-play-hero">
+            <div className="quick-play-stage">
+              <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
+                {match.statusLabel}
+              </span>
+              <span className="game-clock">{match.kickoffLabel}</span>
             </div>
-          </>
-        ) : (
-          <>
-            <p className="quick-play-subtitle">Marcá si vas fuerte, media o suave.</p>
-            <div className="quick-intensity-grid">
-              {INTENSITY_OPTIONS.map((option) => (
-                <button
-                  key={option.label}
-                  className="quick-intensity-button"
-                  type="button"
-                  onClick={() => savePlay(option.amount)}
-                >
-                  <strong>{option.label}</strong>
-                  <span>{option.hint}</span>
+
+            <div className="quick-play-scoreboard quick-play-scoreboard-game">
+              <div className="quick-play-team">
+                <span className="flag">{match.home.flag}</span>
+                <strong>{match.home.name}</strong>
+              </div>
+              <span className="quick-play-vs">vs</span>
+              <div className="quick-play-team">
+                <span className="flag">{match.away.flag}</span>
+                <strong>{match.away.name}</strong>
+              </div>
+            </div>
+
+            <div className="quick-play-copyblock">
+              <p className="eyebrow quick-play-eyebrow">{step === "pick" ? "Swipe" : "Cerrá la jugada"}</p>
+              <h2 className="quick-play-title">
+                {step === "pick" ? "Elegí rápido" : selectedOutcome ?? "Tu pick"}
+              </h2>
+              <p className="quick-play-subtitle">
+                {step === "pick"
+                  ? "Derecha local. Izquierda visita. Arriba empate."
+                  : "Elegí cuántos créditos le cargás a esta jugada."}
+              </p>
+            </div>
+          </div>
+
+          {step === "pick" ? (
+            <>
+              <div className="quick-gesture-lanes" aria-hidden="true">
+                <span>→ {leadingOutcome}</span>
+                {drawOutcome ? <span>↑ {drawOutcome}</span> : null}
+                <span>← {trailingOutcome}</span>
+              </div>
+
+              <div className="quick-play-action-dock">
+                <button className="quick-action-button quick-action-skip" type="button" onClick={advanceDeck}>
+                  <span>⤼</span>
                 </button>
-              ))}
-            </div>
-          </>
-        )}
+                <button className="quick-action-button quick-action-home" type="button" onClick={() => chooseOutcome(leadingOutcome)}>
+                  <span>{match.home.flag}</span>
+                </button>
+                {drawOutcome ? (
+                  <button className="quick-action-button quick-action-draw" type="button" onClick={() => chooseOutcome(drawOutcome)}>
+                    <span>X</span>
+                  </button>
+                ) : null}
+                <button className="quick-action-button quick-action-away" type="button" onClick={() => chooseOutcome(trailingOutcome)}>
+                  <span>{match.away.flag}</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="quick-intensity-grid quick-intensity-grid-game">
+                {INTENSITY_OPTIONS.map((option) => (
+                  <button
+                    key={option.label}
+                    className="quick-intensity-button"
+                    type="button"
+                    onClick={() => savePlay(option.amount)}
+                  >
+                    <strong>{option.label}</strong>
+                    <span>{option.hint}</span>
+                  </button>
+                ))}
+              </div>
 
-        <div className="quick-play-footer">
-          <span className="match-state-chip">{step === "pick" ? match.stage : "Guarda y sigue"}</span>
-          <button
-            className="text-link-button"
-            type="button"
-            onClick={step === "pick" ? advanceDeck : resetInteraction}
-          >
-            {step === "pick" ? (isLast ? "Volver" : "Saltá este") : "Cambiar pick"}
-          </button>
-        </div>
-      </article>
+              <div className="quick-play-action-dock quick-play-action-dock-secondary">
+                <button className="quick-action-button quick-action-skip" type="button" onClick={resetInteraction}>
+                  <span>←</span>
+                </button>
+                <button className="quick-action-chip" type="button" onClick={() => savePlay(7000)}>
+                  Jugármela
+                </button>
+              </div>
+            </>
+          )}
+
+          <div className="quick-play-footer">
+            <span className="match-state-chip">{step === "pick" ? match.stage : "Cierra al arranque"}</span>
+            <span className="quick-play-footer-note">{step === "pick" ? "Tocá o arrastrá" : "Guardá y seguí"}</span>
+          </div>
+        </article>
+      </div>
     </section>
   );
 }
