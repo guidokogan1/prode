@@ -3,12 +3,18 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
-import { MATCH_CREDIT, sumAllocations, validateAllocations } from "@/lib/game";
+import { buildWeightedAllocation, MATCH_CREDIT, sumAllocations, validateAllocations } from "@/lib/game";
 import { ALLOCATION_EVENT, getStoredAllocation, getStoredSession, saveStoredAllocation } from "@/lib/local-store";
 
 type AllocationCardProps = {
   match: MatchViewModel;
 };
+
+const QUICK_INTENSITIES = [
+  { label: "Suave", amount: 4000 },
+  { label: "Media", amount: 5500 },
+  { label: "Fuerte", amount: 7000 },
+];
 
 export function AllocationCard({ match }: AllocationCardProps) {
   const session = useContext(SessionContext);
@@ -66,6 +72,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       amount: item.amount,
     })),
   );
+  const leadingAllocation = [...allocations].sort((a, b) => b.amount - a.amount)[0] ?? null;
 
   function updateAmount(index: number, rawValue: string) {
     const nextAmount = Number(rawValue);
@@ -75,6 +82,24 @@ export function AllocationCard({ match }: AllocationCardProps) {
       current.map((item, currentIndex) =>
         currentIndex === index ? { ...item, amount: safeAmount } : item,
       ),
+    );
+    setSaveState("idle");
+    setSaveMessage(null);
+  }
+
+  function applyQuickIntensity(label: string, amount: number) {
+    const preset = buildWeightedAllocation(
+      allocations.map((item) => item.label),
+      label,
+      amount,
+    );
+
+    setAllocations(
+      preset.map((item, index) => ({
+        id: `${match.id}-${index}`,
+        label: item.outcomeCode,
+        amount: item.amount,
+      })),
     );
     setSaveState("idle");
     setSaveMessage(null);
@@ -161,19 +186,53 @@ export function AllocationCard({ match }: AllocationCardProps) {
       <div className="section-title section-title-compact">
         <div>
           <p className="eyebrow">{match.isEditable ? "Tu jugada" : "Así entraste"}</p>
-          <h2>{match.isEditable ? "Repartí 10.000 créditos" : "Tu ronda quedó cerrada"}</h2>
+          <h2>{match.isEditable ? "Armá la ronda" : "Tu ronda quedó cerrada"}</h2>
         </div>
         <span className="match-state-chip">{match.userStateLabel}</span>
       </div>
 
       {match.isEditable ? (
         <>
+          <div className="allocation-stage-card">
+            <strong>{sessionName ? `${sessionName}, te quedan` : "Te quedan"}</strong>
+            <span className={remaining === 0 ? "money-positive" : ""}>
+              {remaining.toLocaleString("es-AR")} créditos
+            </span>
+            <small>
+              {leadingAllocation && leadingAllocation.amount > 0
+                ? `Vas más con ${leadingAllocation.label}`
+                : "Elegí un lado y cargale fuerte"}
+            </small>
+          </div>
+
           <div className="allocation-grid">
             {allocations.map((item, index) => (
-              <div className="allocation-row" key={item.id}>
+              <div
+                className={`allocation-row allocation-row-game${leadingAllocation?.label === item.label && item.amount > 0 ? " is-leading" : ""}`}
+                key={item.id}
+              >
                 <div className="allocation-label">
-                  <span>{item.label}</span>
+                  <span>
+                    {item.label}
+                    {leadingAllocation?.label === item.label && item.amount > 0 ? (
+                      <em className="allocation-leading-badge">tu fuerte</em>
+                    ) : null}
+                  </span>
                   <strong>{item.amount.toLocaleString("es-AR")}</strong>
+                </div>
+                <div className="allocation-preset-row">
+                  {QUICK_INTENSITIES.map((option) => (
+                    <button
+                      key={`${item.id}-${option.label}`}
+                      className="allocation-preset-chip"
+                      type="button"
+                      disabled={!match.isEditable}
+                      onClick={() => applyQuickIntensity(item.label, option.amount)}
+                    >
+                      <span>{option.label}</span>
+                      <strong>{option.amount / 1000}k</strong>
+                    </button>
+                  ))}
                 </div>
                 <div className="bar-track">
                   <div
@@ -220,33 +279,30 @@ export function AllocationCard({ match }: AllocationCardProps) {
                     aria-label={item.label}
                   />
                 </div>
+                <div className="allocation-row-foot">
+                  <span>{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
+                  <span>tope 7.000</span>
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="allocation-summary simple-summary">
-            <strong>{sessionName ? `${sessionName}, te faltan` : "Te faltan"}</strong>
-            <span className={remaining === 0 ? "money-positive" : ""}>
-              {remaining.toLocaleString("es-AR")} créditos
-            </span>
-          </div>
-
-          <div className="action-row">
+          <div className="action-row action-row-stacked">
             <button
               className="primary-button primary-button-wide"
               disabled={!validation.ok || saveState === "saving" || !match.isEditable}
               onClick={saveAllocation}
             >
-              {saveState === "saving" ? "Guardando..." : "Guardar jugada"}
+              {saveState === "saving" ? "Guardando..." : "Guardar y seguir"}
             </button>
             {saveState === "saved" || saveState === "error" ? (
               <span className={saveState === "error" ? "error-copy" : "subtle"}>{saveMessage}</span>
             ) : null}
           </div>
 
-          <p className="hint">
+          <p className="hint hint-game">
             {validation.ok
-              ? "Tope 7.000 por opción. Arranca el partido y se revela todo."
+              ? "Cuando arranca, se revela lo tuyo y lo del grupo."
               : validation.reason}
           </p>
         </>

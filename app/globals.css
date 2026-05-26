@@ -2362,6 +2362,105 @@ body {
   font-size: 0.98rem;
 }
 
+.allocation-stage-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.allocation-stage-card strong {
+  color: rgba(248, 244, 234, 0.88);
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
+}
+
+.allocation-stage-card span {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.allocation-stage-card small {
+  color: rgba(248, 244, 234, 0.66);
+  font-size: 0.78rem;
+}
+
+.allocation-row-game {
+  padding: 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.allocation-row-game.is-leading {
+  background:
+    radial-gradient(circle at top right, rgba(243, 202, 104, 0.14), transparent 32%),
+    rgba(255, 255, 255, 0.08);
+  border-color: rgba(243, 202, 104, 0.24);
+}
+
+.allocation-label span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.allocation-leading-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(243, 202, 104, 0.16);
+  color: #f3ca68;
+  font-size: 0.64rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.allocation-preset-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.allocation-preset-chip {
+  min-height: 52px;
+  border: 0;
+  border-radius: 16px;
+  display: grid;
+  gap: 2px;
+  align-content: center;
+  justify-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8f4ea;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.allocation-preset-chip span {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(248, 244, 234, 0.72);
+}
+
+.allocation-preset-chip strong {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+}
+
+.allocation-preset-chip:active {
+  transform: translateY(1px);
+}
+
 .bar-track {
   height: 14px;
   background: rgba(255, 255, 255, 0.1);
@@ -2374,6 +2473,16 @@ body {
 
 .allocation-input {
   accent-color: #f3ca68;
+}
+
+.allocation-row-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(248, 244, 234, 0.6);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .allocation-summary.simple-summary {
@@ -2394,6 +2503,15 @@ body {
 
 .hint {
   color: rgba(248, 244, 234, 0.74);
+}
+
+.hint-game {
+  text-align: center;
+}
+
+.action-row-stacked {
+  align-items: center;
+  justify-items: stretch;
 }
 
 .simple-consensus-row {
