@@ -11,7 +11,7 @@ export default async function HomePage() {
   ]);
 
   return (
-    <main className="stack page-narrow">
+    <main className="stack page-narrow home-main">
       <section className="home-head home-head-game">
         <div>
           <p className="eyebrow">Jugá de una</p>

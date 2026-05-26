@@ -890,10 +890,12 @@ input:focus-visible,
 
   .app-shell > main.page-narrow {
     width: min(100%, var(--content-width));
+    margin-inline: auto;
   }
 
   .app-shell > main.page-mid {
     width: min(100%, 760px);
+    margin-inline: auto;
   }
 
   .app-shell > main.page-wide {
@@ -1168,6 +1170,11 @@ input:focus-visible,
   gap: 10px;
 }
 
+.home-main {
+  width: min(100%, 520px);
+  margin-inline: auto;
+}
+
 .quick-play {
   display: grid;
   gap: 12px;
@@ -1215,29 +1222,34 @@ input:focus-visible,
 }
 
 .home-status-row-minimal {
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .home-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 11px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  white-space: nowrap;
+  display: grid;
+  gap: 3px;
+  align-content: center;
+  padding: 10px 12px;
+  min-height: 58px;
+  border-radius: 18px;
+  background: rgba(19, 33, 22, 0.12);
+  border: 1px solid rgba(19, 33, 22, 0.08);
+  box-shadow:
+    0 10px 22px rgba(13, 25, 18, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .home-status-pill strong {
-  font-size: 0.88rem;
+  font-size: 1rem;
   letter-spacing: -0.03em;
-  color: #f7f1e6;
+  color: #132116;
 }
 
 .home-status-pill span {
-  color: var(--muted);
-  font-size: 0.7rem;
+  color: #536055;
+  font-size: 0.72rem;
 }
 
 .status-dot,
@@ -1657,6 +1669,9 @@ body {
 
 .home-head-game {
   gap: 10px;
+  width: 100%;
+  max-width: 440px;
+  margin-inline: auto;
   padding: 2px 2px 0;
 }
 
