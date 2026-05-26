@@ -1575,6 +1575,20 @@ input:focus-visible,
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .pre-reveal-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .form-duel {
+    grid-template-columns: 1fr;
+  }
+
+  .form-divider {
+    width: 100%;
+    height: 34px;
+    border-radius: 14px;
+  }
 }
 
 @media (max-width: 360px) {
@@ -2346,6 +2360,39 @@ body {
   background: rgba(22, 53, 36, 0.08);
 }
 
+.pre-reveal-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pre-reveal-pill {
+  display: grid;
+  gap: 3px;
+  padding: 12px 13px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pre-reveal-pill strong {
+  font-size: 0.86rem;
+  line-height: 1;
+  color: #f8f4ea;
+}
+
+.pre-reveal-pill span {
+  color: rgba(248, 244, 234, 0.66);
+  font-size: 0.72rem;
+}
+
+.pre-reveal-pill-accent {
+  background:
+    radial-gradient(circle at top right, rgba(243, 202, 104, 0.12), transparent 40%),
+    rgba(255, 255, 255, 0.1);
+  border-color: rgba(243, 202, 104, 0.24);
+}
+
 .allocation-card {
   background:
     radial-gradient(circle at top right, rgba(255, 203, 99, 0.14), transparent 26%),
@@ -2518,9 +2565,29 @@ body {
   padding: 13px 2px;
 }
 
+.simple-consensus-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.simple-consensus-copy span {
+  font-weight: 700;
+}
+
+.simple-consensus-copy small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 .simple-consensus-row strong {
   color: #173625;
   font-size: 1rem;
+}
+
+.card-pre-reveal {
+  background:
+    radial-gradient(circle at top right, rgba(243, 202, 104, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(248, 244, 235, 0.88));
 }
 
 .reveal-board {
@@ -2551,6 +2618,59 @@ body {
 .reveal-banner span {
   color: rgba(237, 232, 217, 0.72);
   font-size: 0.82rem;
+}
+
+.compact-summary-form {
+  display: grid;
+  gap: 14px;
+}
+
+.form-duel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-team-card {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(20, 32, 20, 0.06);
+  text-align: center;
+}
+
+.form-team-card .flag {
+  width: 44px;
+  height: 44px;
+  background: rgba(19, 33, 22, 0.06);
+}
+
+.form-team-card strong {
+  font-size: 0.96rem;
+  letter-spacing: -0.03em;
+}
+
+.form-team-card span:last-child {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.form-divider {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: rgba(19, 33, 22, 0.08);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .reveal-pot-card,
