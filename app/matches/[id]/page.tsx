@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AllocationCard } from "@/components/allocation-card";
+import { RevealBoard } from "@/components/reveal-board";
 import { getMatchById } from "@/lib/repositories/matches";
 
 type MatchPageProps = {
@@ -54,29 +55,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
           </div>
         </div>
         {match.revealedTickets.length ? (
-          <div className="list">
-            {match.revealedTickets.map((ticket) => (
-              <div className="ranking-row" key={ticket.userName}>
-                <div>
-                  <strong>{ticket.userName}</strong>
-                  <p className="subtle">
-                    {ticket.allocations
-                      .map((allocation) => `${allocation.label}: ${allocation.amount}`)
-                      .join(" · ")}
-                  </p>
-                </div>
-                {ticket.netLabel ? (
-                  <strong
-                    className={ticket.netLabel.startsWith("-") ? "money-negative" : "money-positive"}
-                  >
-                    {ticket.netLabel}
-                  </strong>
-                ) : (
-                  <span className="subtle">Sin liquidar</span>
-                )}
-              </div>
-            ))}
-          </div>
+          <RevealBoard tickets={match.revealedTickets} />
         ) : (
           <div className="list simple-consensus">
             {match.consensus.map((item) => (

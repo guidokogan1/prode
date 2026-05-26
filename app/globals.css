@@ -1457,6 +1457,37 @@ input:focus-visible,
   background: rgba(20, 32, 20, 0.04);
 }
 
+.locked-summary {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.locked-allocation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.locked-allocation-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.locked-allocation-card span,
+.locked-allocation-card small {
+  color: rgba(248, 244, 234, 0.74);
+}
+
+.locked-allocation-card strong {
+  font-size: 1.05rem;
+  color: #f8f4ea;
+}
+
 .simple-consensus {
   gap: 10px;
 }
@@ -1915,6 +1946,82 @@ body {
   font-size: 1rem;
 }
 
+.reveal-board {
+  display: grid;
+  gap: 10px;
+}
+
+.reveal-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 22px;
+  background: rgba(255, 252, 247, 0.98);
+  border: 1px solid rgba(20, 32, 20, 0.06);
+}
+
+.reveal-card-me {
+  background:
+    radial-gradient(circle at top right, rgba(243, 202, 104, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(248, 242, 233, 0.98));
+  border-color: rgba(243, 202, 104, 0.22);
+}
+
+.reveal-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reveal-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.reveal-avatar {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #173625;
+  color: #f8f4ea;
+  font-weight: 900;
+  flex: 0 0 auto;
+}
+
+.reveal-identity strong,
+.reveal-identity p {
+  margin: 0;
+}
+
+.reveal-picks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reveal-pick {
+  display: grid;
+  gap: 4px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  background: rgba(20, 32, 20, 0.04);
+  text-align: center;
+}
+
+.reveal-pick span {
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.reveal-pick strong {
+  font-size: 0.94rem;
+}
+
 .history-row {
   background:
     linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(249, 244, 236, 0.94));
@@ -2003,6 +2110,11 @@ body {
 
   .home-title {
     max-width: 10ch;
+  }
+
+  .locked-allocation-grid,
+  .reveal-picks {
+    grid-template-columns: 1fr;
   }
 
   .primary-match-card-game .primary-team strong {

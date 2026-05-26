@@ -160,95 +160,116 @@ export function AllocationCard({ match }: AllocationCardProps) {
     <section className="card allocation-card card-grid">
       <div className="section-title section-title-compact">
         <div>
-          <p className="eyebrow">Tu jugada</p>
-          <h2>Repartí 10.000 créditos</h2>
+          <p className="eyebrow">{match.isEditable ? "Tu jugada" : "Así entraste"}</p>
+          <h2>{match.isEditable ? "Repartí 10.000 créditos" : "Tu ronda quedó cerrada"}</h2>
         </div>
         <span className="match-state-chip">{match.userStateLabel}</span>
       </div>
 
-      <div className="allocation-grid">
-        {allocations.map((item, index) => (
-          <div className="allocation-row" key={item.id}>
-            <div className="allocation-label">
-              <span>{item.label}</span>
-              <strong>{item.amount.toLocaleString("es-AR")}</strong>
-            </div>
-            <div className="bar-track">
-              <div
-                className="bar-fill"
-                style={{ width: `${Math.min(100, (item.amount / MATCH_CREDIT) * 100)}%` }}
-              />
-            </div>
-            <div className="allocation-controls">
-              <div className="allocation-stepper">
-                <button
-                  className="mini-button"
-                  type="button"
-                  disabled={!match.isEditable}
-                  onClick={() => nudgeAmount(index, -500)}
-                >
-                  -500
-                </button>
-                <button
-                  className="mini-button mini-button-strong"
-                  type="button"
-                  disabled={!match.isEditable}
-                  onClick={() => maxAmount(index)}
-                >
-                  7k
-                </button>
-                <button
-                  className="mini-button"
-                  type="button"
-                  disabled={!match.isEditable}
-                  onClick={() => nudgeAmount(index, 500)}
-                >
-                  +500
-                </button>
+      {match.isEditable ? (
+        <>
+          <div className="allocation-grid">
+            {allocations.map((item, index) => (
+              <div className="allocation-row" key={item.id}>
+                <div className="allocation-label">
+                  <span>{item.label}</span>
+                  <strong>{item.amount.toLocaleString("es-AR")}</strong>
+                </div>
+                <div className="bar-track">
+                  <div
+                    className="bar-fill"
+                    style={{ width: `${Math.min(100, (item.amount / MATCH_CREDIT) * 100)}%` }}
+                  />
+                </div>
+                <div className="allocation-controls">
+                  <div className="allocation-stepper">
+                    <button
+                      className="mini-button"
+                      type="button"
+                      disabled={!match.isEditable}
+                      onClick={() => nudgeAmount(index, -500)}
+                    >
+                      -500
+                    </button>
+                    <button
+                      className="mini-button mini-button-strong"
+                      type="button"
+                      disabled={!match.isEditable}
+                      onClick={() => maxAmount(index)}
+                    >
+                      7k
+                    </button>
+                    <button
+                      className="mini-button"
+                      type="button"
+                      disabled={!match.isEditable}
+                      onClick={() => nudgeAmount(index, 500)}
+                    >
+                      +500
+                    </button>
+                  </div>
+                  <input
+                    className="allocation-input"
+                    type="range"
+                    min="0"
+                    max="7000"
+                    step="500"
+                    value={item.amount}
+                    disabled={!match.isEditable}
+                    onChange={(event) => updateAmount(index, event.target.value)}
+                    aria-label={item.label}
+                  />
+                </div>
               </div>
-              <input
-                className="allocation-input"
-                type="range"
-                min="0"
-                max="7000"
-                step="500"
-                value={item.amount}
-                disabled={!match.isEditable}
-                onChange={(event) => updateAmount(index, event.target.value)}
-                aria-label={item.label}
-              />
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="allocation-summary simple-summary">
-        <strong>{sessionName ? `${sessionName}, te faltan` : "Te faltan"}</strong>
-        <span className={remaining === 0 ? "money-positive" : ""}>
-          {remaining.toLocaleString("es-AR")} créditos
-        </span>
-      </div>
+          <div className="allocation-summary simple-summary">
+            <strong>{sessionName ? `${sessionName}, te faltan` : "Te faltan"}</strong>
+            <span className={remaining === 0 ? "money-positive" : ""}>
+              {remaining.toLocaleString("es-AR")} créditos
+            </span>
+          </div>
 
-      <div className="action-row">
-        <button
-          className="primary-button primary-button-wide"
-          disabled={!validation.ok || saveState === "saving" || !match.isEditable}
-          onClick={saveAllocation}
-        >
-          {saveState === "saving" ? "Guardando..." : "Guardar jugada"}
-        </button>
-        {saveState === "saved" || saveState === "error" ? (
-          <span className={saveState === "error" ? "error-copy" : "subtle"}>{saveMessage}</span>
-        ) : null}
-      </div>
+          <div className="action-row">
+            <button
+              className="primary-button primary-button-wide"
+              disabled={!validation.ok || saveState === "saving" || !match.isEditable}
+              onClick={saveAllocation}
+            >
+              {saveState === "saving" ? "Guardando..." : "Guardar jugada"}
+            </button>
+            {saveState === "saved" || saveState === "error" ? (
+              <span className={saveState === "error" ? "error-copy" : "subtle"}>{saveMessage}</span>
+            ) : null}
+          </div>
 
-      <p className="hint">
-        {match.isEditable
-          ? validation.ok
-            ? "Tope 7.000 por opción. Arranca el partido y se revela todo."
-            : validation.reason
-          : "Mercado cerrado: ya no podes editar esta jugada."}
-      </p>
+          <p className="hint">
+            {validation.ok
+              ? "Tope 7.000 por opción. Arranca el partido y se revela todo."
+              : validation.reason}
+          </p>
+        </>
+      ) : (
+        <>
+          <div className="locked-allocation-grid">
+            {allocations.map((item) => (
+              <div className="locked-allocation-card" key={item.id}>
+                <span>{item.label}</span>
+                <strong>{item.amount.toLocaleString("es-AR")}</strong>
+                <small>{Math.round((item.amount / MATCH_CREDIT) * 100)}%</small>
+              </div>
+            ))}
+          </div>
+
+          <div className="allocation-summary simple-summary locked-summary">
+            <strong>{sessionName ? `${sessionName}, ya quedó` : "Jugada cerrada"}</strong>
+            <span>Se revela junto al grupo</span>
+          </div>
+
+          <p className="hint">Ya no podés editar esta ronda.</p>
+        </>
+      )}
     </section>
   );
 }
