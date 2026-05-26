@@ -7,6 +7,14 @@ export type AllocationInput = {
 };
 
 export function buildFocusedAllocation(outcomeCodes: string[], selectedOutcomeCode: string) {
+  return buildWeightedAllocation(outcomeCodes, selectedOutcomeCode, OUTCOME_CAP);
+}
+
+export function buildWeightedAllocation(
+  outcomeCodes: string[],
+  selectedOutcomeCode: string,
+  focusedAmount: number,
+) {
   if (!outcomeCodes.includes(selectedOutcomeCode)) {
     throw new Error("selectedOutcomeCode invalido");
   }
@@ -15,7 +23,10 @@ export function buildFocusedAllocation(outcomeCodes: string[], selectedOutcomeCo
     throw new Error("Se necesitan al menos 2 outcomes");
   }
 
-  const focusedAmount = OUTCOME_CAP;
+  if (focusedAmount < 0 || focusedAmount > OUTCOME_CAP) {
+    throw new Error("focusedAmount invalido");
+  }
+
   const remainder = MATCH_CREDIT - focusedAmount;
   const otherCodes = outcomeCodes.filter((code) => code !== selectedOutcomeCode);
   const baseOtherAmount = Math.floor(remainder / otherCodes.length);

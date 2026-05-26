@@ -6,6 +6,8 @@ type MatchCardProps = {
 };
 
 export function MatchCard({ match }: MatchCardProps) {
+  const stateLabel = match.isEditable ? "Entrar ahora" : match.userStateLabel;
+
   return (
     <Link className="card match-card" href={`/matches/${match.id}`}>
       <div className="match-top">
@@ -33,7 +35,7 @@ export function MatchCard({ match }: MatchCardProps) {
       </div>
 
       <div className="meta-row">
-        <span>{match.userStateLabel}</span>
+        <span>{stateLabel}</span>
         <span className="meta-row-end">
           <span>{match.marketTypeLabel}</span>
           <span aria-hidden="true">↗</span>

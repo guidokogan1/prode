@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildFocusedAllocation,
+  buildWeightedAllocation,
   formatNetAmount,
   isMarketEditable,
   settleTicket,
@@ -132,6 +133,14 @@ describe("game rules", () => {
     expect(buildFocusedAllocation(["A", "B"], "B")).toEqual([
       { outcomeCode: "A", amount: 3000 },
       { outcomeCode: "B", amount: 7000 },
+    ]);
+  });
+
+  it("builds weighted allocations for softer presets", () => {
+    expect(buildWeightedAllocation(["1", "X", "2"], "X", 5500)).toEqual([
+      { outcomeCode: "1", amount: 2250 },
+      { outcomeCode: "X", amount: 5500 },
+      { outcomeCode: "2", amount: 2250 },
     ]);
   });
 });

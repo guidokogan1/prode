@@ -15,18 +15,14 @@ export default async function HomePage() {
     <main className="stack page-narrow">
       <section className="home-head home-head-game">
         <div>
-          <p className="eyebrow">Ronda de hoy</p>
-          <h1 className="home-title">Poné tu jugada.</h1>
-          <p className="home-subtitle">10.000 créditos. Cierra al arranque.</p>
+          <p className="eyebrow">Abrí y jugá</p>
+          <h1 className="home-title">¿Qué sale?</h1>
+          <p className="home-subtitle">Deslizá o tocá. Después elegís cuánto.</p>
         </div>
-        <div className="home-status-row">
+        <div className="home-status-row home-status-row-minimal">
           <span className="home-status-pill">
             <strong>{summary.pendingPicks}</strong>
-            <span>sin jugar</span>
-          </span>
-          <span className="home-status-pill">
-            <strong>{summary.liveMatches}</strong>
-            <span>en juego</span>
+            <span>pendientes</span>
           </span>
           <span className="home-status-pill">
             <strong>{summary.yourNet}</strong>
@@ -39,7 +35,7 @@ export default async function HomePage() {
 
       <section className="stack">
         <div className="section-title section-title-compact">
-          <h2>Después</h2>
+          <h2>Seguí después</h2>
           <Link className="subtle" href="/matches">
             Ver todos
           </Link>
@@ -53,7 +49,7 @@ export default async function HomePage() {
 
       <section className="stack">
         <div className="section-title section-title-compact">
-          <h2>Tabla</h2>
+          <h2>Top 2</h2>
           <Link className="subtle" href="/ranking">
             Abrir
           </Link>
