@@ -870,6 +870,21 @@ input:focus-visible,
     padding: 36px 36px 132px;
   }
 
+  .home-head-game {
+    gap: 12px;
+  }
+
+  .home-title {
+    max-width: none;
+    font-size: clamp(2.6rem, 5vw, 4.4rem);
+  }
+
+  .home-subtitle {
+    max-width: 32ch;
+    font-size: 1rem;
+    line-height: 1.24;
+  }
+
   .app-shell > main.page-narrow {
     width: min(100%, var(--content-width));
   }
@@ -1618,11 +1633,11 @@ body {
   color: #4f5b50;
   font-size: 0.92rem;
   line-height: 1.25;
-  max-width: 18ch;
+  max-width: 24ch;
 }
 
 .home-title {
-  max-width: 6.5ch;
+  max-width: 8.5ch;
 }
 
 .primary-match-card-game {
