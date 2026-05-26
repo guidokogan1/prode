@@ -52,6 +52,8 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
           <span className="quick-play-progress">{progress}</span>
         </div>
 
+        <div className="quick-play-deck-shadow" aria-hidden="true" />
+
         <div className="quick-play-stage">
           <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
             {match.statusLabel}
@@ -79,7 +81,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
               type="button"
               onClick={() => handlePick(item.label)}
             >
-              <span className="quick-pick-label">{item.label}</span>
+              <span className="quick-pick-side">
+                <span className="quick-pick-mark" aria-hidden="true" />
+                <span className="quick-pick-label">{item.label}</span>
+              </span>
               <span className="quick-pick-helper">Ir con esta</span>
             </button>
           ))}

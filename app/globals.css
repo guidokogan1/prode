@@ -1701,6 +1701,7 @@ body {
   display: grid;
   gap: 18px;
   padding: 20px 18px;
+  position: relative;
   background:
     radial-gradient(circle at top right, rgba(255, 206, 110, 0.18), transparent 34%),
     linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(247, 242, 233, 0.98));
@@ -1711,6 +1712,27 @@ body {
 .quick-play-card::before {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 52%);
   opacity: 1;
+}
+
+.quick-play-card::after {
+  content: "";
+  position: absolute;
+  inset: 14px 10px -12px 10px;
+  border-radius: 26px;
+  background: rgba(255, 248, 236, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  z-index: -2;
+  transform: scale(0.97);
+}
+
+.quick-play-deck-shadow {
+  position: absolute;
+  inset: 26px 18px -18px;
+  border-radius: 28px;
+  background: rgba(21, 52, 36, 0.08);
+  z-index: -3;
+  transform: scale(0.94);
+  pointer-events: none;
 }
 
 .quick-play-topline {
@@ -1797,6 +1819,20 @@ body {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.06),
     0 10px 24px rgba(16, 39, 27, 0.14);
+}
+
+.quick-pick-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quick-pick-mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #f3ca68;
+  box-shadow: 0 0 0 5px rgba(243, 202, 104, 0.12);
 }
 
 .quick-pick-label {
