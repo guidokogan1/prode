@@ -1899,6 +1899,12 @@ body {
     linear-gradient(180deg, #173625 0%, #10271b 100%);
 }
 
+.allocation-card-locked {
+  background:
+    radial-gradient(circle at top right, rgba(243, 202, 104, 0.18), transparent 28%),
+    linear-gradient(180deg, #143221 0%, #0d2217 100%);
+}
+
 .allocation-label {
   font-size: 0.98rem;
 }
@@ -1949,6 +1955,27 @@ body {
 .reveal-board {
   display: grid;
   gap: 10px;
+}
+
+.reveal-banner {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at top right, rgba(243, 202, 104, 0.16), transparent 34%),
+    rgba(255, 252, 247, 0.98);
+  border: 1px solid rgba(243, 202, 104, 0.18);
+}
+
+.reveal-banner strong,
+.reveal-banner span {
+  margin: 0;
+}
+
+.reveal-banner span {
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .reveal-card {

@@ -15,6 +15,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
     notFound();
   }
 
+  const isRevealed = match.revealedTickets.length > 0;
+
   return (
     <main className="stack page-narrow">
       <section className="card detail-hero detail-hero-simple detail-hero-game">
@@ -41,7 +43,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
         <div className="meta-row">
           <span>{match.kickoffLabel}</span>
-          <span>{match.userStateLabel}</span>
+          <span>{isRevealed ? "Grupo revelado" : match.userStateLabel}</span>
         </div>
       </section>
 
@@ -55,7 +57,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
           </div>
         </div>
         {match.revealedTickets.length ? (
-          <RevealBoard tickets={match.revealedTickets} />
+          <>
+            <div className="reveal-banner">
+              <strong>Se abrió la ronda</strong>
+              <span>Ahora ves lo tuyo y lo de todos.</span>
+            </div>
+            <RevealBoard tickets={match.revealedTickets} />
+          </>
         ) : (
           <div className="list simple-consensus">
             {match.consensus.map((item) => (

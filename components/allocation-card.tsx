@@ -157,7 +157,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
   }
 
   return (
-    <section className="card allocation-card card-grid">
+    <section className={`card allocation-card card-grid${match.isEditable ? "" : " allocation-card-locked"}`}>
       <div className="section-title section-title-compact">
         <div>
           <p className="eyebrow">{match.isEditable ? "Tu jugada" : "Así entraste"}</p>
