@@ -54,10 +54,10 @@ export function SessionPanel() {
 
   return (
     <section className="card card-grid">
-      <div className="section-title">
+      <div className="section-title section-title-compact">
         <div>
           <p className="eyebrow">Tu acceso</p>
-          <h2>{sessionName ? sessionName : "Todavia no entraste"}</h2>
+          <h2>{sessionName ? sessionName : "Sin entrar"}</h2>
         </div>
         <span className="pill">
           {sessionName
@@ -68,12 +68,12 @@ export function SessionPanel() {
         </span>
       </div>
 
-      <p className="body-copy">
-        {sessionMode === "remote"
-          ? "Tu sesion ya esta respaldada por backend y puede pasar a datos reales sin cambiar la experiencia."
-          : sessionMode === "demo"
-            ? "Estas viendo el producto con un perfil dummy consistente, ideal para revisar estados, pantallas y distintos recorridos."
-          : "Mientras no haya backend real, el juego puede seguir funcionando en este dispositivo sin perder el ritmo."}
+      <p className="subtle">
+        {sessionMode === "demo"
+          ? "Estás viendo un perfil demo."
+          : sessionMode === "remote"
+            ? "Tu acceso ya está guardado."
+            : "Entrás con nombre y PIN corto."}
       </p>
 
       <div className="action-row">

@@ -3,7 +3,7 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
-import { MATCH_CREDIT, formatNetAmount, sumAllocations, validateAllocations } from "@/lib/game";
+import { MATCH_CREDIT, sumAllocations, validateAllocations } from "@/lib/game";
 import { ALLOCATION_EVENT, getStoredAllocation, getStoredSession, saveStoredAllocation } from "@/lib/local-store";
 
 type AllocationCardProps = {
@@ -66,8 +66,6 @@ export function AllocationCard({ match }: AllocationCardProps) {
       amount: item.amount,
     })),
   );
-  const leadingOutcome = [...allocations].sort((a, b) => b.amount - a.amount)[0];
-  const previewNet = Math.round((leadingOutcome.amount / MATCH_CREDIT) * 5600 - 1400);
 
   function updateAmount(index: number, rawValue: string) {
     const nextAmount = Number(rawValue);
@@ -80,6 +78,19 @@ export function AllocationCard({ match }: AllocationCardProps) {
     );
     setSaveState("idle");
     setSaveMessage(null);
+  }
+
+  function nudgeAmount(index: number, delta: number) {
+    const current = allocations[index];
+    if (!current) {
+      return;
+    }
+
+    updateAmount(index, String(current.amount + delta));
+  }
+
+  function maxAmount(index: number) {
+    updateAmount(index, "7000");
   }
 
   async function saveAllocation() {
@@ -147,12 +158,12 @@ export function AllocationCard({ match }: AllocationCardProps) {
 
   return (
     <section className="card allocation-card card-grid">
-      <div className="section-title">
+      <div className="section-title section-title-compact">
         <div>
           <p className="eyebrow">Tu jugada</p>
-          <h2>Reparto de 10.000 creditos</h2>
+          <h2>Repartí 10.000 créditos</h2>
         </div>
-        <span className="pill">{match.userStateLabel}</span>
+        <span className="match-state-chip">{match.userStateLabel}</span>
       </div>
 
       <div className="allocation-grid">
@@ -160,7 +171,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
           <div className="allocation-row" key={item.id}>
             <div className="allocation-label">
               <span>{item.label}</span>
-              <span>{item.amount.toLocaleString("es-AR")}</span>
+              <strong>{item.amount.toLocaleString("es-AR")}</strong>
             </div>
             <div className="bar-track">
               <div
@@ -169,6 +180,32 @@ export function AllocationCard({ match }: AllocationCardProps) {
               />
             </div>
             <div className="allocation-controls">
+              <div className="allocation-stepper">
+                <button
+                  className="mini-button"
+                  type="button"
+                  disabled={!match.isEditable}
+                  onClick={() => nudgeAmount(index, -500)}
+                >
+                  -500
+                </button>
+                <button
+                  className="mini-button mini-button-strong"
+                  type="button"
+                  disabled={!match.isEditable}
+                  onClick={() => maxAmount(index)}
+                >
+                  7k
+                </button>
+                <button
+                  className="mini-button"
+                  type="button"
+                  disabled={!match.isEditable}
+                  onClick={() => nudgeAmount(index, 500)}
+                >
+                  +500
+                </button>
+              </div>
               <input
                 className="allocation-input"
                 type="range"
@@ -180,44 +217,21 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 onChange={(event) => updateAmount(index, event.target.value)}
                 aria-label={item.label}
               />
-              <input
-                className="text-input allocation-number"
-                type="number"
-                inputMode="numeric"
-                min="0"
-                max="7000"
-                step="500"
-                value={item.amount}
-                disabled={!match.isEditable}
-                onChange={(event) => updateAmount(index, event.target.value)}
-              />
             </div>
           </div>
         ))}
       </div>
 
-      <div className="card allocation-summary">
-        <div className="section-title">
-          <div>
-            <strong>{sessionName ? `${sessionName}, esta seria tu jugada` : "Vista previa"}</strong>
-            <p className="subtle">
-              Total cargado {total.toLocaleString("es-AR")} · faltan{" "}
-              {remaining.toLocaleString("es-AR")}
-            </p>
-          </div>
-          <strong className={previewNet >= 0 ? "money-positive" : "money-negative"}>
-            {formatNetAmount(previewNet)}
-          </strong>
-        </div>
-        <p className="subtle">
-          Simulacion visual del impacto. El settlement real depende de como se reparta el pozo del
-          grupo.
-        </p>
+      <div className="allocation-summary simple-summary">
+        <strong>{sessionName ? `${sessionName}, te faltan` : "Te faltan"}</strong>
+        <span className={remaining === 0 ? "money-positive" : ""}>
+          {remaining.toLocaleString("es-AR")} créditos
+        </span>
       </div>
 
       <div className="action-row">
         <button
-          className="primary-button"
+          className="primary-button primary-button-wide"
           disabled={!validation.ok || saveState === "saving" || !match.isEditable}
           onClick={saveAllocation}
         >
@@ -231,7 +245,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       <p className="hint">
         {match.isEditable
           ? validation.ok
-            ? "Cada outcome tiene tope de 7.000. Cuando arranca el partido, la jugada se bloquea y se revelan las de todos."
+            ? "Tope 7.000 por opción. Arranca el partido y se revela todo."
             : validation.reason
           : "Mercado cerrado: ya no podes editar esta jugada."}
       </p>

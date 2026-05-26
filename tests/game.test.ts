@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { formatNetAmount, isMarketEditable, settleTicket, validateAllocations } from "@/lib/game";
+import {
+  buildFocusedAllocation,
+  formatNetAmount,
+  isMarketEditable,
+  settleTicket,
+  validateAllocations,
+} from "@/lib/game";
 
 describe("game rules", () => {
   it("validates a correct 10k allocation", () => {
@@ -114,5 +120,18 @@ describe("game rules", () => {
         winningStake: -10,
       }),
     ).toThrow("negativo");
+  });
+
+  it("builds a focused allocation preset for a selected outcome", () => {
+    expect(buildFocusedAllocation(["1", "X", "2"], "1")).toEqual([
+      { outcomeCode: "1", amount: 7000 },
+      { outcomeCode: "X", amount: 1500 },
+      { outcomeCode: "2", amount: 1500 },
+    ]);
+
+    expect(buildFocusedAllocation(["A", "B"], "B")).toEqual([
+      { outcomeCode: "A", amount: 3000 },
+      { outcomeCode: "B", amount: 7000 },
+    ]);
   });
 });

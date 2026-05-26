@@ -68,8 +68,8 @@ export function LoginForm() {
     <form className="card card-grid" onSubmit={handleSubmit}>
       <div className="pill-row">
         <span className="pill">Sin mail</span>
-        <span className="pill">PIN de 4 digitos</span>
-        <span className="pill">Acceso inmediato</span>
+        <span className="pill">PIN 4 dígitos</span>
+        <span className="pill">Entrás y jugás</span>
       </div>
 
       <div className="field">
@@ -102,9 +102,7 @@ export function LoginForm() {
         />
       </div>
 
-      <p className="body-copy">
-        Si hay backend, entra por cookie remota. Si no, sigue en modo local sin romper el flujo.
-      </p>
+      <p className="subtle">Te alcanza con eso para entrar al juego.</p>
 
       {error ? <p className="error-copy">{error}</p> : null}
 

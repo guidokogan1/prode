@@ -5,18 +5,18 @@ export default async function MatchesPage() {
   const matchesByStage = await listMatchesByStage();
 
   return (
-    <main className="stack page-mid">
-      <section className="section-title">
+    <main className="stack page-narrow">
+      <section className="section-title section-title-compact">
         <div>
-          <p className="eyebrow">Fixture</p>
-          <h1 className="page-title">Partidos y jugadas</h1>
+          <p className="eyebrow">Jugar</p>
+          <h1 className="page-title">Elegí un partido</h1>
         </div>
-        <p className="subtle">Mundial 2026 · mobile first</p>
+        <p className="subtle">Se cierra al arranque</p>
       </section>
 
       {matchesByStage.map((group) => (
         <section className="stack" key={group.stage}>
-          <div className="section-title">
+          <div className="section-title section-title-compact">
             <div>
               <p className="eyebrow">{group.label}</p>
               <h2>{group.stage}</h2>

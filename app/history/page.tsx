@@ -4,13 +4,13 @@ export default async function HistoryPage() {
   const history = await getHistory();
 
   return (
-    <main className="stack page-mid">
-      <section className="section-title">
+    <main className="stack page-narrow">
+      <section className="section-title section-title-compact">
         <div>
-          <p className="eyebrow">Historial</p>
-          <h1 className="page-title">Tus ultimas jugadas</h1>
+          <p className="eyebrow">Rachas</p>
+          <h1 className="page-title">Tus últimas rondas</h1>
         </div>
-        <p className="subtle">Resumen claro, partido por partido</p>
+        <p className="subtle">{history.length} partidos</p>
       </section>
 
       <div className="list">

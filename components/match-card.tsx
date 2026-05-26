@@ -9,12 +9,9 @@ export function MatchCard({ match }: MatchCardProps) {
   return (
     <Link className="card match-card" href={`/matches/${match.id}`}>
       <div className="match-top">
-        <div className="pill-row">
-          <span className={`pill ${match.status === "live" ? "pill-live" : ""}`}>
-            {match.statusLabel}
-          </span>
-          <span className="pill">{match.marketTypeLabel}</span>
-        </div>
+        <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
+          {match.statusLabel}
+        </span>
         <span className="subtle">{match.kickoffLabel}</span>
       </div>
 
@@ -36,9 +33,9 @@ export function MatchCard({ match }: MatchCardProps) {
       </div>
 
       <div className="meta-row">
-        <span>{match.stage}</span>
+        <span>{match.userStateLabel}</span>
         <span className="meta-row-end">
-          <span>{match.userStateLabel}</span>
+          <span>{match.marketTypeLabel}</span>
           <span aria-hidden="true">↗</span>
         </span>
       </div>

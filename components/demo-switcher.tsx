@@ -45,17 +45,15 @@ export function DemoSwitcher({ activePersona, personas }: DemoSwitcherProps) {
 
   return (
     <section className="card card-grid">
-      <div className="section-title">
+      <div className="section-title section-title-compact">
         <div>
           <p className="eyebrow">Modo demo</p>
-          <h2>Probar con distintos perfiles</h2>
+          <h2>Cambiar perfil</h2>
         </div>
         <span className="pill">{isPending ? "Cambiando..." : currentPersona.badge}</span>
       </div>
 
-      <p className="body-copy">
-        Cambia de persona para revisar leaderboards, jugadas, reveals y tarjetas con estados muy distintos sin depender del backend real.
-      </p>
+      <p className="subtle">Sirve para revisar estados distintos sin tocar datos reales.</p>
 
       <div className="demo-grid">
         {personas.map((persona) => (

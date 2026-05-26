@@ -6,6 +6,39 @@ export type AllocationInput = {
   amount: number;
 };
 
+export function buildFocusedAllocation(outcomeCodes: string[], selectedOutcomeCode: string) {
+  if (!outcomeCodes.includes(selectedOutcomeCode)) {
+    throw new Error("selectedOutcomeCode invalido");
+  }
+
+  if (outcomeCodes.length < 2) {
+    throw new Error("Se necesitan al menos 2 outcomes");
+  }
+
+  const focusedAmount = OUTCOME_CAP;
+  const remainder = MATCH_CREDIT - focusedAmount;
+  const otherCodes = outcomeCodes.filter((code) => code !== selectedOutcomeCode);
+  const baseOtherAmount = Math.floor(remainder / otherCodes.length);
+  let carry = remainder - baseOtherAmount * otherCodes.length;
+
+  return outcomeCodes.map((outcomeCode) => {
+    if (outcomeCode === selectedOutcomeCode) {
+      return {
+        outcomeCode,
+        amount: focusedAmount,
+      };
+    }
+
+    const nextAmount = baseOtherAmount + (carry > 0 ? 1 : 0);
+    carry = Math.max(0, carry - 1);
+
+    return {
+      outcomeCode,
+      amount: nextAmount,
+    };
+  });
+}
+
 export type SettlementBreakdown = {
   totalPool: number;
   winningPool: number;

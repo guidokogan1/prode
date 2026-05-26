@@ -35,21 +35,6 @@ function RankingIcon() {
   );
 }
 
-function HistoryIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 6.25v6l4 2.25" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path
-        d="M19.25 12a7.25 7.25 0 1 1-2.12-5.13"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <path d="M19.25 4.75v4.5h-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 function ProfileIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -66,10 +51,9 @@ function ProfileIcon() {
 
 const navItems = [
   { href: "/", label: "Inicio", icon: HomeIcon },
-  { href: "/matches", label: "Partidos", icon: MatchesIcon },
-  { href: "/ranking", label: "Ranking", icon: RankingIcon },
-  { href: "/history", label: "Historial", icon: HistoryIcon },
-  { href: "/profile", label: "Perfil", icon: ProfileIcon },
+  { href: "/matches", label: "Jugar", icon: MatchesIcon },
+  { href: "/ranking", label: "Tabla", icon: RankingIcon },
+  { href: "/profile", label: "Yo", icon: ProfileIcon },
 ];
 
 export function BottomNav() {
@@ -78,8 +62,7 @@ export function BottomNav() {
   return (
     <nav className="bottom-nav" aria-label="Navegacion principal">
       {navItems.map((item) => {
-        const isActive =
-          item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
+        const isActive = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
         const Icon = item.icon;
 
         return (
