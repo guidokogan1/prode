@@ -293,7 +293,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
               disabled={!validation.ok || saveState === "saving" || !match.isEditable}
               onClick={saveAllocation}
             >
-              {saveState === "saving" ? "Guardando..." : "Guardar y seguir"}
+              {saveState === "saving" ? "Guardando..." : "Guardar ronda"}
             </button>
             {saveState === "saved" || saveState === "error" ? (
               <span className={saveState === "error" ? "error-copy" : "subtle"}>{saveMessage}</span>
