@@ -190,7 +190,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         ) : (
           <>
             <div style={{ position: "relative", flex: 1 }}>
-              {currentIndex < deck.length - 1 ? (
+              {phase === "idle" && currentIndex < deck.length - 1 ? (
                 <>
                   <div
                     aria-hidden="true"
@@ -373,12 +373,14 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     style={{
                       minHeight: 470,
                       padding: 22,
-                      background: `linear-gradient(160deg, ${getOutcomeColor(chosenOutcome)}18 0%, #0E1D13 45%)`,
+                      background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
                       border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
                       boxShadow: `0 32px 80px rgba(0,0,0,0.65), 0 0 50px ${getOutcomeColor(chosenOutcome)}15`,
                       borderRadius: 24,
                       display: "flex",
                       flexDirection: "column",
+                      position: "relative",
+                      zIndex: 4,
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
@@ -451,6 +453,8 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       alignItems: "center",
                       textAlign: "center",
                       padding: 28,
+                      position: "relative",
+                      zIndex: 4,
                     }}
                   >
                     <div style={{ display: "grid", gap: 16, justifyItems: "center" }}>
