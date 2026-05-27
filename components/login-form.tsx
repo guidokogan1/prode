@@ -20,7 +20,7 @@ export function LoginForm() {
     }
 
     if (!/^\d{4}$/.test(pin)) {
-      setError("El PIN tiene que ser de 4 digitos.");
+      setError("El PIN tiene que ser de 4 dígitos.");
       return;
     }
 
@@ -47,7 +47,7 @@ export function LoginForm() {
       }
 
       if (response.status !== 503) {
-        setError("Nombre o PIN invalidos.");
+        setError("Nombre o PIN inválidos.");
         return;
       }
     } catch {
@@ -63,8 +63,8 @@ export function LoginForm() {
   }
 
   return (
-    <form className="card card-grid" onSubmit={handleSubmit}>
-      <div className="pill-row">
+    <form className="surface-card" style={{ padding: 20, display: "grid", gap: 16 }} onSubmit={handleSubmit}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <span className="pill">Sin mail</span>
         <span className="pill">PIN 4 dígitos</span>
         <span className="pill">Entrás y jugás</span>
@@ -100,11 +100,11 @@ export function LoginForm() {
         />
       </div>
 
-      <p className="subtle">Te alcanza con eso para entrar al juego.</p>
+      <p className="muted-copy">Entrás rápido y la app se acuerda de vos en este dispositivo.</p>
 
       {error ? <p className="error-copy">{error}</p> : null}
 
-      <button className="primary-button" type="submit">
+      <button className="button-primary" type="submit">
         Entrar al juego
       </button>
     </form>

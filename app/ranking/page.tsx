@@ -1,26 +1,27 @@
+import { LeaderboardPodium } from "@/components/leaderboard-podium";
 import { RankingList } from "@/components/ranking-list";
 import { getRanking } from "@/lib/repositories/ranking";
 
 export default async function RankingPage() {
   const ranking = await getRanking();
-  const leader = ranking[0];
 
   return (
-    <main className="stack page-narrow">
-      <section className="section-title section-title-compact">
-        <div>
-          <p className="eyebrow">Tabla</p>
-          <h1 className="page-title">Quién va arriba</h1>
+    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
+      <section style={{ display: "grid", gap: 6, paddingTop: 8 }}>
+        <p className="eyebrow">Tabla</p>
+        <h1 className="display-title">Quién va arriba</h1>
+        <p className="muted-copy">{ranking.length} jugadores peleando la punta del grupo.</p>
+      </section>
+
+      <LeaderboardPodium items={ranking} />
+
+      <section style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+          <h2 className="section-title">Leaderboard</h2>
+          <span className="pill">general</span>
         </div>
-        <span className="subtle">{ranking.length} jugadores</span>
+        <RankingList items={ranking} />
       </section>
-
-      <section className="card compact-summary compact-summary-game">
-        <strong>{leader?.name ?? "Sin datos"}</strong>
-        <span className="subtle">viene picando con {leader?.netLabel ?? "0"}</span>
-      </section>
-
-      <RankingList items={ranking} />
     </main>
   );
 }

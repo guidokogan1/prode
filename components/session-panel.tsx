@@ -14,7 +14,6 @@ export function SessionPanel() {
         const response = await fetch("/api/session", { cache: "no-store" });
         const payload = (await response.json()) as {
           session: { displayName: string; mode: "local" | "remote" | "demo" } | null;
-          demoProfile?: { displayName: string; mode: "demo" };
         };
 
         if (payload.session) {
@@ -27,14 +26,8 @@ export function SessionPanel() {
       }
 
       const localSession = getStoredSession();
-      if (localSession) {
-        setSessionName(localSession.displayName);
-        setSessionMode("local");
-        return;
-      }
-
-      setSessionName(null);
-      setSessionMode("demo");
+      setSessionName(localSession?.displayName ?? null);
+      setSessionMode(localSession ? "local" : "demo");
     };
 
     void sync();
@@ -56,40 +49,35 @@ export function SessionPanel() {
 
     clearStoredSession();
     setSessionName(null);
-    setSessionMode(null);
+    setSessionMode("demo");
   }
 
+  const modeCopy =
+    sessionMode === "remote"
+      ? "Ya estás jugando con sesión remota guardada."
+      : sessionMode === "local"
+        ? "Estás jugando en este dispositivo."
+        : "Estás viendo el juego en modo demo.";
+
   return (
-    <section className="card card-grid">
-      <div className="section-title section-title-compact">
-        <div>
+    <section className="surface-card-soft" style={{ padding: 18, display: "grid", gap: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+        <div style={{ display: "grid", gap: 4 }}>
           <p className="eyebrow">Tu acceso</p>
-          <h2>{sessionName ? sessionName : "Sin entrar"}</h2>
+          <h2 className="section-title">{sessionName ?? "Sin entrar"}</h2>
         </div>
-        <span className="pill">
-          {sessionName
-            ? `Modo ${
-                sessionMode === "remote" ? "remoto" : sessionMode === "demo" ? "demo" : "local"
-              }`
-            : "Falta entrar"}
-        </span>
+        <span className="pill">{sessionMode ? `modo ${sessionMode}` : "sin sesión"}</span>
       </div>
 
-      <p className="subtle">
-        {sessionMode === "demo"
-          ? "Estás viendo la app en modo demo."
-          : sessionMode === "remote"
-            ? "Tu acceso ya está guardado."
-            : "Entrás con nombre y PIN corto."}
-      </p>
+      <p className="muted-copy">{modeCopy}</p>
 
-      <div className="action-row">
-        <Link className="primary-button button-link" href="/login">
-          {sessionName ? "Editar acceso" : "Crear acceso"}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <Link className="button-primary" href="/login">
+          {sessionName ? "Editar acceso" : "Entrar"}
         </Link>
         {sessionName ? (
-          <button className="secondary-button" onClick={handleLogout}>
-            Cerrar sesion
+          <button className="button-secondary" onClick={() => void handleLogout()}>
+            Cerrar sesión
           </button>
         ) : null}
       </div>

@@ -1,5 +1,6 @@
-import { DemoSwitcher } from "@/components/demo-switcher";
 import Link from "next/link";
+import { DemoSwitcher } from "@/components/demo-switcher";
+import { ProfileHero } from "@/components/profile-hero";
 import { SessionPanel } from "@/components/session-panel";
 import { getActiveDemoPersonaSlug } from "@/lib/demo-state";
 import { getDemoPersonas } from "@/lib/mock-data";
@@ -9,57 +10,33 @@ export default async function ProfilePage() {
   const [profile, activePersona] = await Promise.all([getProfile(), getActiveDemoPersonaSlug()]);
 
   return (
-    <main className="stack page-narrow">
-      <section className="card profile-hero">
-        <p className="eyebrow">Yo</p>
-        <h1 className="page-title">{profile.name}</h1>
-        <div className="quick-stats">
-          <div className="quick-stat">
-            <strong>{profile.netLabel}</strong>
-            <span>tabla</span>
-          </div>
-          <div className="quick-stat">
-            <strong>{profile.positiveTickets}</strong>
-            <span>positivas</span>
-          </div>
-          <div className="quick-stat">
-            <strong>{profile.bestHit}</strong>
-            <span>mejor</span>
-          </div>
-        </div>
-      </section>
+    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
+      <ProfileHero profile={profile} />
 
       <SessionPanel />
 
       <DemoSwitcher activePersona={activePersona} personas={getDemoPersonas()} />
 
-      <section className="card compact-summary">
-        <strong>Campeón: {profile.championPick}</strong>
-        <span className="subtle">Tu bomba larga del torneo.</span>
-      </section>
-
-      <section className="card card-grid">
-        <div className="section-title section-title-compact">
-          <div>
-            <p className="eyebrow">Cuenta</p>
-            <h2>Entrás fácil</h2>
-          </div>
+      <section className="surface-card-soft" style={{ padding: 18, display: "grid", gap: 14 }}>
+        <div>
+          <p className="eyebrow">Tu cuenta</p>
+          <h2 className="section-title">Entrás fácil</h2>
         </div>
-        <div className="stat-grid">
-          <div className="stat-cell">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+          <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
             <strong>PIN corto</strong>
-            <span>Sin mail ni password</span>
+            <p className="muted-copy">Sin mail, sin vueltas, directo al juego.</p>
           </div>
-          <div className="stat-cell">
+          <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
             <strong>Historial</strong>
-            <span>Todo queda guardado</span>
+            <p className="muted-copy">Tus rondas quedan guardadas y se leen rápido.</p>
           </div>
         </div>
-        <div className="action-row">
-          <Link className="secondary-button" href="/history">
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link className="button-primary" href="/history">
             Ver jugadas
           </Link>
-          <Link className="pill" href="/login">
+          <Link className="button-secondary" href="/login">
             Cambiar acceso
           </Link>
         </div>

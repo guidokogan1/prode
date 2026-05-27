@@ -6,30 +6,30 @@ export default async function MatchesPage() {
   const [matchesByStage, summary] = await Promise.all([listMatchesByStage(), getHomeSummary()]);
 
   return (
-    <main className="stack page-narrow">
-      <section className="section-title section-title-compact match-list-head">
-        <div>
-          <p className="eyebrow">Modo maratón</p>
-          <h1 className="page-title">Cargá grupos</h1>
-        </div>
-        <div className="home-status-row home-status-row-minimal">
-          <span className="home-status-pill">
-            <strong>{summary.pendingPicks}</strong>
-            <span>por jugar</span>
-          </span>
+    <main className="page-shell page-scroll" style={{ display: "grid", gap: 22 }}>
+      <section style={{ display: "grid", gap: 8, paddingTop: 8 }}>
+        <p className="eyebrow">Modo maratón</p>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end" }}>
+          <div style={{ display: "grid", gap: 4 }}>
+            <h1 className="display-title">Cargá grupos</h1>
+            <p className="muted-copy">Entrá y resolvé varios partidos de corrido sin salir del ritmo.</p>
+          </div>
+          <span className="status-pill status-pill-gold">{summary.pendingPicks} por jugar</span>
         </div>
       </section>
 
       {matchesByStage.map((group) => (
-        <section className="stack" key={group.stage}>
-          <div className="section-title section-title-compact">
-            <div>
+        <section key={group.stage} style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "grid", gap: 4 }}>
               <p className="eyebrow">{group.label}</p>
-              <h2>{group.stage}</h2>
+              <h2 className="section-title">{group.stage}</h2>
             </div>
-            <span className="subtle">{group.matches.length} partidos</span>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
+            <span className="micro-copy">{group.matches.length} partidos</span>
           </div>
-          <div className="list">
+
+          <div style={{ display: "grid", gap: 10 }}>
             {group.matches.map((match) => (
               <MatchCard key={match.id} match={match} />
             ))}

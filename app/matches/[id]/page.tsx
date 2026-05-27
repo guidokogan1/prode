@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { AllocationCard } from "@/components/allocation-card";
-import { RevealBoard } from "@/components/reveal-board";
+import { LiveSocialBoard } from "@/components/live-social-board";
 import { getMatchById } from "@/lib/repositories/matches";
+import { deriveResolvedOutcome, getLeadingOutcome, getOutcomeColor, getOutcomeFlag, getOutcomeHint } from "@/lib/match-ui";
 
 type MatchPageProps = {
   params: Promise<{ id: string }>;
@@ -15,111 +16,152 @@ export default async function MatchPage({ params }: MatchPageProps) {
     notFound();
   }
 
-  const isRevealed = match.revealedTickets.length > 0;
+  const isReveal = match.revealedTickets.length > 0;
+  const resolvedOutcome = deriveResolvedOutcome(match);
   const leadingConsensus = [...match.consensus].sort((left, right) => right.percentage - left.percentage)[0] ?? null;
+  const leadingAllocation = getLeadingOutcome(match);
+  const heroBackground =
+    match.statusVariant === "live"
+      ? "radial-gradient(ellipse 120% 50% at 50% 0%, #2A1010 0%, #091409 50%)"
+      : isReveal
+        ? "radial-gradient(ellipse 140% 60% at 50% 0%, rgba(61,155,95,.18) 0%, #091409 55%)"
+        : "linear-gradient(180deg, rgba(12,24,15,.9) 0%, rgba(9,20,9,1) 100%)";
 
   return (
-    <main className="stack page-narrow">
-      <section className={`card detail-hero detail-hero-simple detail-hero-game${isRevealed ? " detail-hero-revealed" : ""}`}>
-        <div className="match-top">
-          <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
-            {match.statusLabel}
-          </span>
-          <span className="game-clock">{isRevealed ? match.kickoffLabel : match.stage}</span>
-        </div>
-
-        <div className="headline-score">
-          <div className="team-side">
-            <div className="flag">{match.home.flag}</div>
-            <h1>{match.home.name}</h1>
-          </div>
-          <div className="big-score">
-            {match.home.score} - {match.away.score}
-          </div>
-          <div className="team-side">
-            <div className="flag">{match.away.flag}</div>
-            <h1>{match.away.name}</h1>
-          </div>
-        </div>
-
-        <div className="meta-row">
-          <span>{isRevealed ? "Se abrió la ronda" : match.kickoffLabel}</span>
-          <span>{isRevealed ? "Ahora ves cómo entró cada uno" : match.userStateLabel}</span>
-        </div>
-
-        {!isRevealed ? (
-          <div className="pre-reveal-strip">
-            <div className="pre-reveal-pill">
-              <strong>Cierra</strong>
-              <span>al arranque</span>
+    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, background: heroBackground }}>
+      <section
+        className={match.statusVariant === "live" || isReveal ? "surface-card-strong" : "surface-card"}
+        style={{
+          padding: 22,
+          background:
+            match.statusVariant === "live"
+              ? "linear-gradient(160deg, #2A1818 0%, #1A1010 100%)"
+              : isReveal
+                ? "linear-gradient(160deg, #173021 0%, #0E1D13 100%)"
+                : undefined,
+          borderColor:
+            match.statusVariant === "live"
+              ? "rgba(255,59,48,0.2)"
+              : resolvedOutcome
+                ? `${getOutcomeColor(resolvedOutcome)}30`
+                : undefined,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 18 }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              {match.statusVariant === "live" ? <span className="status-pill status-pill-live">LIVE · {match.statusLabel}</span> : <span className="pill">{match.statusLabel}</span>}
+              <span className="pill">{match.stage}</span>
             </div>
-            <div className="pre-reveal-pill">
-              <strong>{match.marketTypeLabel}</strong>
-              <span>modo de ronda</span>
+            <span className="muted-copy">{match.kickoffLabel} · {match.venue}</span>
+          </div>
+          {!isReveal && leadingConsensus ? (
+            <span className="status-pill status-pill-gold">
+              {leadingConsensus.shortLabel} {leadingConsensus.percentage}%
+            </span>
+          ) : null}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 16, alignItems: "center" }}>
+          <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
+            <span style={{ fontSize: "3.7rem", lineHeight: 1 }}>{match.home.flag}</span>
+            <span className="team-display" style={{ textAlign: "center" }}>{match.home.name}</span>
+          </div>
+          <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
+            <strong className="score-display">{match.home.score} - {match.away.score}</strong>
+            <span className="micro-copy">{isReveal ? "Se abrió la ronda" : match.marketTypeLabel}</span>
+          </div>
+          <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
+            <span style={{ fontSize: "3.7rem", lineHeight: 1 }}>{match.away.flag}</span>
+            <span className="team-display" style={{ textAlign: "center" }}>{match.away.name}</span>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
+          <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+            <div style={{ display: "grid", gap: 3 }}>
+              <span className="micro-copy">{isReveal ? "Tu lado fuerte" : "Tu jugada"}</span>
+              <strong>{leadingAllocation?.label ?? "Todavía no cargaste"}</strong>
             </div>
-            {leadingConsensus ? (
-              <div className="pre-reveal-pill pre-reveal-pill-accent">
-                <strong>{leadingConsensus.label}</strong>
-                <span>{leadingConsensus.percentage}% del grupo</span>
+            {leadingAllocation ? (
+              <div style={{ textAlign: "right" }}>
+                <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", color: getOutcomeColor(leadingAllocation.code) }}>
+                  {leadingAllocation.amount}
+                </strong>
+                <div className="micro-copy">{getOutcomeHint(leadingAllocation.code, match.marketType)}</div>
               </div>
             ) : null}
           </div>
-        ) : null}
+
+          {!isReveal ? (
+            <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                {match.consensus.map((item) => (
+                  <div key={item.code} style={{ display: "grid", gap: 4, minWidth: 82 }}>
+                    <span className="micro-copy">{item.label}</span>
+                    <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-display)", fontSize: "1.2rem" }}>{item.percentage}%</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
       </section>
 
       <AllocationCard match={match} />
 
-      <section className={`card card-grid${isRevealed ? "" : " card-pre-reveal"}`}>
-        <div className="section-title section-title-compact">
-          <div>
-            <p className="eyebrow">{match.revealedTickets.length ? "Reveal" : "Consenso"}</p>
-            <h2>{match.revealedTickets.length ? "Así entró el grupo" : "Dónde cae la ronda"}</h2>
+      {isReveal ? (
+        <LiveSocialBoard match={match} />
+      ) : (
+        <section className="surface-card-soft" style={{ padding: 18 }}>
+          <div style={{ display: "grid", gap: 14 }}>
+            <div>
+              <p className="eyebrow">Cómo llegan</p>
+              <h2 className="section-title">Antes del reveal</h2>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+              <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
+                <span className="micro-copy">{match.home.flag} {match.home.name}</span>
+                <strong style={{ display: "block", marginTop: 6 }}>{match.form.home}</strong>
+                <span className="micro-copy">Goles recientes: {match.form.homeGoals}</span>
+              </div>
+              <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
+                <span className="micro-copy">{match.away.flag} {match.away.name}</span>
+                <strong style={{ display: "block", marginTop: 6 }}>{match.form.away}</strong>
+                <span className="micro-copy">Goles recientes: {match.form.awayGoals}</span>
+              </div>
+            </div>
+            <span className="muted-copy">Hasta que arranque, ves el termómetro del grupo pero no cómo entró cada uno.</span>
           </div>
-        </div>
-        {match.revealedTickets.length ? (
-          <>
-            <div className="reveal-banner">
-              <strong>Ya está todo sobre la mesa</strong>
-              <span>Tu jugada y la del grupo ya se ven juntas.</span>
-            </div>
-            <RevealBoard tickets={match.revealedTickets} />
-          </>
-        ) : (
-            <div className="list simple-consensus">
-              {match.consensus.map((item) => (
-                <div className="simple-consensus-row" key={item.label}>
-                  <div className="simple-consensus-copy">
-                    <span>{item.label}</span>
-                    <small>{item.percentage >= 40 ? "muy cargado" : item.percentage >= 25 ? "parejo" : "tapado"}</small>
-                  </div>
-                  <strong>{item.percentage}%</strong>
-                </div>
-              ))}
-            </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section className="card compact-summary compact-summary-form">
-        <div className="section-title section-title-compact">
-          <div>
-            <p className="eyebrow">Forma</p>
-            <h2>Cómo llegan</h2>
+      {resolvedOutcome ? (
+        <section
+          className="surface-card-soft"
+          style={{
+            padding: 16,
+            borderRadius: 20,
+            background: `${getOutcomeColor(resolvedOutcome)}12`,
+            borderColor: `${getOutcomeColor(resolvedOutcome)}30`,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: "1.8rem" }}>{getOutcomeFlag(resolvedOutcome, match)}</span>
+            <div style={{ display: "grid", gap: 4 }}>
+              <span className="micro-copy">Outcome ganador</span>
+              <strong style={{ color: getOutcomeColor(resolvedOutcome) }}>
+                {match.consensus.find((item) => item.code === resolvedOutcome)?.label ?? "Resultado"}
+              </strong>
+            </div>
           </div>
-        </div>
-        <div className="form-duel">
-          <div className="form-team-card">
-            <span className="flag">{match.home.flag}</span>
-            <strong>{match.home.name}</strong>
-            <span>{match.form.home}</span>
-          </div>
-          <div className="form-divider">vs</div>
-          <div className="form-team-card">
-            <span className="flag">{match.away.flag}</span>
-            <strong>{match.away.name}</strong>
-            <span>{match.form.away}</span>
-          </div>
-        </div>
-      </section>
+          <span className="pill">Liquidado</span>
+        </section>
+      ) : null}
     </main>
   );
 }

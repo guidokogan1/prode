@@ -56,6 +56,26 @@ export function getLeadingOutcome(match: MatchViewModel) {
   return [...match.allocation].sort((left, right) => right.percentage - left.percentage)[0] ?? null;
 }
 
+export function deriveResolvedOutcome(match: MatchViewModel): MatchOutcomeCode | null {
+  if (match.status !== "finished") {
+    return null;
+  }
+
+  if (match.marketType === "qualifies") {
+    return match.home.score > match.away.score ? "home_qualifies" : "away_qualifies";
+  }
+
+  if (match.home.score > match.away.score) {
+    return "home";
+  }
+
+  if (match.away.score > match.home.score) {
+    return "away";
+  }
+
+  return "draw";
+}
+
 export function parseAmount(raw: string) {
   return Number(raw.replace(/\./g, "").replace(/,/g, ""));
 }

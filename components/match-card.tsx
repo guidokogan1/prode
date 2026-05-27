@@ -1,46 +1,87 @@
 import Link from "next/link";
 import type { MatchViewModel } from "@/lib/domain";
+import { getLeadingOutcome, getOutcomeColor } from "@/lib/match-ui";
 
 type MatchCardProps = {
   match: MatchViewModel;
 };
 
 export function MatchCard({ match }: MatchCardProps) {
-  const stateLabel = match.isEditable ? "Entrar ahora" : match.userStateLabel;
+  const leading = getLeadingOutcome(match);
+  const statusTone =
+    match.statusVariant === "live"
+      ? "rgba(255,59,48,0.07)"
+      : match.statusVariant === "settled"
+        ? "rgba(61,155,95,0.06)"
+        : "rgba(255,255,255,0.03)";
+  const statusBorder =
+    match.statusVariant === "live"
+      ? "rgba(255,59,48,0.2)"
+      : match.statusVariant === "settled"
+        ? "rgba(61,155,95,0.15)"
+        : "rgba(255,255,255,0.06)";
 
   return (
-    <Link className="card match-card" href={`/matches/${match.id}`}>
-      <div className="match-top">
-        <span className={`status-dot ${match.status === "live" ? "live" : ""}`}>
-          {match.statusLabel}
-        </span>
-        <span className="subtle">{match.kickoffLabel}</span>
+    <Link
+      href={`/matches/${match.id}`}
+      className="surface-card-soft"
+      style={{
+        padding: "14px 16px",
+        borderRadius: 18,
+        display: "flex",
+        gap: 12,
+        alignItems: "center",
+        background: statusTone,
+        borderColor: statusBorder,
+      }}
+    >
+      <div style={{ width: 18, display: "grid", placeItems: "center", flexShrink: 0 }}>
+        {match.statusVariant === "live" ? (
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: "#FF3B30", boxShadow: "0 0 12px rgba(255,59,48,.6)" }} />
+        ) : match.statusVariant === "locked" ? (
+          <span className="micro-copy">🔒</span>
+        ) : leading ? (
+          <span className="micro-copy" style={{ color: getOutcomeColor(leading.code) }}>✓</span>
+        ) : null}
       </div>
 
-      <div className="match-teams">
-        <div className="team-row">
-          <div className="team-name">
-            <span className="flag">{match.home.flag}</span>
-            <span>{match.home.name}</span>
-          </div>
-          <span className="score">{match.home.score}</span>
-        </div>
-        <div className="team-row">
-          <div className="team-name">
-            <span className="flag">{match.away.flag}</span>
-            <span>{match.away.name}</span>
-          </div>
-          <span className="score">{match.away.score}</span>
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+        <span style={{ fontSize: "1.4rem" }}>{match.home.flag}</span>
+        <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>{match.home.name.slice(0, 3).toUpperCase()}</strong>
+        {match.statusVariant === "live" || match.statusVariant === "settled" ? (
+          <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem", color: match.statusVariant === "live" ? "#FF3B30" : "#7A9A81" }}>
+            {match.home.score} - {match.away.score}
+          </strong>
+        ) : (
+          <span style={{ color: "rgba(255,255,255,0.14)" }}>·</span>
+        )}
+        <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>{match.away.name.slice(0, 3).toUpperCase()}</strong>
+        <span style={{ fontSize: "1.4rem" }}>{match.away.flag}</span>
       </div>
 
-      <div className="meta-row">
-        <span>{stateLabel}</span>
-        <span className="meta-row-end">
-          <span>{match.marketTypeLabel}</span>
-          <span aria-hidden="true">↗</span>
-        </span>
+      <div style={{ textAlign: "right", flexShrink: 0, display: "grid", gap: 4 }}>
+        <span className="micro-copy">{match.stage}</span>
+        <span style={{ color: "#7A9A81", fontSize: ".78rem", fontWeight: 700 }}>{match.kickoffLabel}</span>
       </div>
+
+      {leading ? (
+        <div
+          style={{
+            flexShrink: 0,
+            borderRadius: 999,
+            padding: "6px 9px",
+            background: `${getOutcomeColor(leading.code)}18`,
+            border: `1px solid ${getOutcomeColor(leading.code)}30`,
+            color: getOutcomeColor(leading.code),
+            fontSize: ".66rem",
+            fontWeight: 800,
+            letterSpacing: ".1em",
+            textTransform: "uppercase",
+          }}
+        >
+          {leading.shortLabel}
+        </div>
+      ) : null}
     </Link>
   );
 }

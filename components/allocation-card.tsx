@@ -4,7 +4,8 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
 import { buildWeightedAllocation, MATCH_CREDIT, sumAllocations, validateAllocations } from "@/lib/game";
-import { ALLOCATION_EVENT, getStoredAllocation, getStoredSession, saveStoredAllocation } from "@/lib/local-store";
+import { getOutcomeColor } from "@/lib/match-ui";
+import { ALLOCATION_EVENT, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 
 type AllocationCardProps = {
   match: MatchViewModel;
@@ -22,15 +23,15 @@ export function AllocationCard({ match }: AllocationCardProps) {
     () =>
       match.allocation.map((item, index) => ({
         id: `${match.id}-${index}`,
+        code: item.code,
         label: item.label,
-        amount: Number(item.amount.replace(".", "")),
+        amount: Number(item.amount.replace(/\./g, "")),
       })),
     [match],
   );
   const [allocations, setAllocations] = useState(initialAllocations);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const sessionName = session?.displayName ?? getStoredSession()?.displayName ?? null;
 
   useEffect(() => {
     const syncAllocation = () => {
@@ -39,17 +40,18 @@ export function AllocationCard({ match }: AllocationCardProps) {
         setAllocations(
           stored.map((item, index) => ({
             id: `${match.id}-${index}`,
+            code: match.allocation[index]?.code ?? match.allocation[0]?.code ?? "home",
             label: item.label,
             amount: item.amount,
           })),
         );
-      } else {
-        setAllocations(initialAllocations);
+        return;
       }
+
+      setAllocations(initialAllocations);
     };
 
     syncAllocation();
-
     window.addEventListener(ALLOCATION_EVENT, syncAllocation);
     window.addEventListener("storage", syncAllocation);
 
@@ -57,31 +59,19 @@ export function AllocationCard({ match }: AllocationCardProps) {
       window.removeEventListener(ALLOCATION_EVENT, syncAllocation);
       window.removeEventListener("storage", syncAllocation);
     };
-  }, [initialAllocations, match.id]);
+  }, [initialAllocations, match]);
 
-  const total = sumAllocations(
-    allocations.map((item) => ({
-      outcomeCode: item.label,
-      amount: item.amount,
-    })),
-  );
+  const total = sumAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })));
   const remaining = MATCH_CREDIT - total;
-  const validation = validateAllocations(
-    allocations.map((item) => ({
-      outcomeCode: item.label,
-      amount: item.amount,
-    })),
-  );
-  const leadingAllocation = [...allocations].sort((a, b) => b.amount - a.amount)[0] ?? null;
+  const validation = validateAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })));
+  const leadingAllocation = [...allocations].sort((left, right) => right.amount - left.amount)[0] ?? null;
 
   function updateAmount(index: number, rawValue: string) {
     const nextAmount = Number(rawValue);
     const safeAmount = Number.isFinite(nextAmount) ? Math.max(0, Math.min(7000, nextAmount)) : 0;
 
     setAllocations((current) =>
-      current.map((item, currentIndex) =>
-        currentIndex === index ? { ...item, amount: safeAmount } : item,
-      ),
+      current.map((item, itemIndex) => (itemIndex === index ? { ...item, amount: safeAmount } : item)),
     );
     setSaveState("idle");
     setSaveMessage(null);
@@ -97,25 +87,13 @@ export function AllocationCard({ match }: AllocationCardProps) {
     setAllocations(
       preset.map((item, index) => ({
         id: `${match.id}-${index}`,
+        code: match.allocation[index]?.code ?? match.allocation[0]?.code ?? "home",
         label: item.outcomeCode,
         amount: item.amount,
       })),
     );
     setSaveState("idle");
     setSaveMessage(null);
-  }
-
-  function nudgeAmount(index: number, delta: number) {
-    const current = allocations[index];
-    if (!current) {
-      return;
-    }
-
-    updateAmount(index, String(current.amount + delta));
-  }
-
-  function maxAmount(index: number) {
-    updateAmount(index, "7000");
   }
 
   async function saveAllocation() {
@@ -125,25 +103,19 @@ export function AllocationCard({ match }: AllocationCardProps) {
 
     if (!match.isEditable) {
       setSaveState("error");
-      setSaveMessage("Este partido ya cerro y no admite cambios.");
-      return;
-    }
-
-    if (!sessionName) {
-      setSaveState("error");
-      setSaveMessage("Primero tenes que entrar con nombre + PIN.");
+      setSaveMessage("Este partido ya cerró y no admite cambios.");
       return;
     }
 
     setSaveState("saving");
 
-    saveStoredAllocation(
-      match.id,
-      allocations.map((item) => ({
-        label: item.label,
-        amount: item.amount,
-      })),
-    );
+    const payload = allocations.map((item) => ({
+      code: item.code,
+      label: item.label,
+      amount: item.amount,
+    }));
+
+    saveStoredAllocation(match.id, payload);
 
     try {
       const response = await fetch("/api/tickets", {
@@ -153,11 +125,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
         },
         body: JSON.stringify({
           matchId: match.id,
-          allocations: allocations.map((item) => ({
-            label: item.label,
-            amount: item.amount,
-          })),
-          displayName: sessionName,
+          allocations: payload,
         }),
       });
 
@@ -177,154 +145,125 @@ export function AllocationCard({ match }: AllocationCardProps) {
       setSaveMessage(result.message ?? "Jugada guardada.");
     } catch {
       setSaveState("saved");
-      setSaveMessage("Guardado en este dispositivo.");
+      setSaveMessage(session?.mode === "remote" ? "Guardado local mientras reconecta." : "Guardado en este dispositivo.");
     }
   }
 
   return (
-    <section className={`card allocation-card card-grid${match.isEditable ? "" : " allocation-card-locked"}`}>
-      <div className="section-title section-title-compact">
-        <div>
+    <section
+      className={match.isEditable ? "surface-card" : "surface-card-soft"}
+      style={{
+        padding: 18,
+        display: "grid",
+        gap: 16,
+        background: match.isEditable ? undefined : "rgba(255,255,255,0.04)",
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
+        <div style={{ display: "grid", gap: 4 }}>
           <p className="eyebrow">{match.isEditable ? "Tu jugada" : "Así entraste"}</p>
-          <h2>{match.isEditable ? "Armá la ronda" : "Tu ronda quedó cerrada"}</h2>
+          <h2 className="section-title">{match.isEditable ? "Armá la ronda" : "Ronda cerrada"}</h2>
         </div>
-        <span className="match-state-chip">{match.userStateLabel}</span>
+        <span className="pill">{match.userStateLabel}</span>
       </div>
 
       {match.isEditable ? (
         <>
-          <div className="allocation-stage-card">
-            <strong>{sessionName ? `${sessionName}, te quedan` : "Te quedan"}</strong>
-            <span className={remaining === 0 ? "money-positive" : ""}>
-              {remaining.toLocaleString("es-AR")} créditos
-            </span>
-            <small>
-              {leadingAllocation && leadingAllocation.amount > 0
-                ? `Vas más con ${leadingAllocation.label}`
-                : "Elegí un lado y cargale fuerte"}
-            </small>
+          <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div style={{ display: "grid", gap: 4 }}>
+                <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>
+                  {remaining.toLocaleString("es-AR")} cr
+                </strong>
+                <span className="micro-copy">
+                  {leadingAllocation ? `Tu fuerte hoy: ${leadingAllocation.label}` : "Elegí tu lado y cargale fuerte"}
+                </span>
+              </div>
+              <span className="micro-copy">{session?.displayName ? `${session.displayName}` : "Sin sesión remota"}</span>
+            </div>
           </div>
 
-          <div className="allocation-grid">
+          <div style={{ display: "grid", gap: 12 }}>
             {allocations.map((item, index) => (
-              <div
-                className={`allocation-row allocation-row-game${leadingAllocation?.label === item.label && item.amount > 0 ? " is-leading" : ""}`}
+              <article
                 key={item.id}
+                className="surface-card-soft"
+                style={{
+                  padding: 14,
+                  borderRadius: 16,
+                  borderColor: leadingAllocation?.label === item.label && item.amount > 0 ? `${getOutcomeColor(item.code)}30` : "rgba(255,255,255,0.08)",
+                }}
               >
-                <div className="allocation-label">
-                  <span>
-                    {item.label}
-                    {leadingAllocation?.label === item.label && item.amount > 0 ? (
-                      <em className="allocation-leading-badge">tu fuerte</em>
-                    ) : null}
-                  </span>
-                  <strong>{item.amount.toLocaleString("es-AR")}</strong>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ display: "grid", gap: 4 }}>
+                    <strong>{item.label}</strong>
+                    <span className="micro-copy">
+                      {leadingAllocation?.label === item.label && item.amount > 0 ? "tu fuerte" : "tope 7.000"}
+                    </span>
+                  </div>
+                  <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-display)", fontSize: "1.25rem" }}>
+                    {item.amount.toLocaleString("es-AR")}
+                  </strong>
                 </div>
-                <div className="allocation-preset-row">
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
                   {QUICK_INTENSITIES.map((option) => (
                     <button
                       key={`${item.id}-${option.label}`}
-                      className="allocation-preset-chip"
-                      type="button"
-                      disabled={!match.isEditable}
+                      className="button-secondary"
+                      style={{ minHeight: 36, borderRadius: 999, padding: "0 12px", fontSize: ".78rem" }}
                       onClick={() => applyQuickIntensity(item.label, option.amount)}
+                      type="button"
                     >
-                      <span>{option.label}</span>
-                      <strong>{option.amount / 1000}k</strong>
+                      {option.label} · {option.amount / 1000}k
                     </button>
                   ))}
                 </div>
-                <div className="bar-track">
-                  <div
-                    className="bar-fill"
-                    style={{ width: `${Math.min(100, (item.amount / MATCH_CREDIT) * 100)}%` }}
-                  />
+
+                <input
+                  type="range"
+                  min="0"
+                  max="7000"
+                  step="500"
+                  value={item.amount}
+                  onChange={(event) => updateAmount(index, event.target.value)}
+                  style={{ width: "100%", accentColor: getOutcomeColor(item.code) }}
+                  aria-label={item.label}
+                />
+
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
+                  <span className="micro-copy">{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
+                  <span className="micro-copy">step de 500</span>
                 </div>
-                <div className="allocation-controls">
-                  <div className="allocation-stepper">
-                    <button
-                      className="mini-button"
-                      type="button"
-                      disabled={!match.isEditable}
-                      onClick={() => nudgeAmount(index, -500)}
-                    >
-                      -500
-                    </button>
-                    <button
-                      className="mini-button mini-button-strong"
-                      type="button"
-                      disabled={!match.isEditable}
-                      onClick={() => maxAmount(index)}
-                    >
-                      7k
-                    </button>
-                    <button
-                      className="mini-button"
-                      type="button"
-                      disabled={!match.isEditable}
-                      onClick={() => nudgeAmount(index, 500)}
-                    >
-                      +500
-                    </button>
-                  </div>
-                  <input
-                    className="allocation-input"
-                    type="range"
-                    min="0"
-                    max="7000"
-                    step="500"
-                    value={item.amount}
-                    disabled={!match.isEditable}
-                    onChange={(event) => updateAmount(index, event.target.value)}
-                    aria-label={item.label}
-                  />
-                </div>
-                <div className="allocation-row-foot">
-                  <span>{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
-                  <span>tope 7.000</span>
-                </div>
-              </div>
+              </article>
             ))}
           </div>
 
-          <div className="action-row action-row-stacked">
-            <button
-              className="primary-button primary-button-wide"
-              disabled={!validation.ok || saveState === "saving" || !match.isEditable}
-              onClick={saveAllocation}
-            >
+          <div style={{ display: "grid", gap: 10 }}>
+            <button className="button-primary" onClick={() => void saveAllocation()} disabled={!validation.ok || saveState === "saving"}>
               {saveState === "saving" ? "Guardando..." : "Guardar ronda"}
             </button>
-            {saveState === "saved" || saveState === "error" ? (
-              <span className={saveState === "error" ? "error-copy" : "subtle"}>{saveMessage}</span>
-            ) : null}
+            {saveMessage ? (
+              <span className={saveState === "error" ? "error-copy" : "micro-copy"}>{saveMessage}</span>
+            ) : (
+              <span className={validation.ok ? "micro-copy" : "error-copy"}>
+                {validation.ok ? "Cuando arranca, se revela lo tuyo y lo del grupo." : validation.reason}
+              </span>
+            )}
           </div>
-
-          <p className="hint hint-game">
-            {validation.ok
-              ? "Cuando arranca, se revela lo tuyo y lo del grupo."
-              : validation.reason}
-          </p>
         </>
       ) : (
-        <>
-          <div className="locked-allocation-grid">
-            {allocations.map((item) => (
-              <div className="locked-allocation-card" key={item.id}>
-                <span>{item.label}</span>
-                <strong>{item.amount.toLocaleString("es-AR")}</strong>
-                <small>{Math.round((item.amount / MATCH_CREDIT) * 100)}%</small>
+        <div style={{ display: "grid", gap: 10 }}>
+          {allocations.map((item) => (
+            <div key={item.id} className="surface-card-soft" style={{ padding: "12px 14px", borderRadius: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <div style={{ display: "grid", gap: 4 }}>
+                <strong>{item.label}</strong>
+                <span className="micro-copy">{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
               </div>
-            ))}
-          </div>
-
-          <div className="allocation-summary simple-summary locked-summary">
-            <strong>{sessionName ? `${sessionName}, ya quedó` : "Jugada cerrada"}</strong>
-            <span>Se revela junto al grupo</span>
-          </div>
-
-          <p className="hint">Ya no podés editar esta ronda.</p>
-        </>
+              <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-display)", fontSize: "1.2rem" }}>{item.amount.toLocaleString("es-AR")}</strong>
+            </div>
+          ))}
+        </div>
       )}
     </section>
   );
