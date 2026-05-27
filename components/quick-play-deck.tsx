@@ -317,7 +317,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       </motion.div>
                     ) : null}
 
-                    <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: 22, position: "relative", zIndex: 1 }}>
+                    <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", height: "100%", padding: 22, position: "relative", zIndex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
                         <span className="eyebrow">{match.stage}</span>
                         <div className="status-pill status-pill-gold">
@@ -325,7 +325,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                         </div>
                       </div>
 
-                      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", paddingBlock: 4 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 8, paddingBottom: 10 }}>
                         <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 38px 1fr", gap: 8, alignItems: "center" }}>
                           <div style={{ display: "grid", gap: 10, justifyItems: "center" }}>
                             <span style={{ fontSize: "4.1rem", lineHeight: 1 }}>{match.home.flag}</span>
@@ -343,7 +343,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, paddingTop: 12, marginTop: 4, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span>←</span>
                           <span style={{ color: "#E8413A", fontSize: ".78rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica visita" : "visitante"}</span>
