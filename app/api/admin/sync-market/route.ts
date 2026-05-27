@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequestAuthorized } from "@/lib/admin-route";
 import { syncMatchMarket } from "@/lib/repositories/market-sync";
 
 export async function POST(request: NextRequest) {
+  if (!(await isAdminRequestAuthorized(request))) {
+    return NextResponse.json({ ok: false, reason: "No autorizado." }, { status: 401 });
+  }
+
   const body = (await request.json()) as { matchId?: string };
 
   if (!body.matchId) {

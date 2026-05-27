@@ -1,6 +1,7 @@
-import { getFallbackHomeSummary, getFallbackMatches, getFallbackRanking } from "@/lib/mock-data";
+import { getFallbackHomeSummary, getFallbackMatches } from "@/lib/mock-data";
 import { getActiveDemoPersonaSlug } from "@/lib/demo-state";
 import { formatNetAmount } from "@/lib/game";
+import { getRanking } from "@/lib/repositories/ranking";
 import { getCurrentSession } from "@/lib/server-session";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -53,7 +54,7 @@ export async function getHomeSummary() {
 
 export async function getMatchesForHome() {
   const matches = await getMatches();
-  return matches.slice(0, 3);
+  return matches.slice().sort(sortMatchesForHome).slice(0, 5);
 }
 
 async function getMatches() {
@@ -72,12 +73,22 @@ export async function getLeaderboardPreview() {
   return ranking.slice(0, 5);
 }
 
-async function getRanking() {
-  const supabase = getSupabaseServerClient();
+function sortMatchesForHome(left: Awaited<ReturnType<typeof getMatches>>[number], right: Awaited<ReturnType<typeof getMatches>>[number]) {
+  const score = (match: typeof left) => {
+    if (match.statusVariant === "live") {
+      return 0;
+    }
 
-  if (!supabase) {
-    return getFallbackRanking();
-  }
+    if (match.isEditable) {
+      return 1;
+    }
 
-  return getFallbackRanking();
+    if (match.statusVariant === "locked") {
+      return 2;
+    }
+
+    return 3;
+  };
+
+  return score(left) - score(right);
 }
