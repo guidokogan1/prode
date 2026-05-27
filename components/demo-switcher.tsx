@@ -33,7 +33,6 @@ export function DemoSwitcher({ activePersona, personas }: DemoSwitcherProps) {
 
       saveStoredSession({
         displayName: persona.name,
-        pin: "0000",
         joinedAt: new Date().toISOString(),
       });
 

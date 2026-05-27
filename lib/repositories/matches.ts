@@ -108,6 +108,12 @@ export async function getMatchById(id: string): Promise<MatchViewModel | null> {
   }
 
   let revealedTickets = fallback.revealedTickets;
+  const outcomeMeta = new Map(
+    fallback.allocation.map((item) => [
+      normalizeLabel(item.label),
+      { code: item.code, shortLabel: item.shortLabel },
+    ]),
+  );
 
   if (marketQuery.data.status === "revealed" || marketQuery.data.status === "settled") {
     const revealQuery = await supabase
@@ -134,7 +140,11 @@ export async function getMatchById(id: string): Promise<MatchViewModel | null> {
                 : allocation.outcome;
 
               return {
+                code: outcomeMeta.get(normalizeLabel(outcome?.label ?? ""))?.code ?? fallback.allocation[0]?.code ?? "home",
                 label: outcome?.label ?? "Outcome",
+                shortLabel:
+                  outcomeMeta.get(normalizeLabel(outcome?.label ?? ""))?.shortLabel ??
+                  (outcome?.label ?? "Outcome"),
                 amount: allocation.amount.toLocaleString("es-AR"),
               };
             },

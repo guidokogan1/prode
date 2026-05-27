@@ -1,6 +1,7 @@
 import { isMarketEditable, MATCH_CREDIT, validateAllocations } from "@/lib/game";
 import type { SaveTicketPayload } from "@/lib/domain";
 import { getFallbackMatchById } from "@/lib/mock-data";
+import { getCurrentSession } from "@/lib/server-session";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 type SaveTicketResult =
@@ -13,10 +14,6 @@ type SaveTicketResult =
       ok: false;
       reason: string;
     };
-
-type UserRow = {
-  id: string;
-};
 
 type MarketRow = {
   id: string;
@@ -62,16 +59,11 @@ export async function saveTicket(payload: SaveTicketPayload): Promise<SaveTicket
     };
   }
 
-  const userQuery = await supabase
-    .from("users")
-    .select("id")
-    .ilike("display_name", payload.displayName)
-    .maybeSingle<UserRow>();
-
-  if (userQuery.error || !userQuery.data) {
+  const session = await getCurrentSession();
+  if (!session?.userId) {
     return {
       ok: false,
-      reason: "No se encontro un usuario remoto para esta sesion.",
+      reason: "No se encontro una sesion remota valida.",
     };
   }
 
@@ -118,7 +110,7 @@ export async function saveTicket(payload: SaveTicketPayload): Promise<SaveTicket
     .from("tickets")
     .upsert(
       {
-        user_id: userQuery.data.id,
+        user_id: session.userId,
         match_market_id: marketId,
         credit_total: MATCH_CREDIT,
         updated_at: new Date().toISOString(),

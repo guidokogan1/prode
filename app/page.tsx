@@ -1,85 +1,83 @@
-import Link from "next/link";
 import { QuickPlayDeck } from "@/components/quick-play-deck";
-import { getHomeSummary, getLeaderboardPreview, getMatchesForHome } from "@/lib/repositories/home";
+import { getCurrentSession } from "@/lib/server-session";
+import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
 
 export default async function HomePage() {
-  const [summary, featuredMatches, leaderboardPreview] = await Promise.all([
+  const [summary, featuredMatches, session] = await Promise.all([
     getHomeSummary(),
     getMatchesForHome(),
-    getLeaderboardPreview(),
+    getCurrentSession(),
   ]);
-  const liveMatch = featuredMatches.find((match) => match.status === "live") ?? null;
-  const queueRemaining = summary.pendingPicks;
-  const me = leaderboardPreview.find((entry) => entry.name === "Vos") ?? leaderboardPreview[0] ?? null;
+
+  const pendingLabel = Number(summary.pendingPicks || "0");
+  const initial = session?.displayName?.slice(0, 1).toUpperCase() ?? "V";
 
   return (
-    <main className="page-narrow home-playground">
-      <section className="home-shell">
-        <div className="home-shell-header">
-          <div className="home-brand">
-            <span className="home-brand-ball">⚽</span>
-            <span className="home-brand-label">Mundial 26</span>
-          </div>
-          <div className="home-shell-side">
-            {queueRemaining ? (
-              <span className="home-badge">{queueRemaining} sin jugar</span>
-            ) : null}
-            <span className="home-avatar">{me?.name?.slice(0, 1) ?? "V"}</span>
-          </div>
+    <main
+      className="page-shell"
+      style={{
+        background: "radial-gradient(ellipse 120% 60% at 50% 0%, #1C3A22 0%, #091409 55%)",
+        display: "grid",
+        gridTemplateRows: "auto auto 1fr",
+        gap: 14,
+      }}
+    >
+      <section style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, paddingTop: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: "1.2rem" }}>⚽</span>
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 900,
+              letterSpacing: ".14em",
+              textTransform: "uppercase",
+            }}
+          >
+            Mundial 26
+          </span>
         </div>
-
-        <div className="home-intro">
-          <div>
-            <p className="eyebrow">Jugada rápida</p>
-            <h1 className="home-intro-title">¿Qué sale?</h1>
-            <p className="home-intro-copy">Deslizá o tocá. Elegís el resultado y seguís al próximo.</p>
-          </div>
-          <div className="home-queue-pills">
-            <span className="home-queue-pill">
-              <strong>{summary.liveMatches}</strong>
-              <span>live</span>
-            </span>
-            <span className="home-queue-pill">
-              <strong>{summary.yourNet}</strong>
-              <span>tu tabla</span>
-            </span>
-          </div>
-        </div>
-
-        <QuickPlayDeck matches={featuredMatches} />
-
-        <div className="home-footer-stack">
-          <Link className="home-bottom-card" href="/matches">
-            <div>
-              <strong>Cargá grupos de una</strong>
-              <span>Modo maratón</span>
-            </div>
-            <span className="home-bottom-arrow">→</span>
-          </Link>
-
-          {liveMatch ? (
-            <Link className="home-bottom-card home-bottom-card-live" href={`/matches/${liveMatch.id}`}>
-              <div className="home-live-row">
-                <span className="home-live-dot" />
-                <span className="home-live-label">Live</span>
-                <strong>
-                  {liveMatch.home.flag} {liveMatch.home.score} - {liveMatch.away.score} {liveMatch.away.flag}
-                </strong>
-                <span>{liveMatch.statusLabel}</span>
-              </div>
-              <span className="home-bottom-arrow home-bottom-arrow-live">ver →</span>
-            </Link>
-          ) : (
-            <Link className="home-bottom-card" href="/ranking">
-              <div>
-                <strong>Tabla general</strong>
-                <span>Mirá quién va arriba</span>
-              </div>
-              <span className="home-bottom-arrow">→</span>
-            </Link>
-          )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {pendingLabel > 0 ? <span className="status-pill status-pill-gold">{pendingLabel} sin jugar</span> : null}
+          <span
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 999,
+              display: "grid",
+              placeItems: "center",
+              background: "#1C2E1F",
+              color: "#EDE8D9",
+              fontFamily: "var(--font-display)",
+              fontWeight: 900,
+              fontSize: "1rem",
+            }}
+          >
+            {initial}
+          </span>
         </div>
       </section>
+
+      <section style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end" }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <p className="eyebrow">Jugada rápida</p>
+            <h1 className="display-title">¿Qué sale?</h1>
+            <p className="muted-copy">Elegí de una y seguí con la próxima ronda.</p>
+          </div>
+          <div style={{ display: "grid", gap: 8, minWidth: 88 }}>
+            <div className="surface-card-soft" style={{ padding: "10px 12px", borderRadius: 16 }}>
+              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1.25rem" }}>{summary.liveMatches}</strong>
+              <span className="micro-copy">live</span>
+            </div>
+            <div className="surface-card-soft" style={{ padding: "10px 12px", borderRadius: 16 }}>
+              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "#D4A64B" }}>{summary.yourNet}</strong>
+              <span className="micro-copy">tu tabla</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <QuickPlayDeck matches={featuredMatches} />
     </main>
   );
 }

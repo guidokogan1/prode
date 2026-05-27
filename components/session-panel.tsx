@@ -13,7 +13,8 @@ export function SessionPanel() {
       try {
         const response = await fetch("/api/session", { cache: "no-store" });
         const payload = (await response.json()) as {
-          session: { displayName: string; mode: "local" | "remote" } | null;
+          session: { displayName: string; mode: "local" | "remote" | "demo" } | null;
+          demoProfile?: { displayName: string; mode: "demo" };
         };
 
         if (payload.session) {
@@ -26,8 +27,14 @@ export function SessionPanel() {
       }
 
       const localSession = getStoredSession();
-      setSessionName(localSession?.displayName ?? null);
-      setSessionMode(localSession ? "local" : null);
+      if (localSession) {
+        setSessionName(localSession.displayName);
+        setSessionMode("local");
+        return;
+      }
+
+      setSessionName(null);
+      setSessionMode("demo");
     };
 
     void sync();
@@ -70,7 +77,7 @@ export function SessionPanel() {
 
       <p className="subtle">
         {sessionMode === "demo"
-          ? "Estás viendo un perfil demo."
+          ? "Estás viendo la app en modo demo."
           : sessionMode === "remote"
             ? "Tu acceso ya está guardado."
             : "Entrás con nombre y PIN corto."}

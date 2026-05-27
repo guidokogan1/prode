@@ -343,9 +343,9 @@ describe("read repositories", () => {
     expect(match?.revealedTickets[0]).toEqual({
       userName: "Guido",
       allocations: [
-        { label: "Argentina", amount: "7.000" },
-        { label: "Empate", amount: "2.000" },
-        { label: "Japon", amount: "1.000" },
+        { code: "home", label: "Argentina", shortLabel: "Argentina", amount: "7.000" },
+        { code: "draw", label: "Empate", shortLabel: "EMP", amount: "2.000" },
+        { code: "away", label: "Japon", shortLabel: "Japon", amount: "1.000" },
       ],
       netLabel: "+6.154",
     });

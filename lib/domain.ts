@@ -1,5 +1,15 @@
 export type MatchStatus = "scheduled" | "live" | "finished";
 export type MarketType = "1x2" | "qualifies";
+export type MatchStatusVariant = "upcoming" | "locked" | "live" | "revealed" | "settled";
+export type MatchOutcomeCode = "home" | "draw" | "away" | "home_qualifies" | "away_qualifies";
+
+export type OutcomeViewModel = {
+  code: MatchOutcomeCode;
+  label: string;
+  shortLabel: string;
+  amount: string;
+  percentage: number;
+};
 
 export type MatchViewModel = {
   id: string;
@@ -7,6 +17,7 @@ export type MatchViewModel = {
   venue: string;
   kickoffLabel: string;
   status: MatchStatus;
+  statusVariant: MatchStatusVariant;
   statusLabel: string;
   marketType: MarketType;
   marketTypeLabel: string;
@@ -22,15 +33,8 @@ export type MatchViewModel = {
     flag: string;
     score: number;
   };
-  allocation: {
-    label: string;
-    amount: string;
-    percentage: number;
-  }[];
-  consensus: {
-    label: string;
-    percentage: number;
-  }[];
+  allocation: OutcomeViewModel[];
+  consensus: Omit<OutcomeViewModel, "amount">[];
   form: {
     home: string;
     away: string;
@@ -39,10 +43,7 @@ export type MatchViewModel = {
   };
   revealedTickets: {
     userName: string;
-    allocations: {
-      label: string;
-      amount: string;
-    }[];
+    allocations: Pick<OutcomeViewModel, "code" | "label" | "shortLabel" | "amount">[];
     netLabel?: string;
   }[];
 };
@@ -78,6 +79,7 @@ export type ProfileViewModel = {
 };
 
 export type AllocationDraft = {
+  code?: MatchOutcomeCode;
   label: string;
   amount: number;
 };
@@ -85,5 +87,5 @@ export type AllocationDraft = {
 export type SaveTicketPayload = {
   matchId: string;
   allocations: AllocationDraft[];
-  displayName: string;
+  displayName?: string;
 };

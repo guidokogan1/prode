@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { saveTicket } from "@/lib/repositories/tickets";
 
-const { getFallbackMatchByIdMock, getSupabaseServerClientMock } = vi.hoisted(() => ({
+const { getFallbackMatchByIdMock, getSupabaseServerClientMock, getCurrentSessionMock } = vi.hoisted(() => ({
   getFallbackMatchByIdMock: vi.fn(),
   getSupabaseServerClientMock: vi.fn(),
+  getCurrentSessionMock: vi.fn(),
 }));
 
 vi.mock("@/lib/mock-data", () => ({
@@ -14,8 +15,11 @@ vi.mock("@/lib/supabase/server", () => ({
   getSupabaseServerClient: getSupabaseServerClientMock,
 }));
 
+vi.mock("@/lib/server-session", () => ({
+  getCurrentSession: getCurrentSessionMock,
+}));
+
 function makeSupabaseMock(config: {
-  user?: { data: { id: string } | null; error: unknown | null };
   market?: { data: { id: string; status: string; lock_at: string | null } | null; error: unknown | null };
   outcomes?: { data: Array<{ id: string; label: string }> | null; error: unknown | null };
   ticketUpsert?: { data: { id: string } | null; error: unknown | null };
@@ -24,20 +28,6 @@ function makeSupabaseMock(config: {
 }) {
   return {
     from(table: string) {
-      if (table === "users") {
-        return {
-          select() {
-            return {
-              ilike() {
-                return {
-                  maybeSingle: async () => config.user ?? { data: null, error: null },
-                };
-              },
-            };
-          },
-        };
-      }
-
       if (table === "match_markets") {
         return {
           select() {
@@ -102,6 +92,7 @@ function makeSupabaseMock(config: {
 describe("saveTicket", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getCurrentSessionMock.mockResolvedValue({ userId: "user-1", displayName: "Guido", mode: "remote" });
     getFallbackMatchByIdMock.mockReturnValue({
       id: "arg-jpn",
       isEditable: true,
@@ -168,7 +159,6 @@ describe("saveTicket", () => {
   it("rejects a closed remote market", async () => {
     getSupabaseServerClientMock.mockReturnValue(
       makeSupabaseMock({
-        user: { data: { id: "user-1" }, error: null },
         market: {
           data: { id: "market-1", status: "revealed", lock_at: null },
           error: null,
@@ -195,7 +185,6 @@ describe("saveTicket", () => {
   it("rejects allocations that do not match remote outcomes", async () => {
     getSupabaseServerClientMock.mockReturnValue(
       makeSupabaseMock({
-        user: { data: { id: "user-1" }, error: null },
         market: {
           data: { id: "market-1", status: "open", lock_at: null },
           error: null,
@@ -230,7 +219,6 @@ describe("saveTicket", () => {
   it("saves remotely when user, market and outcomes are valid", async () => {
     getSupabaseServerClientMock.mockReturnValue(
       makeSupabaseMock({
-        user: { data: { id: "user-1" }, error: null },
         market: {
           data: { id: "market-1", status: "open", lock_at: null },
           error: null,

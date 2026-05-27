@@ -38,7 +38,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (payload.session) {
+        if (payload.session && payload.session.mode !== "demo") {
           setSession(payload.session);
           return;
         }

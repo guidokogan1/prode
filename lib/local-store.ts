@@ -5,7 +5,6 @@ export const ALLOCATION_EVENT = "mundial-pool:allocation-changed";
 
 export type StoredSession = {
   displayName: string;
-  pin: string;
   joinedAt: string;
 };
 

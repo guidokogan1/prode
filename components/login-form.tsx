@@ -39,7 +39,6 @@ export function LoginForm() {
       if (response.ok) {
         saveStoredSession({
           displayName: trimmedName,
-          pin,
           joinedAt: new Date().toISOString(),
         });
         router.push("/profile");
@@ -57,7 +56,6 @@ export function LoginForm() {
 
     saveStoredSession({
       displayName: trimmedName,
-      pin,
       joinedAt: new Date().toISOString(),
     });
     router.push("/profile");

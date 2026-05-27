@@ -2,58 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-function HomeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4.75 10.5 12 4.75l7.25 5.75v7.25a1.5 1.5 0 0 1-1.5 1.5H6.25a1.5 1.5 0 0 1-1.5-1.5V10.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M9.5 19.25v-4.5h5v4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MatchesIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="4.75" y="5.75" width="14.5" height="12.5" rx="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M8 9.75h8M8 14.25h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function RankingIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 18.25V11.5M12 18.25V7.75M18 18.25v-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M4.75 18.25h14.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ProfileIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="8.25" r="3.25" stroke="currentColor" strokeWidth="1.8" />
-      <path
-        d="M5.75 18.5c1.5-2.5 3.66-3.75 6.25-3.75s4.75 1.25 6.25 3.75"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
+import { List, Trophy, User, Zap } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Inicio", icon: HomeIcon },
-  { href: "/matches", label: "Jugar", icon: MatchesIcon },
-  { href: "/ranking", label: "Tabla", icon: RankingIcon },
-  { href: "/profile", label: "Yo", icon: ProfileIcon },
+  { href: "/", label: "Jugar", icon: Zap },
+  { href: "/matches", label: "Partidos", icon: List },
+  { href: "/ranking", label: "Tabla", icon: Trophy },
+  { href: "/profile", label: "Yo", icon: User },
 ];
 
 export function BottomNav() {
@@ -72,7 +27,7 @@ export function BottomNav() {
             className={`nav-link${isActive ? " active" : ""}`}
           >
             <span className="nav-icon" aria-hidden="true">
-              <Icon />
+              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.85} />
             </span>
             <span className="nav-label">{item.label}</span>
           </Link>

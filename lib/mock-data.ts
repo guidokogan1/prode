@@ -1,4 +1,11 @@
-import type { HistoryEntry, MatchViewModel, ProfileViewModel, RankingEntry } from "@/lib/domain";
+import type {
+  HistoryEntry,
+  MatchOutcomeCode,
+  MatchStatusVariant,
+  MatchViewModel,
+  ProfileViewModel,
+  RankingEntry,
+} from "@/lib/domain";
 
 export type DemoPersonaSlug = "guido" | "mari" | "bato" | "pepo" | "cami";
 
@@ -267,6 +274,115 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
   ],
 };
 
+function deriveStatusVariant(match: Pick<MatchViewModel, "status" | "isEditable" | "revealedTickets">): MatchStatusVariant {
+  if (match.status === "live") {
+    return "live";
+  }
+
+  if (match.status === "finished") {
+    return "settled";
+  }
+
+  if (match.revealedTickets.length > 0) {
+    return "revealed";
+  }
+
+  return match.isEditable ? "upcoming" : "locked";
+}
+
+function inferOutcomeCode(
+  marketType: MatchViewModel["marketType"],
+  index: number,
+  length: number,
+): MatchOutcomeCode {
+  if (marketType === "qualifies") {
+    return index === 0 ? "home_qualifies" : "away_qualifies";
+  }
+
+  if (length === 2) {
+    return index === 0 ? "home" : "away";
+  }
+
+  if (index === 0) {
+    return "home";
+  }
+
+  if (index === length - 1) {
+    return "away";
+  }
+
+  return "draw";
+}
+
+function buildShortLabel(label: string) {
+  return label
+    .replace(/^Clasifica\s+/i, "")
+    .replace(/^Estados Unidos$/i, "EE.UU.")
+    .replace(/^Paises Bajos$/i, "NED")
+    .replace(/^Empate$/i, "EMP");
+}
+
+type RawOutcome = {
+  label: string;
+  amount: string;
+  percentage: number;
+};
+
+type RawConsensus = {
+  label: string;
+  percentage: number;
+};
+
+type RawRevealedTicket = {
+  userName: string;
+  allocations: {
+    label: string;
+    amount: string;
+  }[];
+  netLabel?: string;
+};
+
+type RawMatchViewModel = Omit<MatchViewModel, "statusVariant" | "allocation" | "consensus" | "revealedTickets"> & {
+  allocation: RawOutcome[];
+  consensus: RawConsensus[];
+  revealedTickets: RawRevealedTicket[];
+};
+
+function decorateMatch(match: RawMatchViewModel): MatchViewModel {
+  const allocation = match.allocation.map((item, index, list) => ({
+    ...item,
+    code: inferOutcomeCode(match.marketType, index, list.length),
+    shortLabel: buildShortLabel(item.label),
+  }));
+
+  const consensus = match.consensus.map((item, index, list) => ({
+    ...item,
+    code: inferOutcomeCode(match.marketType, index, list.length),
+    shortLabel: buildShortLabel(item.label),
+  }));
+
+  const revealedTickets = match.revealedTickets.map((ticket) => ({
+    ...ticket,
+    allocations: ticket.allocations.map((allocationItem, index, list) => ({
+      ...allocationItem,
+      code: inferOutcomeCode(match.marketType, index, list.length),
+      shortLabel: buildShortLabel(allocationItem.label),
+    })),
+  }));
+
+  return {
+    ...match,
+    allocation,
+    consensus,
+    revealedTickets,
+    statusVariant: deriveStatusVariant({
+      status: match.status,
+      isEditable: match.isEditable,
+      revealedTickets,
+    }),
+  };
+}
+
 function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
   const profiles = {
     guido: {
@@ -456,7 +572,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     },
   }[persona];
 
-  return [
+  const matches: RawMatchViewModel[] = [
     {
       id: "arg-jpn",
       stage: "Fase de grupos",
@@ -662,6 +778,8 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
       ],
     },
   ];
+
+  return matches.map((match) => decorateMatch(match));
 }
 
 function normalizeDemoPersonaSlug(slug?: string | null): DemoPersonaSlug {
