@@ -18,7 +18,7 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
   const actualRanks = [1, 0, 2];
 
   return (
-    <section className="surface-card-strong" style={{ padding: 18 }}>
+    <section className="surface-card-strong" style={{ padding: 18, fontFamily: "var(--font-body)" }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, alignItems: "end" }}>
         {podiumOrder.map((item, index) => {
           const actualRank = actualRanks[index] ?? index;
@@ -55,11 +55,11 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
                   border: `1px solid ${color}25`,
                 }}
               >
-                <span style={{ fontFamily: "var(--font-accent)", fontWeight: 800, letterSpacing: "-0.04em", color }}>
+                <span style={{ fontFamily: "var(--font-accent)", fontWeight: 800, fontStyle: "normal", letterSpacing: "-0.04em", color }}>
                   {formatCompactCredits(Math.abs(item.net))}
                 </span>
               </div>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: ".8rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{item.name}</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: ".8rem", fontWeight: 700, fontStyle: "normal", letterSpacing: "-0.01em" }}>{item.name}</span>
             </div>
           );
         })}

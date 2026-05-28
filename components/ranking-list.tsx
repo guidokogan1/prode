@@ -6,7 +6,7 @@ type RankingListProps = {
 
 export function RankingList({ items }: RankingListProps) {
   return (
-    <section style={{ display: "grid", gap: 10 }}>
+    <section style={{ display: "grid", gap: 10, fontFamily: "var(--font-body)" }}>
       {items.map((item) => (
         <article
           key={item.name}
@@ -56,16 +56,17 @@ export function RankingList({ items }: RankingListProps) {
                 color: item.name === "Vos" ? "#D8B56A" : "#EDE8D9",
                 fontFamily: "var(--font-body)",
                 fontWeight: 700,
+                fontStyle: "normal",
                 letterSpacing: "-0.02em",
               }}
             >
               {item.name === "Vos" ? "Vos" : item.name}
             </strong>
-            <span className="micro-copy" style={{ lineHeight: 1.45 }}>{item.positiveTickets} positivas · mejor {item.bestHit}</span>
+            <span className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", lineHeight: 1.45 }}>{item.positiveTickets} positivas · mejor {item.bestHit}</span>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0, minWidth: 68 }}>
             <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.18rem", color: item.net >= 0 ? "#EDE8D9" : "#E8413A", whiteSpace: "nowrap", letterSpacing: "-0.04em" }}>{item.netLabel}</strong>
-            <div className="micro-copy">ganancia</div>
+            <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal" }}>ganancia</div>
           </div>
         </article>
       ))}
