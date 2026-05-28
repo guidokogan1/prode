@@ -9,12 +9,14 @@ export default async function MatchesPage() {
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 22 }}>
       <section style={{ display: "grid", gap: 8, paddingTop: 8 }}>
         <p className="eyebrow">Modo maratón</p>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
           <div style={{ display: "grid", gap: 4 }}>
             <h1 className="display-title">Cargá grupos</h1>
             <p className="muted-copy">Entrá y resolvé varios partidos de corrido sin salir del ritmo.</p>
           </div>
-          <span className="status-pill status-pill-gold">{summary.pendingPicks} por jugar</span>
+          <span className="status-pill status-pill-gold" style={{ whiteSpace: "nowrap", minWidth: 102, justifyContent: "center", flexShrink: 0 }}>
+            {summary.pendingPicks} por jugar
+          </span>
         </div>
       </section>
 
