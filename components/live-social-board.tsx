@@ -77,12 +77,14 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "1.35rem" }}>{getOutcomeFlag(group.outcome.code, match)}</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 700, color: isWinning ? getOutcomeColor(group.outcome.code) : "#EDE8D9" }}>
+                  <strong style={{ fontFamily: "var(--font-body)", fontSize: "1rem", fontStyle: "normal", fontWeight: 700, color: isWinning ? getOutcomeColor(group.outcome.code) : "#EDE8D9" }}>
                     {group.outcome.label}
                   </strong>
                   {isWinning ? (
                     <span
                       style={{
+                        fontFamily: "var(--font-body)",
+                        fontStyle: "normal",
                         fontSize: ".62rem",
                         fontWeight: 800,
                         letterSpacing: ".12em",
@@ -122,7 +124,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                         {ticket.userName.slice(0, 1)}
                       </span>
                       <div style={{ display: "grid", gap: 2 }}>
-                        <span style={{ fontSize: ".92rem", fontWeight: 700 }}>{ticket.userName}</span>
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: ".92rem", fontStyle: "normal", fontWeight: 700 }}>{ticket.userName}</span>
                         {ticket.netLabel ? <span className="micro-copy">{ticket.netLabel}</span> : null}
                       </div>
                     </div>
