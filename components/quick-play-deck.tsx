@@ -317,7 +317,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     >
                       <div style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
                         <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.home.flag}</span>
-                        <span style={{ color: "#3D9B5F", fontSize: ".72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".14em" }}>
+                        <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                           {match.marketType === "qualifies" ? "clasifica local" : "gana local"}
                         </span>
                       </div>
@@ -334,7 +334,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     >
                       <div style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
                         <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.away.flag}</span>
-                        <span style={{ color: "#E8413A", fontSize: ".72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".14em" }}>
+                        <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                           {match.marketType === "qualifies" ? "clasifica visita" : "visitante"}
                         </span>
                       </div>
@@ -352,7 +352,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       >
                         <div style={{ position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
                           <span style={{ fontSize: "2.6rem", lineHeight: 1 }}>🤝</span>
-                          <span style={{ color: "#5B8FF0", fontSize: ".72rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: ".14em" }}>
+                          <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                             empate
                           </span>
                         </div>
@@ -369,18 +369,18 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 4, paddingBottom: 8 }}>
                         <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 30px 1fr", gap: 6, alignItems: "center" }}>
-                          <div style={{ display: "grid", gap: 8, justifyItems: "center" }}>
+                          <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
                             <span style={{ fontSize: "3.35rem", lineHeight: 1 }}>{match.home.flag}</span>
                             <span className="team-display" style={{ textAlign: "center" }}>{match.home.name}</span>
-                            <span className="micro-copy" style={{ letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(122,154,129,0.7)" }}>Local</span>
+                            <span className="micro-copy" style={{ fontSize: ".66rem", letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(151,173,153,0.74)" }}>Local</span>
                           </div>
                           <div style={{ display: "grid", placeItems: "center" }}>
-                            <span style={{ fontFamily: "var(--font-accent)", fontSize: "1.26rem", fontWeight: 800, color: "rgba(255,255,255,0.12)", letterSpacing: "-0.04em" }}>VS</span>
+                            <span style={{ fontFamily: "var(--font-body)", fontSize: "1.2rem", fontWeight: 600, color: "rgba(255,255,255,0.12)", letterSpacing: "-0.03em" }}>vs</span>
                           </div>
-                          <div style={{ display: "grid", gap: 8, justifyItems: "center" }}>
+                          <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
                             <span style={{ fontSize: "3.35rem", lineHeight: 1 }}>{match.away.flag}</span>
                             <span className="team-display" style={{ textAlign: "center" }}>{match.away.name}</span>
-                            <span className="micro-copy" style={{ letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(122,154,129,0.7)" }}>Visitante</span>
+                            <span className="micro-copy" style={{ fontSize: ".66rem", letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(151,173,153,0.74)" }}>Visitante</span>
                           </div>
                         </div>
                       </div>
@@ -388,16 +388,16 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, paddingTop: 10, marginTop: 2, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span>←</span>
-                          <span style={{ color: "#E8413A", fontSize: ".78rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica visita" : "visitante"}</span>
+                          <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".76rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica visita" : "visitante"}</span>
                         </div>
                         {showDrawGesture ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ color: "#5B8FF0", fontSize: ".78rem", fontWeight: 700 }}>empate</span>
+                            <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".76rem", fontWeight: 700 }}>empate</span>
                             <span>↑</span>
                           </div>
                         ) : <span className="micro-copy">{match.userStateLabel}</span>}
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ color: "#3D9B5F", fontSize: ".78rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica local" : "local"}</span>
+                          <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".76rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica local" : "local"}</span>
                           <span>→</span>
                         </div>
                       </div>
