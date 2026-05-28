@@ -37,8 +37,8 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
                   background: item.name === "Vos" ? "rgba(212,166,75,0.2)" : "rgba(255,255,255,0.07)",
                   color: item.name === "Vos" ? "#D4A64B" : "#EDE8D9",
                   border: item.name === "Vos" ? "2px solid rgba(212,166,75,0.4)" : "0",
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 900,
+                  fontFamily: "var(--font-accent)",
+                  fontWeight: 800,
                 }}
               >
                 {item.name.slice(0, 1)}
@@ -55,11 +55,11 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
                   border: `1px solid ${color}25`,
                 }}
               >
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 900, color }}>
+                <span style={{ fontFamily: "var(--font-accent)", fontWeight: 800, letterSpacing: "-0.04em", color }}>
                   {formatCompactCredits(Math.abs(item.net))}
                 </span>
               </div>
-              <span style={{ fontSize: ".78rem", fontWeight: 700 }}>{item.name}</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: ".8rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{item.name}</span>
             </div>
           );
         })}

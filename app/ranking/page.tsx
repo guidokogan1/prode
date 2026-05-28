@@ -9,7 +9,20 @@ export default async function RankingPage() {
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
       <section style={{ display: "grid", gap: 6, paddingTop: 8 }}>
         <p className="eyebrow">Tabla</p>
-        <h1 className="display-title">Quién va arriba</h1>
+        <h1
+          style={{
+            margin: 0,
+            fontFamily: "var(--font-display)",
+            fontSize: "clamp(2.15rem, 8.6vw, 3rem)",
+            lineHeight: 0.96,
+            fontWeight: 700,
+            letterSpacing: "-0.05em",
+            color: "var(--text-primary)",
+            textWrap: "balance",
+          }}
+        >
+          Quién va arriba
+        </h1>
         <p className="muted-copy">{ranking.length} jugadores peleando la punta del grupo.</p>
       </section>
 

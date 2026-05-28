@@ -51,7 +51,16 @@ export function RankingList({ items }: RankingListProps) {
             {item.name.slice(0, 1)}
           </span>
           <div style={{ display: "grid", gap: 3, flex: 1, minWidth: 0 }}>
-            <strong style={{ color: item.name === "Vos" ? "#D8B56A" : "#EDE8D9", fontWeight: 700 }}>{item.name === "Vos" ? "Vos" : item.name}</strong>
+            <strong
+              style={{
+                color: item.name === "Vos" ? "#D8B56A" : "#EDE8D9",
+                fontFamily: "var(--font-body)",
+                fontWeight: 700,
+                letterSpacing: "-0.02em",
+              }}
+            >
+              {item.name === "Vos" ? "Vos" : item.name}
+            </strong>
             <span className="micro-copy" style={{ lineHeight: 1.45 }}>{item.positiveTickets} positivas · mejor {item.bestHit}</span>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0, minWidth: 68 }}>
