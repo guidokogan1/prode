@@ -62,11 +62,11 @@ export function RankingList({ items }: RankingListProps) {
             >
               {item.name === "Vos" ? "Vos" : item.name}
             </strong>
-            <span className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", lineHeight: 1.45 }}>{item.positiveTickets} positivas · mejor {item.bestHit}</span>
+            <span className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", lineHeight: 1.45 }}>{item.positiveTickets} POSITIVAS · MEJOR {item.bestHit}</span>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0, minWidth: 68 }}>
             <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.18rem", color: item.net >= 0 ? "#EDE8D9" : "#E8413A", whiteSpace: "nowrap", letterSpacing: "-0.04em" }}>{item.netLabel}</strong>
-            <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal" }}>ganancia</div>
+            <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", letterSpacing: ".08em", textTransform: "uppercase" }}>GANANCIA</div>
           </div>
         </article>
       ))}

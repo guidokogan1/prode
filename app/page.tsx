@@ -71,11 +71,11 @@ export default async function HomePage() {
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
               <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", letterSpacing: "-0.04em" }}>{summary.liveMatches}</strong>
-              <span className="micro-copy">live</span>
+              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>LIVE</span>
             </div>
             <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
               <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", color: "#D8B56A", letterSpacing: "-0.04em" }}>{summary.yourNet}</strong>
-              <span className="micro-copy">tu tabla</span>
+              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>TU TABLA</span>
             </div>
           </div>
         </div>

@@ -54,7 +54,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
           <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "2rem", color: "#D8B56A", letterSpacing: "-0.05em" }}>
             {profile.netLabel}
           </strong>
-          <span className="micro-copy">tu tabla</span>
+          <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>TU TABLA</span>
         </div>
       </div>
 
@@ -68,7 +68,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
             <div style={{ display: "grid", gap: 5 }}>
               <span>{item.icon}</span>
               <strong style={{ fontFamily: item.label === "Campeón" ? "var(--font-display)" : "var(--font-accent)", fontSize: "1.15rem", letterSpacing: item.label === "Campeón" ? "-0.02em" : "-0.04em" }}>{item.value}</strong>
-              <span className="micro-copy">{item.label}</span>
+              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>{item.label}</span>
             </div>
           </div>
         ))}
