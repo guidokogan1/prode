@@ -204,11 +204,11 @@ input,
 }
 
 .section-title {
-  font-family: var(--font-display-serif);
-  font-size: clamp(1.45rem, 5vw, 2.05rem);
-  line-height: 1;
-  font-weight: 400;
-  letter-spacing: -0.018em;
+  font-family: var(--font-display);
+  font-size: clamp(1.28rem, 4.8vw, 1.82rem);
+  line-height: 1.02;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 
