@@ -13,7 +13,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         background: "radial-gradient(ellipse 140% 80% at 50% 0%, #1C3522 0%, #091409 70%)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "start", marginBottom: 22 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "start", marginBottom: 22, flexWrap: "wrap" }}>
         <div style={{ display: "grid", gap: 10 }}>
           <span
             style={{
@@ -47,6 +47,8 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
             background: "rgba(212,166,75,0.08)",
             borderColor: "rgba(212,166,75,0.2)",
             textAlign: "right",
+            minWidth: 132,
+            marginLeft: "auto",
           }}
         >
           <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "2rem", color: "#D4A64B" }}>
@@ -56,7 +58,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(108px, 1fr))", gap: 12 }}>
         {[
           { label: "Positivas", value: String(profile.positiveTickets), icon: "🎯" },
           { label: "Mejor golpe", value: profile.bestHit, icon: "🔥" },

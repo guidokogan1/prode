@@ -14,7 +14,8 @@ export function RankingList({ items }: RankingListProps) {
           style={{
             padding: "14px 16px",
             borderRadius: 18,
-            display: "flex",
+            display: "grid",
+            gridTemplateColumns: "24px 38px minmax(0, 1fr) auto",
             alignItems: "center",
             gap: 12,
             background: item.name === "Vos" ? "rgba(212,166,75,0.08)" : "rgba(255,255,255,0.03)",
@@ -51,10 +52,10 @@ export function RankingList({ items }: RankingListProps) {
           </span>
           <div style={{ display: "grid", gap: 3, flex: 1, minWidth: 0 }}>
             <strong style={{ color: item.name === "Vos" ? "#D4A64B" : "#EDE8D9" }}>{item.name === "Vos" ? "Vos" : item.name}</strong>
-            <span className="micro-copy">{item.positiveTickets} positivas · mejor {item.bestHit}</span>
+            <span className="micro-copy" style={{ lineHeight: 1.45 }}>{item.positiveTickets} positivas · mejor {item.bestHit}</span>
           </div>
-          <div style={{ textAlign: "right", flexShrink: 0 }}>
-            <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", color: item.net >= 0 ? "#EDE8D9" : "#E8413A" }}>{item.netLabel}</strong>
+          <div style={{ textAlign: "right", flexShrink: 0, minWidth: 68 }}>
+            <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", color: item.net >= 0 ? "#EDE8D9" : "#E8413A", whiteSpace: "nowrap" }}>{item.netLabel}</strong>
             <div className="micro-copy">ganancia</div>
           </div>
         </article>
