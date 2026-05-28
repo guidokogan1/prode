@@ -572,22 +572,22 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   <motion.button
                     whileTap={{ scale: 0.88 }}
                     whileHover={{ scale: 1.03 }}
-                    onClick={() => void chooseOutcome(match.allocation[match.allocation.length - 1]?.code ?? "away")}
+                    onClick={() => void chooseOutcome(match.allocation[0]?.code ?? "home")}
                     style={{
                       width: 58,
                       height: 58,
                       borderRadius: 999,
-                      border: "1.5px solid rgba(232,65,58,0.35)",
-                      background: "rgba(232,65,58,0.12)",
-                      boxShadow: "0 4px 20px rgba(232,65,58,0.18)",
+                      border: "1.5px solid rgba(61,155,95,0.35)",
+                      background: "rgba(61,155,95,0.12)",
+                      boxShadow: "0 4px 20px rgba(61,155,95,0.18)",
                       display: "grid",
                       placeItems: "center",
-                      color: "#E8413A",
+                      color: "#3D9B5F",
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.away.flag}</span>
-                      <span style={{ fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.away.name.slice(0, 3)}</span>
+                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.home.flag}</span>
+                      <span style={{ fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.home.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>
                   {showDrawGesture ? (
@@ -617,22 +617,22 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   <motion.button
                     whileTap={{ scale: 0.88 }}
                     whileHover={{ scale: 1.03 }}
-                    onClick={() => void chooseOutcome(match.allocation[0]?.code ?? "home")}
+                    onClick={() => void chooseOutcome(match.allocation[match.allocation.length - 1]?.code ?? "away")}
                     style={{
                       width: 58,
                       height: 58,
                       borderRadius: 999,
-                      border: "1.5px solid rgba(61,155,95,0.35)",
-                      background: "rgba(61,155,95,0.12)",
-                      boxShadow: "0 4px 20px rgba(61,155,95,0.18)",
+                      border: "1.5px solid rgba(232,65,58,0.35)",
+                      background: "rgba(232,65,58,0.12)",
+                      boxShadow: "0 4px 20px rgba(232,65,58,0.18)",
                       display: "grid",
                       placeItems: "center",
-                      color: "#3D9B5F",
+                      color: "#E8413A",
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.home.flag}</span>
-                      <span style={{ fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.home.name.slice(0, 3)}</span>
+                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.away.flag}</span>
+                      <span style={{ fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.away.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>
                 </motion.div>
