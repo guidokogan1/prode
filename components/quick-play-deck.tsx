@@ -183,7 +183,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const showDrawGesture = match?.allocation.some((item) => item.code === "draw");
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
+    <div style={{ display: "grid", gap: 10, minHeight: 0 }}>
       {!done ? (
         <div style={{ display: "flex", justifyContent: "center", gap: 6, minHeight: 12 }}>
           {deck.map((_, dotIndex) => (
@@ -202,14 +202,14 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         </div>
       ) : null}
 
-      <div style={{ minHeight: 540, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div style={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10 }}>
         {done ? (
           <motion.div
             className="surface-card"
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             style={{
-              minHeight: 470,
+              minHeight: 408,
               padding: 28,
               display: "flex",
               flexDirection: "column",
@@ -297,7 +297,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       opacity: cardOpacity,
                       position: "relative",
                       zIndex: 2,
-                      minHeight: 470,
+                      minHeight: 408,
                     }}
                     className="surface-card"
                     initial={{ scale: 0.92, opacity: 0, y: 40 }}
@@ -359,33 +359,33 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       </motion.div>
                     ) : null}
 
-                    <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", height: "100%", padding: 22, position: "relative", zIndex: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+                    <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", height: "100%", padding: 18, position: "relative", zIndex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
                         <span className="eyebrow">{match.stage}</span>
-                        <div className="status-pill status-pill-gold">
+                        <div className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>
                           <span>{match.kickoffLabel}</span>
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 8, paddingBottom: 10 }}>
-                        <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 38px 1fr", gap: 8, alignItems: "center" }}>
-                          <div style={{ display: "grid", gap: 10, justifyItems: "center" }}>
-                            <span style={{ fontSize: "4.1rem", lineHeight: 1 }}>{match.home.flag}</span>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 4, paddingBottom: 8 }}>
+                        <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 30px 1fr", gap: 6, alignItems: "center" }}>
+                          <div style={{ display: "grid", gap: 8, justifyItems: "center" }}>
+                            <span style={{ fontSize: "3.35rem", lineHeight: 1 }}>{match.home.flag}</span>
                             <span className="team-display" style={{ textAlign: "center" }}>{match.home.name}</span>
                             <span className="micro-copy" style={{ letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(122,154,129,0.7)" }}>Local</span>
                           </div>
                           <div style={{ display: "grid", placeItems: "center" }}>
-                            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.55rem", fontWeight: 900, color: "rgba(255,255,255,0.12)" }}>VS</span>
+                            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 900, color: "rgba(255,255,255,0.12)" }}>VS</span>
                           </div>
-                          <div style={{ display: "grid", gap: 10, justifyItems: "center" }}>
-                            <span style={{ fontSize: "4.1rem", lineHeight: 1 }}>{match.away.flag}</span>
+                          <div style={{ display: "grid", gap: 8, justifyItems: "center" }}>
+                            <span style={{ fontSize: "3.35rem", lineHeight: 1 }}>{match.away.flag}</span>
                             <span className="team-display" style={{ textAlign: "center" }}>{match.away.name}</span>
                             <span className="micro-copy" style={{ letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(122,154,129,0.7)" }}>Visitante</span>
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, paddingTop: 12, marginTop: 4, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, paddingTop: 10, marginTop: 2, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span>←</span>
                           <span style={{ color: "#E8413A", fontSize: ".78rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica visita" : "visitante"}</span>
@@ -413,8 +413,8 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     exit={{ scale: 0.94, opacity: 0, y: -14 }}
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     style={{
-                      minHeight: 470,
-                      padding: 22,
+                      minHeight: 408,
+                      padding: 18,
                       background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
                       border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
                       boxShadow: `0 32px 80px rgba(0,0,0,0.65), 0 0 50px ${getOutcomeColor(chosenOutcome)}15`,
@@ -435,13 +435,13 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                         background: "linear-gradient(135deg, rgba(255,255,255,0.07), transparent 42%)",
                       }}
                     />
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, position: "relative", zIndex: 1 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 999, background: getOutcomeColor(chosenOutcome) }} />
                       <span className="eyebrow">Tu pick</span>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 16, paddingBottom: 20, marginBottom: 20, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                      <span style={{ fontSize: "3.2rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, match)}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.06)", position: "relative", zIndex: 1 }}>
+                      <span style={{ fontSize: "2.8rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, match)}</span>
                       <div style={{ display: "grid", gap: 4 }}>
                         <p className="section-title">{match.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</p>
                         <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>
@@ -450,9 +450,9 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gap: 14, marginTop: "auto", marginBottom: "auto" }}>
+                    <div style={{ display: "grid", gap: 12, marginTop: "auto", marginBottom: "auto", position: "relative", zIndex: 1 }}>
                       <p className="eyebrow">¿Con cuánta fuerza?</p>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
                         {INTENSITIES.map((option) => {
                           const Icon = option.icon;
                           const iconColor = option.id === "hard" ? "#D4A64B" : option.id === "medium" ? "#EDE8D9" : "#7A9A81";
@@ -464,7 +464,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                               whileHover={{ scale: 1.03 }}
                               onClick={() => void handleIntensityPick(option)}
                               style={{
-                                minHeight: 132,
+                                minHeight: 112,
                                 borderRadius: 16,
                                 border: "1px solid rgba(255,255,255,0.09)",
                                 background: "rgba(255,255,255,0.04)",
@@ -484,7 +484,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       </div>
                     </div>
 
-                    <button className="button-ghost" onClick={resetPhase} style={{ marginTop: 18 }}>
+                    <button className="button-ghost" onClick={resetPhase} style={{ marginTop: 14, position: "relative", zIndex: 1 }}>
                       ← cambiar pick
                     </button>
                   </motion.div>
@@ -499,7 +499,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     className="surface-card"
                     style={{
-                      minHeight: 470,
+                      minHeight: 408,
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
@@ -567,7 +567,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
             <AnimatePresence>
               {phase === "idle" ? (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ type: "spring", stiffness: 240, damping: 22 }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 16 }}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ type: "spring", stiffness: 240, damping: 22 }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 10 }}>
                   <motion.button
                     whileTap={{ scale: 0.88 }}
                     whileHover={{ scale: 1.03 }}
@@ -642,7 +642,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       </div>
 
       <AnimatePresence initial={false}>
-        {(phase === "idle" || done) ? (
+        {(phase === "idle" || done) && !liveMatch ? (
           <motion.div
             key="home-shortcuts"
             initial={{ opacity: 0, y: 8 }}
@@ -654,26 +654,33 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
               <span>Cargá grupos de una</span>
               <span aria-hidden="true">→</span>
             </button>
-            {liveMatch ? (
-              <button
-                className="button-secondary"
-                onClick={() => router.push(`/matches/${liveMatch.id}`)}
-                style={{
-                  justifyContent: "space-between",
-                  width: "100%",
-                  background: "rgba(255,59,48,0.08)",
-                  borderColor: "rgba(255,59,48,0.2)",
-                  color: "#EDE8D9",
-                }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: 999, background: "#FF3B30", boxShadow: "0 0 12px rgba(255,59,48,.6)" }} />
-                  <span>LIVE {liveMatch.home.flag} {liveMatch.home.score} - {liveMatch.away.score} {liveMatch.away.flag}</span>
-                </span>
-                <span style={{ color: "#FF3B30", fontWeight: 800 }}>ver →</span>
-              </button>
-            ) : null}
           </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence initial={false}>
+        {phase === "idle" && liveMatch ? (
+          <motion.button
+            key="home-live-cta"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="button-secondary"
+            onClick={() => router.push(`/matches/${liveMatch.id}`)}
+            style={{
+              justifyContent: "space-between",
+              width: "100%",
+              background: "rgba(255,59,48,0.08)",
+              borderColor: "rgba(255,59,48,0.2)",
+              color: "#EDE8D9",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: "#FF3B30", boxShadow: "0 0 12px rgba(255,59,48,.6)" }} />
+              <span>LIVE {liveMatch.home.flag} {liveMatch.home.score} - {liveMatch.away.score} {liveMatch.away.flag}</span>
+            </span>
+            <span style={{ color: "#FF3B30", fontWeight: 800 }}>ver →</span>
+          </motion.button>
         ) : null}
       </AnimatePresence>
     </div>

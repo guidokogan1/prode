@@ -19,29 +19,32 @@ export default async function HomePage() {
         background: "radial-gradient(ellipse 120% 60% at 50% 0%, #1C3A22 0%, #091409 55%)",
         display: "grid",
         gridTemplateRows: "auto auto 1fr",
-        gap: 14,
+        gap: 10,
+        overflow: "hidden",
+        minHeight: "calc(100dvh - var(--bottom-nav-height) - var(--safe-bottom))",
       }}
     >
-      <section style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, paddingTop: 8 }}>
+      <section style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 2 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: "1.2rem" }}>⚽</span>
+          <span style={{ fontSize: "1.05rem" }}>⚽</span>
           <span
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 900,
               letterSpacing: ".14em",
               textTransform: "uppercase",
+              fontSize: ".96rem",
             }}
           >
             Mundial 26
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {pendingLabel > 0 ? <span className="status-pill status-pill-gold">{pendingLabel} sin jugar</span> : null}
+          {pendingLabel > 0 ? <span className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>{pendingLabel} sin jugar</span> : null}
           <span
             style={{
-              width: 34,
-              height: 34,
+              width: 32,
+              height: 32,
               borderRadius: 999,
               display: "grid",
               placeItems: "center",
@@ -57,20 +60,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section style={{ display: "grid", gap: 10 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end" }}>
-          <div style={{ display: "grid", gap: 6 }}>
+      <section style={{ display: "grid", gap: 8 }}>
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={{ display: "grid", gap: 4 }}>
             <p className="eyebrow">Jugada rápida</p>
             <h1 className="display-title">¿Qué sale?</h1>
             <p className="muted-copy">Elegí de una y seguí con la próxima ronda.</p>
           </div>
-          <div style={{ display: "grid", gap: 8, minWidth: 88 }}>
-            <div className="surface-card-soft" style={{ padding: "10px 12px", borderRadius: 16 }}>
-              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1.25rem" }}>{summary.liveMatches}</strong>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1rem" }}>{summary.liveMatches}</strong>
               <span className="micro-copy">live</span>
             </div>
-            <div className="surface-card-soft" style={{ padding: "10px 12px", borderRadius: 16 }}>
-              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1.1rem", color: "#D4A64B" }}>{summary.yourNet}</strong>
+            <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1rem", color: "#D4A64B" }}>{summary.yourNet}</strong>
               <span className="micro-copy">tu tabla</span>
             </div>
           </div>
