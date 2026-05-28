@@ -172,7 +172,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
           <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div style={{ display: "grid", gap: 4 }}>
-                <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>
+                <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.24rem", letterSpacing: "-0.04em" }}>
                   {remaining.toLocaleString("es-AR")} cr
                 </strong>
                 <span className="micro-copy">
@@ -201,7 +201,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                       {leadingAllocation?.label === item.label && item.amount > 0 ? "tu fuerte" : "tope 7.000"}
                     </span>
                   </div>
-                  <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-display)", fontSize: "1.25rem" }}>
+                  <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.04em" }}>
                     {item.amount.toLocaleString("es-AR")}
                   </strong>
                 </div>
@@ -211,7 +211,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                     <button
                       key={`${item.id}-${option.label}`}
                       className="button-secondary"
-                      style={{ minHeight: 36, borderRadius: 999, padding: "0 12px", fontSize: ".78rem" }}
+                      style={{ minHeight: 36, borderRadius: 999, padding: "0 12px", fontSize: ".74rem" }}
                       onClick={() => applyQuickIntensity(item.label, option.amount)}
                       type="button"
                     >
@@ -260,7 +260,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 <strong>{item.label}</strong>
                 <span className="micro-copy">{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
               </div>
-              <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-display)", fontSize: "1.2rem" }}>{item.amount.toLocaleString("es-AR")}</strong>
+              <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.14rem", letterSpacing: "-0.04em" }}>{item.amount.toLocaleString("es-AR")}</strong>
             </div>
           ))}
         </div>

@@ -77,7 +77,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "1.35rem" }}>{getOutcomeFlag(group.outcome.code, match)}</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                  <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem", color: isWinning ? getOutcomeColor(group.outcome.code) : "#EDE8D9" }}>
+                  <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 700, color: isWinning ? getOutcomeColor(group.outcome.code) : "#EDE8D9" }}>
                     {group.outcome.label}
                   </strong>
                   {isWinning ? (
@@ -115,8 +115,8 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                           placeItems: "center",
                           background: isWinning ? `${getOutcomeColor(group.outcome.code)}20` : "rgba(255,255,255,0.08)",
                           color: isWinning ? getOutcomeColor(group.outcome.code) : "#EDE8D9",
-                          fontFamily: "var(--font-display)",
-                          fontWeight: 900,
+                          fontFamily: "var(--font-accent)",
+                          fontWeight: 800,
                         }}
                       >
                         {ticket.userName.slice(0, 1)}
@@ -126,7 +126,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                         {ticket.netLabel ? <span className="micro-copy">{ticket.netLabel}</span> : null}
                       </div>
                     </div>
-                    <strong style={{ color: isWinning ? getOutcomeColor(group.outcome.code) : "#7A9A81", fontFamily: "var(--font-display)", fontSize: "1rem" }}>
+                    <strong style={{ color: isWinning ? getOutcomeColor(group.outcome.code) : "#97AD99", fontFamily: "var(--font-accent)", fontSize: ".98rem", letterSpacing: "-0.04em" }}>
                       {ticket.amountLabel}
                     </strong>
                   </div>
@@ -141,7 +141,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
 
       <div className="surface-card-soft" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(212,166,75,0.07)", borderColor: "rgba(212,166,75,0.18)" }}>
         <span className="muted-copy">Pozo del partido</span>
-        <strong style={{ color: "#D4A64B", fontFamily: "var(--font-display)", fontSize: "1.35rem" }}>{formatCompactCredits(totalPot)} cr</strong>
+        <strong style={{ color: "#D8B56A", fontFamily: "var(--font-accent)", fontSize: "1.28rem", letterSpacing: "-0.05em" }}>{formatCompactCredits(totalPot)} cr</strong>
       </div>
     </section>
   );

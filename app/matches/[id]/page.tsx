@@ -81,11 +81,11 @@ export default async function MatchPage({ params }: MatchPageProps) {
           <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
             <div style={{ display: "grid", gap: 3 }}>
               <span className="micro-copy">{isReveal ? "Tu lado fuerte" : "Tu jugada"}</span>
-              <strong>{leadingAllocation?.label ?? "Todavía no cargaste"}</strong>
+              <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Todavía no cargaste"}</strong>
             </div>
             {leadingAllocation ? (
               <div style={{ textAlign: "right" }}>
-                <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem", color: getOutcomeColor(leadingAllocation.code) }}>
+                <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", color: getOutcomeColor(leadingAllocation.code), letterSpacing: "-0.04em" }}>
                   {leadingAllocation.amount}
                 </strong>
                 <div className="micro-copy">{getOutcomeHint(leadingAllocation.code, match.marketType)}</div>
@@ -99,7 +99,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
                 {match.consensus.map((item) => (
                   <div key={item.code} style={{ display: "grid", gap: 4, minWidth: 82 }}>
                     <span className="micro-copy">{item.label}</span>
-                    <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-display)", fontSize: "1.2rem" }}>{item.percentage}%</strong>
+                    <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.16rem", letterSpacing: "-0.04em" }}>{item.percentage}%</strong>
                   </div>
                 ))}
               </div>

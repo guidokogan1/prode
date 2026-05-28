@@ -375,7 +375,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                             <span className="micro-copy" style={{ letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(122,154,129,0.7)" }}>Local</span>
                           </div>
                           <div style={{ display: "grid", placeItems: "center" }}>
-                            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 900, color: "rgba(255,255,255,0.12)" }}>VS</span>
+                            <span style={{ fontFamily: "var(--font-accent)", fontSize: "1.26rem", fontWeight: 800, color: "rgba(255,255,255,0.12)", letterSpacing: "-0.04em" }}>VS</span>
                           </div>
                           <div style={{ display: "grid", gap: 8, justifyItems: "center" }}>
                             <span style={{ fontSize: "3.35rem", lineHeight: 1 }}>{match.away.flag}</span>
@@ -476,7 +476,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                               }}
                             >
                               <Icon size={26} style={{ color: iconColor }} />
-                              <span style={{ fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 900 }}>{option.label}</span>
+                              <span style={{ fontFamily: "var(--font-display)", fontSize: ".98rem", fontWeight: 700 }}>{option.label}</span>
                               <span className="micro-copy" style={{ color: "#7A9A81" }}>{option.hint}</span>
                             </motion.button>
                           );
