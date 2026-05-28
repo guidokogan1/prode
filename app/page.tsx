@@ -30,8 +30,8 @@ export default async function HomePage() {
           <span
             style={{
               fontFamily: "var(--font-display)",
-              fontWeight: 900,
-              letterSpacing: ".14em",
+              fontWeight: 800,
+              letterSpacing: ".12em",
               textTransform: "uppercase",
               fontSize: ".96rem",
             }}
@@ -50,9 +50,9 @@ export default async function HomePage() {
               placeItems: "center",
               background: "#1C2E1F",
               color: "#EDE8D9",
-              fontFamily: "var(--font-display)",
-              fontWeight: 900,
-              fontSize: "1rem",
+              fontFamily: "var(--font-accent)",
+              fontWeight: 800,
+              fontSize: ".95rem",
             }}
           >
             {initial}
@@ -69,11 +69,11 @@ export default async function HomePage() {
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1rem" }}>{summary.liveMatches}</strong>
+              <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", letterSpacing: "-0.04em" }}>{summary.liveMatches}</strong>
               <span className="micro-copy">live</span>
             </div>
             <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "1rem", color: "#D4A64B" }}>{summary.yourNet}</strong>
+              <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", color: "#D8B56A", letterSpacing: "-0.04em" }}>{summary.yourNet}</strong>
               <span className="micro-copy">tu tabla</span>
             </div>
           </div>

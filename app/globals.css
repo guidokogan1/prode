@@ -5,11 +5,11 @@
   --card-mid: #1f3e28;
   --surface: #142219;
   --surface-alt: #1c2e1f;
-  --surface-soft: rgba(255, 255, 255, 0.03);
+  --surface-soft: rgba(255, 255, 255, 0.045);
   --text-primary: #ede8d9;
-  --text-secondary: #7a9a81;
-  --text-tertiary: #4a6a4d;
-  --gold: #d4a64b;
+  --text-secondary: #97ad99;
+  --text-tertiary: #667d69;
+  --gold: #d8b56a;
   --gold-dark: #0a150c;
   --outcome-home: #3d9b5f;
   --outcome-away: #e8413a;
@@ -29,7 +29,8 @@
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --font-body: var(--font-barlow), "Segoe UI", sans-serif;
-  --font-display: var(--font-barlow-condensed), var(--font-barlow), sans-serif;
+  --font-display: var(--font-barlow), "Segoe UI", sans-serif;
+  --font-accent: var(--font-barlow-condensed), var(--font-barlow), sans-serif;
 }
 
 * {
@@ -178,55 +179,62 @@ input,
 .eyebrow {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .display-title,
 .section-title,
-.score-display,
 .team-display {
   margin: 0;
   font-family: var(--font-display);
   color: var(--text-primary);
-  letter-spacing: -0.05em;
+  font-weight: 800;
+  letter-spacing: -0.035em;
 }
 
 .display-title {
-  font-size: clamp(2.4rem, 8vw, 3.4rem);
-  line-height: 0.9;
+  font-size: clamp(2.25rem, 8vw, 3.15rem);
+  line-height: 0.94;
 }
 
 .section-title {
-  font-size: clamp(1.6rem, 5vw, 2.3rem);
-  line-height: 0.92;
+  font-size: clamp(1.45rem, 5vw, 2.05rem);
+  line-height: 0.98;
 }
 
 .score-display {
+  margin: 0;
+  font-family: var(--font-accent);
   font-size: clamp(2.7rem, 12vw, 4.2rem);
   line-height: 0.88;
+  font-weight: 800;
   letter-spacing: -0.08em;
+  color: var(--text-primary);
 }
 
 .team-display {
-  font-size: clamp(1.05rem, 4.6vw, 1.35rem);
-  font-weight: 900;
+  font-size: clamp(1rem, 4.3vw, 1.18rem);
+  letter-spacing: -0.02em;
   text-transform: uppercase;
 }
 
 .muted-copy {
   margin: 0;
   color: var(--text-secondary);
-  line-height: 1.45;
-  font-size: 0.95rem;
+  line-height: 1.5;
+  font-size: 0.92rem;
+  font-weight: 500;
 }
 
 .micro-copy {
   color: var(--text-tertiary);
-  font-size: 0.76rem;
-  line-height: 1.35;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  font-weight: 500;
 }
 
 .pill,
@@ -237,8 +245,9 @@ input,
   min-height: 32px;
   padding: 0 12px;
   border-radius: var(--radius-pill);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
+  font-family: var(--font-body);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -283,7 +292,7 @@ input,
   background: var(--gold);
   color: var(--gold-dark);
   padding: 0 18px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .button-secondary {
@@ -385,9 +394,9 @@ input,
 }
 
 .nav-label {
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 

@@ -24,10 +24,10 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
               placeItems: "center",
               background: "rgba(212,166,75,0.18)",
               border: "2px solid rgba(212,166,75,0.4)",
-              color: "#D4A64B",
-              fontFamily: "var(--font-display)",
-              fontWeight: 900,
-              fontSize: "1.8rem",
+              color: "#D8B56A",
+              fontFamily: "var(--font-accent)",
+              fontWeight: 800,
+              fontSize: "1.7rem",
             }}
           >
             {profile.name.slice(0, 1)}
@@ -51,7 +51,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
             marginLeft: "auto",
           }}
         >
-          <strong style={{ display: "block", fontFamily: "var(--font-display)", fontSize: "2rem", color: "#D4A64B" }}>
+          <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "2rem", color: "#D8B56A", letterSpacing: "-0.05em" }}>
             {profile.netLabel}
           </strong>
           <span className="micro-copy">tu tabla</span>
@@ -67,7 +67,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
           <div key={item.label} className="surface-card-soft" style={{ padding: "14px 12px", borderRadius: 16, textAlign: "center" }}>
             <div style={{ display: "grid", gap: 5 }}>
               <span>{item.icon}</span>
-              <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem" }}>{item.value}</strong>
+              <strong style={{ fontFamily: item.label === "Campeón" ? "var(--font-display)" : "var(--font-accent)", fontSize: "1.15rem", letterSpacing: item.label === "Campeón" ? "-0.02em" : "-0.04em" }}>{item.value}</strong>
               <span className="micro-copy">{item.label}</span>
             </div>
           </div>
