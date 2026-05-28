@@ -297,7 +297,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       opacity: cardOpacity,
                       position: "relative",
                       zIndex: 2,
-                      minHeight: 408,
+                      minHeight: 360,
                     }}
                     className="surface-card"
                     initial={{ scale: 0.92, opacity: 0, y: 40 }}
@@ -359,7 +359,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       </motion.div>
                     ) : null}
 
-                    <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", height: "100%", padding: 18, position: "relative", zIndex: 1 }}>
+                    <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", height: "100%", padding: 16, position: "relative", zIndex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
                         <span className="eyebrow">{match.stage}</span>
                         <div className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>
@@ -367,38 +367,38 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 4, paddingBottom: 8 }}>
-                        <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 30px 1fr", gap: 6, alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 2, paddingBottom: 6 }}>
+                        <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 24px 1fr", gap: 4, alignItems: "center" }}>
                           <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
-                            <span style={{ fontSize: "3.35rem", lineHeight: 1 }}>{match.home.flag}</span>
+                            <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.home.flag}</span>
                             <span className="team-display" style={{ textAlign: "center" }}>{match.home.name}</span>
                             <span className="micro-copy" style={{ fontSize: ".66rem", letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(151,173,153,0.74)" }}>Local</span>
                           </div>
                           <div style={{ display: "grid", placeItems: "center" }}>
-                            <span style={{ fontFamily: "var(--font-body)", fontSize: "1.2rem", fontWeight: 600, color: "rgba(255,255,255,0.12)", letterSpacing: "-0.03em" }}>vs</span>
+                            <span style={{ fontFamily: "var(--font-body)", fontSize: "1rem", fontWeight: 600, color: "rgba(255,255,255,0.12)", letterSpacing: "-0.03em" }}>vs</span>
                           </div>
                           <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
-                            <span style={{ fontSize: "3.35rem", lineHeight: 1 }}>{match.away.flag}</span>
+                            <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.away.flag}</span>
                             <span className="team-display" style={{ textAlign: "center" }}>{match.away.name}</span>
                             <span className="micro-copy" style={{ fontSize: ".66rem", letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(151,173,153,0.74)" }}>Visitante</span>
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, paddingTop: 10, marginTop: 2, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span>←</span>
-                          <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".76rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica visita" : "visitante"}</span>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8, paddingTop: 10, marginTop: 2, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 6 }}>
+                          <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{match.marketType === "qualifies" ? "clasifica local" : "local"}</span>
+                          <span style={{ color: "rgba(237,232,217,0.82)", fontFamily: "var(--font-body)", fontSize: ".82rem", fontWeight: 600 }}>←</span>
                         </div>
                         {showDrawGesture ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".76rem", fontWeight: 700 }}>empate</span>
-                            <span>↑</span>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                            <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>empate</span>
+                            <span style={{ color: "rgba(237,232,217,0.82)", fontFamily: "var(--font-body)", fontSize: ".82rem", fontWeight: 600 }}>↑</span>
                           </div>
                         ) : <span className="micro-copy">{match.userStateLabel}</span>}
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".76rem", fontWeight: 700 }}>{match.marketType === "qualifies" ? "clasifica local" : "local"}</span>
-                          <span>→</span>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+                          <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{match.marketType === "qualifies" ? "clasifica visita" : "visitante"}</span>
+                          <span style={{ color: "rgba(237,232,217,0.82)", fontFamily: "var(--font-body)", fontSize: ".82rem", fontWeight: 600 }}>→</span>
                         </div>
                       </div>
                     </div>
@@ -413,8 +413,8 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     exit={{ scale: 0.94, opacity: 0, y: -14 }}
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     style={{
-                      minHeight: 408,
-                      padding: 18,
+                      minHeight: 360,
+                      padding: 16,
                       background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
                       border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
                       boxShadow: `0 32px 80px rgba(0,0,0,0.65), 0 0 50px ${getOutcomeColor(chosenOutcome)}15`,
@@ -499,7 +499,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     className="surface-card"
                     style={{
-                      minHeight: 408,
+                      minHeight: 360,
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
