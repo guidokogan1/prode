@@ -2,7 +2,7 @@
 
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useMotionValue, useTransform } from "motion/react";
+import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles, Zap } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
@@ -39,12 +39,15 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
   const [chosenIntensity, setChosenIntensity] = useState<IntensityOption | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [saveTone, setSaveTone] = useState<"default" | "warning">("default");
+  const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
   const [exitDir, setExitDir] = useState<MatchOutcomeCode>("home");
+  const [isSaving, setIsSaving] = useState(false);
   const nextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isChoosingRef = useRef(false);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const cardOpacity = useMotionValue(1);
   const rotate = useTransform(x, [-200, 200], [-18, 18]);
   const homeOpacity = useTransform(x, [20, 100], [0, 1]);
   const awayOpacity = useTransform(x, [-100, -20], [1, 0]);
@@ -72,8 +75,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
     setChosenIntensity(null);
     setSaveMessage(null);
     setSaveTone("default");
+    setIsSaving(false);
     x.set(0);
     y.set(0);
+    cardOpacity.set(1);
   };
 
   function moveNext() {
@@ -81,12 +86,28 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
     resetPhase();
   }
 
-  function chooseOutcome(code: MatchOutcomeCode) {
+  async function chooseOutcome(code: MatchOutcomeCode) {
+    if (phase !== "idle" || isChoosingRef.current) {
+      return;
+    }
+
+    isChoosingRef.current = true;
     setExitDir(code);
+    const targetX = code === "home" || code === "home_qualifies" ? 168 : code === "away" || code === "away_qualifies" ? -168 : 0;
+    const targetY = code === "draw" ? -148 : 0;
+
+    await Promise.all([
+      animate(x, targetX, { type: "spring", stiffness: 235, damping: 24 }).finished,
+      animate(y, targetY, { type: "spring", stiffness: 235, damping: 24 }).finished,
+      animate(cardOpacity, 0.16, { duration: 0.18, ease: "easeOut" }).finished,
+    ]);
+
     setChosenOutcome(code);
     setPhase("chosen");
     x.set(0);
     y.set(0);
+    cardOpacity.set(1);
+    isChoosingRef.current = false;
   }
 
   async function handleIntensityPick(option: (typeof INTENSITIES)[number]) {
@@ -108,22 +129,31 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       amount: item.amount,
     }));
 
-    saveStoredAllocation(match.id, payload);
+    if (nextTimerRef.current) {
+      clearTimeout(nextTimerRef.current);
+    }
 
+    saveStoredAllocation(match.id, payload);
     setChosenIntensity(option.id);
     setPhase("saved");
+    setIsSaving(true);
+    setSaveMessage("Subiendo ticket");
+    setSaveTone("loading");
 
     try {
-      const response = await fetch("/api/tickets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          matchId: match.id,
-          allocations: payload,
+      const [, response] = await Promise.all([
+        new Promise((resolve) => setTimeout(resolve, 760)),
+        fetch("/api/tickets", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            matchId: match.id,
+            allocations: payload,
+          }),
         }),
-      });
+      ]);
 
       if (!response.ok) {
         throw new Error("remote save failed");
@@ -134,11 +164,13 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
     } catch {
       setSaveMessage(session?.mode === "remote" ? "Guardado local mientras reconecta." : "Guardado en este dispositivo.");
       setSaveTone("warning");
+    } finally {
+      setIsSaving(false);
     }
 
     nextTimerRef.current = setTimeout(() => {
       moveNext();
-    }, 1100);
+    }, 760);
   }
 
   const idleExit =
@@ -240,21 +272,21 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     key={`idle-${match.id}`}
                     drag
                     dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                    dragElastic={0.25}
-                    onDragEnd={(_, info) => {
+                    dragElastic={0.3}
+                    onDragEnd={async (_, info) => {
                       const { x: offsetX, y: offsetY } = info.offset;
-                      if (offsetX > 75) {
-                        chooseOutcome(match.allocation[0]?.code ?? "home");
+                      if (offsetX > 68) {
+                        await chooseOutcome(match.allocation[0]?.code ?? "home");
                         return;
                       }
-                      if (offsetX < -75) {
-                        chooseOutcome(match.allocation[match.allocation.length - 1]?.code ?? "away");
+                      if (offsetX < -68) {
+                        await chooseOutcome(match.allocation[match.allocation.length - 1]?.code ?? "away");
                         return;
                       }
-                      if (offsetY < -75 && showDrawGesture) {
+                      if (offsetY < -68 && showDrawGesture) {
                         const drawOutcome = match.allocation.find((item) => isDrawCode(item.code));
                         if (drawOutcome) {
-                          chooseOutcome(drawOutcome.code);
+                          await chooseOutcome(drawOutcome.code);
                         }
                       }
                     }}
@@ -262,6 +294,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       x,
                       y,
                       rotate,
+                      opacity: cardOpacity,
                       position: "relative",
                       zIndex: 2,
                       minHeight: 470,
@@ -270,8 +303,8 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     initial={{ scale: 0.92, opacity: 0, y: 40 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={idleExit}
-                    transition={{ type: "spring", stiffness: 280, damping: 26 }}
-                    whileDrag={{ scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 250, damping: 24 }}
+                    whileDrag={{ scale: 1.018 }}
                   >
                     <motion.div
                       style={{
@@ -375,10 +408,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                 {phase === "chosen" && chosenOutcome ? (
                   <motion.div
                     key={`chosen-${match.id}-${chosenOutcome}`}
-                    initial={{ scale: 0.92, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.88, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                    initial={{ scale: 0.94, opacity: 0, y: 14 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.94, opacity: 0, y: -14 }}
+                    transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     style={{
                       minHeight: 470,
                       padding: 22,
@@ -460,10 +493,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                 {phase === "saved" && chosenOutcome && chosenIntensity ? (
                   <motion.div
                     key={`saved-${match.id}-${chosenOutcome}-${chosenIntensity}`}
-                    initial={{ scale: 0.92, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.88, opacity: 0, y: -40 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 26 }}
+                    initial={{ scale: 0.96, opacity: 0, y: 16 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.94, opacity: 0, y: -24 }}
+                    transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     className="surface-card"
                     style={{
                       minHeight: 470,
@@ -486,10 +519,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                         background: "linear-gradient(135deg, rgba(255,255,255,0.06), transparent 42%)",
                       }}
                     />
-                    <div style={{ display: "grid", gap: 16, justifyItems: "center" }}>
+                    <div style={{ display: "grid", gap: 16, justifyItems: "center", position: "relative", zIndex: 1 }}>
                       <motion.div
                         initial={{ scale: 0, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0 }}
+                        animate={{ scale: 1, rotate: 0, boxShadow: isSaving ? "0 0 0 12px rgba(61,155,95,0.08)" : "0 0 0 0 rgba(61,155,95,0)" }}
                         transition={{ type: "spring", stiffness: 350, damping: 20, delay: 0.08 }}
                         style={{
                           width: 64,
@@ -511,7 +544,17 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                           <span style={{ color: "#D4A64B" }}>{INTENSITIES.find((item) => item.id === chosenIntensity)?.hint}</span>
                         </p>
                         {saveMessage ? (
-                          <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : "#7A9A81" }}>
+                          <span
+                            className="micro-copy"
+                            style={{
+                              color: saveTone === "warning" ? "#D4A64B" : saveTone === "loading" ? "#EDE8D9" : "#7A9A81",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 6,
+                            }}
+                          >
+                            {isSaving ? <span style={{ width: 7, height: 7, borderRadius: 999, background: "#D4A64B", boxShadow: "0 0 16px rgba(212,166,75,.55)" }} /> : null}
                             {saveMessage}
                           </span>
                         ) : null}
@@ -524,10 +567,11 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
             <AnimatePresence>
               {phase === "idle" ? (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 16 }}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} transition={{ type: "spring", stiffness: 240, damping: 22 }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 16 }}>
                   <motion.button
                     whileTap={{ scale: 0.88 }}
-                    onClick={() => chooseOutcome(match.allocation[match.allocation.length - 1]?.code ?? "away")}
+                    whileHover={{ scale: 1.03 }}
+                    onClick={() => void chooseOutcome(match.allocation[match.allocation.length - 1]?.code ?? "away")}
                     style={{
                       width: 58,
                       height: 58,
@@ -548,10 +592,11 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   {showDrawGesture ? (
                     <motion.button
                       whileTap={{ scale: 0.88 }}
+                      whileHover={{ scale: 1.03 }}
                       onClick={() => {
                         const drawOutcome = match.allocation.find((item) => item.code === "draw");
                         if (drawOutcome) {
-                          chooseOutcome(drawOutcome.code);
+                          void chooseOutcome(drawOutcome.code);
                         }
                       }}
                       style={{
@@ -570,7 +615,8 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   ) : null}
                   <motion.button
                     whileTap={{ scale: 0.88 }}
-                    onClick={() => chooseOutcome(match.allocation[0]?.code ?? "home")}
+                    whileHover={{ scale: 1.03 }}
+                    onClick={() => void chooseOutcome(match.allocation[0]?.code ?? "home")}
                     style={{
                       width: 58,
                       height: 58,

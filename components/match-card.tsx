@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "motion/react";
 import type { MatchViewModel } from "@/lib/domain";
 import { getLeadingOutcome, getOutcomeColor } from "@/lib/match-ui";
 
@@ -22,66 +25,74 @@ export function MatchCard({ match }: MatchCardProps) {
         : "rgba(255,255,255,0.06)";
 
   return (
-    <Link
-      href={`/matches/${match.id}`}
-      className="surface-card-soft"
-      style={{
-        padding: "14px 16px",
-        borderRadius: 18,
-        display: "flex",
-        gap: 12,
-        alignItems: "center",
-        background: statusTone,
-        borderColor: statusBorder,
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.985 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={{ scale: 1.015, y: -2 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 240, damping: 24 }}
     >
-      <div style={{ width: 18, display: "grid", placeItems: "center", flexShrink: 0 }}>
-        {match.statusVariant === "live" ? (
-          <span style={{ width: 8, height: 8, borderRadius: 999, background: "#FF3B30", boxShadow: "0 0 12px rgba(255,59,48,.6)" }} />
-        ) : match.statusVariant === "locked" ? (
-          <span className="micro-copy">🔒</span>
-        ) : leading ? (
-          <span className="micro-copy" style={{ color: getOutcomeColor(leading.code) }}>✓</span>
-        ) : null}
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
-        <span style={{ fontSize: "1.4rem" }}>{match.home.flag}</span>
-        <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>{match.home.name.slice(0, 3).toUpperCase()}</strong>
-        {match.statusVariant === "live" || match.statusVariant === "settled" ? (
-          <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem", color: match.statusVariant === "live" ? "#FF3B30" : "#7A9A81" }}>
-            {match.home.score} - {match.away.score}
-          </strong>
-        ) : (
-          <span style={{ color: "rgba(255,255,255,0.14)" }}>·</span>
-        )}
-        <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>{match.away.name.slice(0, 3).toUpperCase()}</strong>
-        <span style={{ fontSize: "1.4rem" }}>{match.away.flag}</span>
-      </div>
-
-      <div style={{ textAlign: "right", flexShrink: 0, display: "grid", gap: 4 }}>
-        <span className="micro-copy">{match.stage}</span>
-        <span style={{ color: "#7A9A81", fontSize: ".78rem", fontWeight: 700 }}>{match.kickoffLabel}</span>
-      </div>
-
-      {leading ? (
-        <div
-          style={{
-            flexShrink: 0,
-            borderRadius: 999,
-            padding: "6px 9px",
-            background: `${getOutcomeColor(leading.code)}18`,
-            border: `1px solid ${getOutcomeColor(leading.code)}30`,
-            color: getOutcomeColor(leading.code),
-            fontSize: ".66rem",
-            fontWeight: 800,
-            letterSpacing: ".1em",
-            textTransform: "uppercase",
-          }}
-        >
-          {leading.shortLabel}
+      <Link
+        href={`/matches/${match.id}`}
+        className="surface-card-soft"
+        style={{
+          padding: "14px 16px",
+          borderRadius: 18,
+          display: "flex",
+          gap: 12,
+          alignItems: "center",
+          background: statusTone,
+          borderColor: statusBorder,
+        }}
+      >
+        <div style={{ width: 18, display: "grid", placeItems: "center", flexShrink: 0 }}>
+          {match.statusVariant === "live" ? (
+            <span style={{ width: 8, height: 8, borderRadius: 999, background: "#FF3B30", boxShadow: "0 0 12px rgba(255,59,48,.6)" }} />
+          ) : match.statusVariant === "locked" ? (
+            <span className="micro-copy">🔒</span>
+          ) : leading ? (
+            <span className="micro-copy" style={{ color: getOutcomeColor(leading.code) }}>✓</span>
+          ) : null}
         </div>
-      ) : null}
-    </Link>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: "1.4rem" }}>{match.home.flag}</span>
+          <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>{match.home.name.slice(0, 3).toUpperCase()}</strong>
+          {match.statusVariant === "live" || match.statusVariant === "settled" ? (
+            <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem", color: match.statusVariant === "live" ? "#FF3B30" : "#7A9A81" }}>
+              {match.home.score} - {match.away.score}
+            </strong>
+          ) : (
+            <span style={{ color: "rgba(255,255,255,0.14)" }}>·</span>
+          )}
+          <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>{match.away.name.slice(0, 3).toUpperCase()}</strong>
+          <span style={{ fontSize: "1.4rem" }}>{match.away.flag}</span>
+        </div>
+
+        <div style={{ textAlign: "right", flexShrink: 0, display: "grid", gap: 4 }}>
+          <span className="micro-copy">{match.stage}</span>
+          <span style={{ color: "#7A9A81", fontSize: ".78rem", fontWeight: 700 }}>{match.kickoffLabel}</span>
+        </div>
+
+        {leading ? (
+          <div
+            style={{
+              flexShrink: 0,
+              borderRadius: 999,
+              padding: "6px 9px",
+              background: `${getOutcomeColor(leading.code)}18`,
+              border: `1px solid ${getOutcomeColor(leading.code)}30`,
+              color: getOutcomeColor(leading.code),
+              fontSize: ".66rem",
+              fontWeight: 800,
+              letterSpacing: ".1em",
+              textTransform: "uppercase",
+            }}
+          >
+            {leading.shortLabel}
+          </div>
+        ) : null}
+      </Link>
+    </motion.div>
   );
 }
