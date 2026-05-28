@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Barlow, Barlow_Condensed, DM_Serif_Display } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
 import { SessionProvider } from "@/components/session-provider";
 import "./globals.css";
@@ -14,6 +14,12 @@ const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
   variable: "--font-barlow-condensed",
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-serif-display",
 });
 
 export const metadata: Metadata = {
@@ -35,7 +41,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${barlow.variable} ${barlowCondensed.variable}`}>
+      <body className={`${barlow.variable} ${barlowCondensed.variable} ${dmSerifDisplay.variable}`}>
         <SessionProvider>
           <div className="app-shell">
             {children}

@@ -31,6 +31,7 @@
   --font-body: var(--font-barlow), "Segoe UI", sans-serif;
   --font-display: var(--font-barlow), "Segoe UI", sans-serif;
   --font-accent: var(--font-barlow-condensed), var(--font-barlow), sans-serif;
+  --font-display-serif: var(--font-serif-display), "Iowan Old Style", "Times New Roman", serif;
 }
 
 * {
@@ -190,20 +191,25 @@ input,
 .section-title,
 .team-display {
   margin: 0;
-  font-family: var(--font-display);
   color: var(--text-primary);
-  font-weight: 800;
-  letter-spacing: -0.035em;
 }
 
 .display-title {
+  font-family: var(--font-display-serif);
   font-size: clamp(2.25rem, 8vw, 3.15rem);
-  line-height: 0.94;
+  line-height: 0.96;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 
 .section-title {
+  font-family: var(--font-display-serif);
   font-size: clamp(1.45rem, 5vw, 2.05rem);
-  line-height: 0.98;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
 }
 
 .score-display {
@@ -217,7 +223,9 @@ input,
 }
 
 .team-display {
+  font-family: var(--font-display);
   font-size: clamp(1rem, 4.3vw, 1.18rem);
+  font-weight: 800;
   letter-spacing: -0.02em;
   text-transform: uppercase;
 }
