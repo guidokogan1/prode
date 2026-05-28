@@ -180,8 +180,8 @@ input,
 .eyebrow {
   margin: 0;
   color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-style: normal;
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -224,7 +224,7 @@ input,
 }
 
 .team-display {
-  font-family: var(--font-body);
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
   font-size: clamp(1rem, 4.2vw, 1.12rem);
   line-height: 1.05;
   font-weight: 600;
@@ -234,8 +234,8 @@ input,
 
 .muted-copy {
   margin: 0;
-  font-family: var(--font-body);
-  font-style: normal;
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   color: var(--text-secondary);
   line-height: 1.5;
   font-size: 0.92rem;
@@ -243,8 +243,8 @@ input,
 }
 
 .micro-copy {
-  font-family: var(--font-body);
-  font-style: normal;
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   color: var(--text-tertiary);
   font-size: 0.78rem;
   line-height: 1.4;
@@ -253,6 +253,8 @@ input,
 
 .pill,
 .status-pill {
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -261,7 +263,6 @@ input,
   border-radius: var(--radius-pill);
   font-size: 0.74rem;
   font-weight: 700;
-  font-family: var(--font-body);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -285,8 +286,8 @@ input,
 .button-primary,
 .button-secondary,
 .button-ghost {
-  font-family: var(--font-body);
-  font-style: normal;
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -332,8 +333,8 @@ input,
 }
 
 .field label {
-  font-family: var(--font-body);
-  font-style: normal;
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   color: var(--text-secondary);
   font-size: 0.82rem;
   font-weight: 700;
@@ -412,8 +413,8 @@ input,
 }
 
 .nav-label {
-  font-family: var(--font-body);
-  font-style: normal;
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -421,18 +422,18 @@ input,
 }
 
 .money-positive {
-  font-family: var(--font-body);
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
   color: var(--outcome-home);
 }
 
 .money-negative {
-  font-family: var(--font-body);
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
   color: var(--outcome-away);
 }
 
 .error-copy {
-  font-family: var(--font-body);
-  font-style: normal;
+  font-family: var(--font-barlow), system-ui, sans-serif !important;
+  font-style: normal !important;
   color: #ff8c84;
   font-size: 0.86rem;
 }
