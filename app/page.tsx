@@ -29,8 +29,9 @@ export default async function HomePage() {
           <span style={{ fontSize: "1.05rem" }}>⚽</span>
           <span
             style={{
-              fontFamily: "var(--font-display)",
+              fontFamily: "var(--font-barlow), system-ui, sans-serif",
               fontWeight: 800,
+              fontStyle: "normal",
               letterSpacing: ".12em",
               textTransform: "uppercase",
               fontSize: ".96rem",

@@ -587,7 +587,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
                       <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.home.flag}</span>
-                      <span style={{ fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.home.name.slice(0, 3)}</span>
+                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.home.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>
                   {showDrawGesture ? (
@@ -632,7 +632,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
                       <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.away.flag}</span>
-                      <span style={{ fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.away.name.slice(0, 3)}</span>
+                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.away.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>
                 </motion.div>
