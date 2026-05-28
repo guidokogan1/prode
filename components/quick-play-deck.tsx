@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles, Zap } from "lucide-react";
@@ -41,6 +41,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning">("default");
   const [exitDir, setExitDir] = useState<MatchOutcomeCode>("home");
+  const nextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -48,6 +49,14 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const homeOpacity = useTransform(x, [20, 100], [0, 1]);
   const awayOpacity = useTransform(x, [-100, -20], [1, 0]);
   const drawOpacity = useTransform(y, [-100, -20], [1, 0]);
+
+  useEffect(() => {
+    return () => {
+      if (nextTimerRef.current) {
+        clearTimeout(nextTimerRef.current);
+      }
+    };
+  }, []);
 
   if (!deck.length) {
     return null;
@@ -127,7 +136,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       setSaveTone("warning");
     }
 
-    setTimeout(() => {
+    nextTimerRef.current = setTimeout(() => {
       moveNext();
     }, 1100);
   }
@@ -161,7 +170,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         </div>
       ) : null}
 
-      <div style={{ minHeight: 560, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div style={{ minHeight: 540, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         {done ? (
           <motion.div
             className="surface-card"
@@ -381,8 +390,18 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       flexDirection: "column",
                       position: "relative",
                       zIndex: 4,
+                      overflow: "hidden",
                     }}
                   >
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.07), transparent 42%)",
+                      }}
+                    />
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 999, background: getOutcomeColor(chosenOutcome) }} />
                       <span className="eyebrow">Tu pick</span>
@@ -455,8 +474,18 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       padding: 28,
                       position: "relative",
                       zIndex: 4,
+                      overflow: "hidden",
                     }}
                   >
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        pointerEvents: "none",
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.06), transparent 42%)",
+                      }}
+                    />
                     <div style={{ display: "grid", gap: 16, justifyItems: "center" }}>
                       <motion.div
                         initial={{ scale: 0, rotate: -20 }}
