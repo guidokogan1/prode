@@ -202,14 +202,14 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         </div>
       ) : null}
 
-      <div style={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10 }}>
+      <div style={{ minHeight: 0, display: "grid", gap: 10, alignContent: "start" }}>
         {done ? (
           <motion.div
             className="surface-card"
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             style={{
-              minHeight: 408,
+              minHeight: 360,
               padding: 28,
               display: "flex",
               flexDirection: "column",
@@ -230,7 +230,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
           </motion.div>
         ) : (
           <>
-            <div style={{ position: "relative", flex: 1 }}>
+            <div style={{ position: "relative" }}>
               {phase === "idle" && currentIndex < deck.length - 1 ? (
                 <>
                   <div
@@ -297,7 +297,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       opacity: cardOpacity,
                       position: "relative",
                       zIndex: 2,
-                      minHeight: 360,
+                      minHeight: 332,
                       fontFamily: "var(--font-barlow), system-ui, sans-serif",
                     }}
                     className="surface-card"
@@ -360,7 +360,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       </motion.div>
                     ) : null}
 
-                    <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", height: "100%", padding: 16, position: "relative", zIndex: 1, fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>
+                    <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", padding: 16, position: "relative", zIndex: 1, fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
                         <span className="eyebrow" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>{match.stage}</span>
                         <div className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>
@@ -414,7 +414,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     exit={{ scale: 0.94, opacity: 0, y: -14 }}
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     style={{
-                      minHeight: 360,
+                      minHeight: 332,
                       padding: 16,
                       background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
                       border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
@@ -500,7 +500,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     className="surface-card"
                     style={{
-                      minHeight: 360,
+                      minHeight: 332,
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
