@@ -1,33 +1,50 @@
 "use client";
 
 import Link from "next/link";
+import type { SessionState } from "@/lib/domain";
 import { clearStoredSession, getStoredSession, SESSION_EVENT } from "@/lib/local-store";
 import { useEffect, useState } from "react";
 
 export function SessionPanel() {
-  const [sessionName, setSessionName] = useState<string | null>(null);
-  const [sessionMode, setSessionMode] = useState<"local" | "remote" | "demo" | null>(null);
+  const [session, setSession] = useState<SessionState | null>(null);
 
   useEffect(() => {
     const sync = async () => {
       try {
         const response = await fetch("/api/session", { cache: "no-store" });
-        const payload = (await response.json()) as {
-          session: { displayName: string; mode: "local" | "remote" | "demo" } | null;
-        };
+        const payload = (await response.json()) as { session: SessionState };
 
-        if (payload.session) {
-          setSessionName(payload.session.displayName);
-          setSessionMode(payload.session.mode);
-          return;
+        if (payload.session.kind === "anonymous") {
+          const localSession = getStoredSession();
+          if (localSession) {
+            setSession({
+              kind: "local",
+              appMode: payload.session.appMode,
+              displayName: localSession.displayName,
+              demoPersonaSlug: payload.session.demoPersonaSlug,
+            });
+            return;
+          }
         }
-      } catch {
-        // Falls back below.
-      }
 
-      const localSession = getStoredSession();
-      setSessionName(localSession?.displayName ?? null);
-      setSessionMode(localSession ? "local" : "demo");
+        setSession(payload.session);
+        return;
+      } catch {
+        const localSession = getStoredSession();
+        setSession(
+          localSession
+            ? {
+                kind: "local",
+                appMode: "demo",
+                displayName: localSession.displayName,
+              }
+            : {
+                kind: "anonymous",
+                appMode: "demo",
+                displayName: null,
+              },
+        );
+      }
     };
 
     void sync();
@@ -48,36 +65,52 @@ export function SessionPanel() {
     }
 
     clearStoredSession();
-    setSessionName(null);
-    setSessionMode("demo");
+    setSession((current) =>
+      current
+        ? {
+            kind: current.appMode === "demo" ? "demo" : "anonymous",
+            appMode: current.appMode,
+            displayName: current.appMode === "demo" ? current.displayName : null,
+            demoPersonaSlug: current.demoPersonaSlug,
+          }
+        : {
+            kind: "anonymous",
+            appMode: "demo",
+            displayName: null,
+          },
+    );
   }
 
+  const sessionName = session?.displayName ?? "Sin entrar";
+  const sessionBadge = session ? `${session.kind} · ${session.appMode}` : "sin sesión";
   const modeCopy =
-    sessionMode === "remote"
-      ? "Ya estás jugando con sesión remota guardada."
-      : sessionMode === "local"
-        ? "Estás jugando en este dispositivo."
-        : "Estás viendo el juego en modo demo.";
+    session?.kind === "remote"
+      ? "Sesión remota"
+      : session?.kind === "local"
+        ? "Sesión local"
+        : session?.kind === "demo"
+          ? "Modo demo"
+          : "Sin sesión";
 
   return (
-    <section className="surface-card-soft" style={{ padding: 18, display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
-        <div style={{ display: "grid", gap: 4 }}>
-          <p className="eyebrow">Tu acceso</p>
-          <h2 className="section-title">{sessionName ?? "Sin entrar"}</h2>
+    <section className="surface-card-soft panel-stack">
+      <div className="panel-head">
+        <div className="stack-sm">
+          <p className="eyebrow">Sesión</p>
+          <h2 className="section-title">{sessionName}</h2>
         </div>
-        <span className="pill">{sessionMode ? `modo ${sessionMode}` : "sin sesión"}</span>
+        <span className="pill">{sessionBadge}</span>
       </div>
 
       <p className="muted-copy">{modeCopy}</p>
 
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <div className="actions-row">
         <Link className="button-primary" href="/login">
-          {sessionName ? "Editar acceso" : "Entrar"}
+          {session?.kind === "anonymous" || session?.kind === "demo" ? "Entrar" : "Cambiar acceso"}
         </Link>
-        {sessionName ? (
+        {session && session.kind !== "anonymous" ? (
           <button className="button-secondary" onClick={() => void handleLogout()}>
-            Cerrar sesión
+            Salir
           </button>
         ) : null}
       </div>

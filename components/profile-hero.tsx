@@ -1,4 +1,5 @@
 import type { ProfileViewModel } from "@/lib/domain";
+import { formatNetAmount } from "@/lib/format";
 
 type ProfileHeroProps = {
   profile: ProfileViewModel;
@@ -33,9 +34,9 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
             {profile.name.slice(0, 1)}
           </span>
           <div style={{ display: "grid", gap: 4 }}>
-            <p className="eyebrow">Yo</p>
+            <p className="eyebrow">Perfil</p>
             <h1 className="display-title">{profile.name}</h1>
-            <p className="muted-copy">Tu partido, tu tabla y tus jugadas fuertes.</p>
+            <p className="muted-copy">Tu resumen</p>
           </div>
         </div>
 
@@ -52,16 +53,16 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
           }}
         >
           <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "2rem", color: "#D8B56A", letterSpacing: "-0.05em" }}>
-            {profile.netLabel}
+            {formatNetAmount(profile.netAmount)}
           </strong>
-          <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>TU TABLA</span>
+          <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>Neto</span>
         </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(108px, 1fr))", gap: 12 }}>
         {[
           { label: "Positivas", value: String(profile.positiveTickets), icon: "🎯" },
-          { label: "Mejor golpe", value: profile.bestHit, icon: "🔥" },
+          { label: "Mejor", value: formatNetAmount(profile.bestHitAmount), icon: "🔥" },
           { label: "Campeón", value: profile.championPick, icon: "🏆" },
         ].map((item) => (
           <div key={item.label} className="surface-card-soft" style={{ padding: "14px 12px", borderRadius: 16, textAlign: "center" }}>

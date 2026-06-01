@@ -1,61 +1,63 @@
 "use client";
 
 import { createContext, useEffect, useState } from "react";
+import type { SessionState } from "@/lib/domain";
 import { getStoredSession, SESSION_EVENT } from "@/lib/local-store";
 
-export type AppSession = {
-  userId?: string;
-  displayName: string;
-  mode: "local" | "remote" | "demo";
-};
-
-export const SessionContext = createContext<AppSession | null>(null);
+export const SessionContext = createContext<SessionState | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<AppSession | null>(null);
+  const [session, setSession] = useState<SessionState | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    const syncLocal = () => {
+    const syncLocal = (baseAppMode: SessionState["appMode"] = "demo", demoPersonaSlug?: string) => {
       const localSession = getStoredSession();
       setSession(
         localSession
           ? {
+              kind: "local",
+              appMode: baseAppMode,
               displayName: localSession.displayName,
-              mode: "local",
+              demoPersonaSlug,
             }
-          : null,
+          : {
+              kind: "anonymous",
+              appMode: baseAppMode,
+              displayName: null,
+              demoPersonaSlug,
+            },
       );
     };
 
-    const syncRemote = async () => {
+    const syncSession = async () => {
       try {
         const response = await fetch("/api/session", { cache: "no-store" });
-        const payload = (await response.json()) as { session: AppSession | null };
+        const payload = (await response.json()) as { session: SessionState };
 
         if (!mounted) {
           return;
         }
 
-        if (payload.session && payload.session.mode !== "demo") {
-          setSession(payload.session);
+        if (payload.session.kind === "anonymous") {
+          syncLocal(payload.session.appMode, payload.session.demoPersonaSlug);
           return;
         }
-      } catch {
-        // Falls back below.
-      }
 
-      if (mounted) {
-        syncLocal();
+        setSession(payload.session);
+      } catch {
+        if (mounted) {
+          syncLocal();
+        }
       }
     };
 
     const handleSessionChanged = () => {
-      void syncRemote();
+      void syncSession();
     };
 
-    void syncRemote();
+    void syncSession();
     window.addEventListener(SESSION_EVENT, handleSessionChanged);
     window.addEventListener("storage", handleSessionChanged);
 

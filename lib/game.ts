@@ -1,3 +1,5 @@
+import { formatNetAmount as formatNetAmountValue } from "@/lib/format";
+
 export const MATCH_CREDIT = 10_000;
 export const OUTCOME_CAP = 7_000;
 
@@ -8,6 +10,21 @@ export type AllocationInput = {
 
 export function buildFocusedAllocation(outcomeCodes: string[], selectedOutcomeCode: string) {
   return buildWeightedAllocation(outcomeCodes, selectedOutcomeCode, OUTCOME_CAP);
+}
+
+export function buildBalancedAllocation(outcomeCodes: string[]) {
+  if (outcomeCodes.length < 2) {
+    throw new Error("Se necesitan al menos 2 outcomes");
+  }
+
+  const baseAmount = Math.floor(MATCH_CREDIT / outcomeCodes.length);
+  let carry = MATCH_CREDIT - baseAmount * outcomeCodes.length;
+
+  return outcomeCodes.map((outcomeCode) => {
+    const amount = baseAmount + (carry > 0 ? 1 : 0);
+    carry = Math.max(0, carry - 1);
+    return { outcomeCode, amount };
+  });
 }
 
 export function buildWeightedAllocation(
@@ -124,7 +141,7 @@ export function settleTicket(params: {
 }
 
 export function formatNetAmount(amount: number) {
-  return `${amount >= 0 ? "+" : "-"}${Math.abs(Math.round(amount)).toLocaleString("es-AR")}`;
+  return formatNetAmountValue(amount);
 }
 
 export function isMarketEditable(params: {

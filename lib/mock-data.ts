@@ -1,11 +1,14 @@
 import type {
   HistoryEntry,
   MatchOutcomeCode,
+  MatchStageGroup,
+  MarketStatus,
   MatchStatusVariant,
   MatchViewModel,
   ProfileViewModel,
   RankingEntry,
 } from "@/lib/domain";
+import { parseCredits } from "@/lib/format";
 
 export type DemoPersonaSlug = "guido" | "mari" | "bato" | "pepo" | "cami";
 
@@ -52,48 +55,48 @@ const demoPersonas: DemoPersona[] = [
 ];
 
 const ranking: RankingEntry[] = [
-  { position: 1, name: "Guido", net: 12222, netLabel: "+12.222", positiveTickets: 19, bestHit: "+18.000" },
-  { position: 2, name: "Mari", net: 5523, netLabel: "+5.523", positiveTickets: 17, bestHit: "+9.800" },
-  { position: 3, name: "Bato", net: -2017, netLabel: "-2.017", positiveTickets: 15, bestHit: "+6.154" },
-  { position: 4, name: "Pepo", net: -3151, netLabel: "-3.151", positiveTickets: 14, bestHit: "+7.020" },
-  { position: 5, name: "Juli", net: -5280, netLabel: "-5.280", positiveTickets: 12, bestHit: "+11.300" },
-  { position: 6, name: "Cami", net: -7299, netLabel: "-7.299", positiveTickets: 10, bestHit: "+5.440" },
+  { position: 1, name: "Guido", netAmount: 12222, positiveTickets: 19, bestHitAmount: 18000 },
+  { position: 2, name: "Mari", netAmount: 5523, positiveTickets: 17, bestHitAmount: 9800 },
+  { position: 3, name: "Bato", netAmount: -2017, positiveTickets: 15, bestHitAmount: 6154 },
+  { position: 4, name: "Pepo", netAmount: -3151, positiveTickets: 14, bestHitAmount: 7020 },
+  { position: 5, name: "Juli", netAmount: -5280, positiveTickets: 12, bestHitAmount: 11300 },
+  { position: 6, name: "Cami", netAmount: -7299, positiveTickets: 10, bestHitAmount: 5440 },
 ];
 
 const personaProfiles: Record<DemoPersonaSlug, ProfileViewModel> = {
   guido: {
     name: "Guido",
-    netLabel: "+12.222",
+    netAmount: 12222,
     positiveTickets: 19,
-    bestHit: "+18.000",
+    bestHitAmount: 18000,
     championPick: "Argentina",
   },
   mari: {
     name: "Mari",
-    netLabel: "+5.523",
+    netAmount: 5523,
     positiveTickets: 17,
-    bestHit: "+9.800",
+    bestHitAmount: 9800,
     championPick: "Brasil",
   },
   bato: {
     name: "Bato",
-    netLabel: "-2.017",
+    netAmount: -2017,
     positiveTickets: 15,
-    bestHit: "+6.154",
+    bestHitAmount: 6154,
     championPick: "Uruguay",
   },
   pepo: {
     name: "Pepo",
-    netLabel: "-3.151",
+    netAmount: -3151,
     positiveTickets: 14,
-    bestHit: "+7.020",
+    bestHitAmount: 7020,
     championPick: "Francia",
   },
   cami: {
     name: "Cami",
-    netLabel: "-7.299",
+    netAmount: -7299,
     positiveTickets: 10,
-    bestHit: "+5.440",
+    bestHitAmount: 5440,
     championPick: "Japon",
   },
 };
@@ -105,12 +108,11 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Argentina vs Japon",
       stage: "Fase de grupos",
       description: "Fuiste fuerte con Argentina y terminaste arriba del pozo del partido.",
-      net: 6154,
-      netLabel: "+6.154",
+      netAmount: 6154,
       allocations: [
-        { label: "Argentina", amount: "7.000" },
-        { label: "Empate", amount: "2.000" },
-        { label: "Japon", amount: "1.000" },
+        { label: "Argentina", amount: 7000 },
+        { label: "Empate", amount: 2000 },
+        { label: "Japon", amount: 1000 },
       ],
     },
     {
@@ -118,12 +120,11 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Brasil vs Mexico",
       stage: "Fase de grupos",
       description: "Te cubriste con el empate y saliste apenas arriba de la base.",
-      net: 714,
-      netLabel: "+714",
+      netAmount: 714,
       allocations: [
-        { label: "Brasil", amount: "3.000" },
-        { label: "Empate", amount: "5.000" },
-        { label: "Mexico", amount: "2.000" },
+        { label: "Brasil", amount: 3000 },
+        { label: "Empate", amount: 5000 },
+        { label: "Mexico", amount: 2000 },
       ],
     },
     {
@@ -131,11 +132,10 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Jordania vs Alemania",
       stage: "Octavos de final",
       description: "Leiste el batacazo, casi nadie fue para ese lado y te disparaste en la tabla.",
-      net: 11000,
-      netLabel: "+11.000",
+      netAmount: 11000,
       allocations: [
-        { label: "Clasifica Jordania", amount: "7.000" },
-        { label: "Clasifica Alemania", amount: "3.000" },
+        { label: "Clasifica Jordania", amount: 7000 },
+        { label: "Clasifica Alemania", amount: 3000 },
       ],
     },
   ],
@@ -145,12 +145,11 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Argentina vs Japon",
       stage: "Fase de grupos",
       description: "Repartiste mas parejo y cobraste, pero sin gran diferencia sobre el resto.",
-      net: 1538,
-      netLabel: "+1.538",
+      netAmount: 1538,
       allocations: [
-        { label: "Argentina", amount: "4.000" },
-        { label: "Empate", amount: "4.000" },
-        { label: "Japon", amount: "2.000" },
+        { label: "Argentina", amount: 4000 },
+        { label: "Empate", amount: 4000 },
+        { label: "Japon", amount: 2000 },
       ],
     },
     {
@@ -158,12 +157,11 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Brasil vs Mexico",
       stage: "Fase de grupos",
       description: "Leiste bien el empate y subiste sin tomar demasiado riesgo.",
-      net: 2857,
-      netLabel: "+2.857",
+      netAmount: 2857,
       allocations: [
-        { label: "Brasil", amount: "2.000" },
-        { label: "Empate", amount: "6.000" },
-        { label: "Mexico", amount: "2.000" },
+        { label: "Brasil", amount: 2000 },
+        { label: "Empate", amount: 6000 },
+        { label: "Mexico", amount: 2000 },
       ],
     },
     {
@@ -171,11 +169,10 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Jordania vs Alemania",
       stage: "Octavos de final",
       description: "Fuiste con el favorito y el cruce te dejo por debajo de la base.",
-      net: -4000,
-      netLabel: "-4.000",
+      netAmount: -4000,
       allocations: [
-        { label: "Clasifica Jordania", amount: "2.000" },
-        { label: "Clasifica Alemania", amount: "8.000" },
+        { label: "Clasifica Jordania", amount: 2000 },
+        { label: "Clasifica Alemania", amount: 8000 },
       ],
     },
   ],
@@ -185,12 +182,11 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Argentina vs Japon",
       stage: "Fase de grupos",
       description: "Te fuiste largo con Japon y el partido te dejo corto de retorno.",
-      net: -5385,
-      netLabel: "-5.385",
+      netAmount: -5385,
       allocations: [
-        { label: "Argentina", amount: "2.000" },
-        { label: "Empate", amount: "3.000" },
-        { label: "Japon", amount: "5.000" },
+        { label: "Argentina", amount: 2000 },
+        { label: "Empate", amount: 3000 },
+        { label: "Japon", amount: 5000 },
       ],
     },
     {
@@ -198,11 +194,10 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Jordania vs Alemania",
       stage: "Octavos de final",
       description: "No llegaste a cargar suficiente del batacazo y el golpe se noto.",
-      net: -7000,
-      netLabel: "-7.000",
+      netAmount: -7000,
       allocations: [
-        { label: "Clasifica Jordania", amount: "1.000" },
-        { label: "Clasifica Alemania", amount: "9.000" },
+        { label: "Clasifica Jordania", amount: 1000 },
+        { label: "Clasifica Alemania", amount: 9000 },
       ],
     },
     {
@@ -210,11 +205,10 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Espana vs Uruguay",
       stage: "Cuartos de final",
       description: "Todavia estas esperando el cruce ideal para pegar el salto.",
-      net: 0,
-      netLabel: "+0",
+      netAmount: 0,
       allocations: [
-        { label: "Clasifica Espana", amount: "3.500" },
-        { label: "Clasifica Uruguay", amount: "6.500" },
+        { label: "Clasifica Espana", amount: 3500 },
+        { label: "Clasifica Uruguay", amount: 6500 },
       ],
     },
   ],
@@ -224,12 +218,11 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Brasil vs Mexico",
       stage: "Fase de grupos",
       description: "Cubriste demasiado al favorito y cobraste por debajo de lo esperado.",
-      net: -1800,
-      netLabel: "-1.800",
+      netAmount: -1800,
       allocations: [
-        { label: "Brasil", amount: "6.000" },
-        { label: "Empate", amount: "2.500" },
-        { label: "Mexico", amount: "1.500" },
+        { label: "Brasil", amount: 6000 },
+        { label: "Empate", amount: 2500 },
+        { label: "Mexico", amount: 1500 },
       ],
     },
     {
@@ -237,11 +230,10 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Espana vs Uruguay",
       stage: "Cuartos de final",
       description: "Todavia no cerraste esta jugada, asi que el perfil sirve para revisar pendientes.",
-      net: 0,
-      netLabel: "+0",
+      netAmount: 0,
       allocations: [
-        { label: "Clasifica Espana", amount: "5.000" },
-        { label: "Clasifica Uruguay", amount: "5.000" },
+        { label: "Clasifica Espana", amount: 5000 },
+        { label: "Clasifica Uruguay", amount: 5000 },
       ],
     },
   ],
@@ -251,12 +243,11 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Argentina vs Japon",
       stage: "Fase de grupos",
       description: "Entraste mas tibia y el favorito no te alcanzo para quedar arriba.",
-      net: -2308,
-      netLabel: "-2.308",
+      netAmount: -2308,
       allocations: [
-        { label: "Argentina", amount: "3.000" },
-        { label: "Empate", amount: "4.000" },
-        { label: "Japon", amount: "3.000" },
+        { label: "Argentina", amount: 3000 },
+        { label: "Empate", amount: 4000 },
+        { label: "Japon", amount: 3000 },
       ],
     },
     {
@@ -264,11 +255,10 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
       title: "Uruguay vs Espana",
       stage: "Cuartos de final",
       description: "Todavia venis buscando una jugada grande que te vuelva a meter.",
-      net: 0,
-      netLabel: "+0",
+      netAmount: 0,
       allocations: [
-        { label: "Clasifica Espana", amount: "4.000" },
-        { label: "Clasifica Uruguay", amount: "6.000" },
+        { label: "Clasifica Espana", amount: 4000 },
+        { label: "Clasifica Uruguay", amount: 6000 },
       ],
     },
   ],
@@ -288,6 +278,22 @@ function deriveStatusVariant(match: Pick<MatchViewModel, "status" | "isEditable"
   }
 
   return match.isEditable ? "upcoming" : "locked";
+}
+
+function deriveMarketStatus(match: Pick<MatchViewModel, "status" | "isEditable" | "revealedTickets">): MarketStatus {
+  if (match.status === "finished") {
+    return "settled";
+  }
+
+  if (match.status === "live") {
+    return "revealed";
+  }
+
+  if (match.revealedTickets.length > 0) {
+    return "revealed";
+  }
+
+  return match.isEditable ? "open" : "locked";
 }
 
 function inferOutcomeCode(
@@ -339,18 +345,25 @@ type RawRevealedTicket = {
     label: string;
     amount: string;
   }[];
-  netLabel?: string;
+  netAmount?: number;
 };
 
-type RawMatchViewModel = Omit<MatchViewModel, "statusVariant" | "allocation" | "consensus" | "revealedTickets"> & {
+type RawMatchViewModel = Omit<MatchViewModel, "statusVariant" | "marketStatus" | "draftState" | "allocation" | "consensus" | "revealedTickets" | "form"> & {
   allocation: RawOutcome[];
   consensus: RawConsensus[];
   revealedTickets: RawRevealedTicket[];
+  form: {
+    home: string;
+    away: string;
+    homeGoals: string;
+    awayGoals: string;
+  };
 };
 
 function decorateMatch(match: RawMatchViewModel): MatchViewModel {
   const allocation = match.allocation.map((item, index, list) => ({
     ...item,
+    amount: parseCredits(item.amount),
     code: inferOutcomeCode(match.marketType, index, list.length),
     shortLabel: buildShortLabel(item.label),
   }));
@@ -362,12 +375,13 @@ function decorateMatch(match: RawMatchViewModel): MatchViewModel {
   }));
 
   const revealedTickets = match.revealedTickets.map((ticket) => ({
-    ...ticket,
-    allocations: ticket.allocations.map((allocationItem, index, list) => ({
-      ...allocationItem,
-      code: inferOutcomeCode(match.marketType, index, list.length),
-      shortLabel: buildShortLabel(allocationItem.label),
-    })),
+      ...ticket,
+      allocations: ticket.allocations.map((allocationItem, index, list) => ({
+        ...allocationItem,
+        amount: parseCredits(allocationItem.amount),
+        code: inferOutcomeCode(match.marketType, index, list.length),
+        shortLabel: buildShortLabel(allocationItem.label),
+      })),
   }));
 
   return {
@@ -375,11 +389,22 @@ function decorateMatch(match: RawMatchViewModel): MatchViewModel {
     allocation,
     consensus,
     revealedTickets,
+    marketStatus: deriveMarketStatus({
+      status: match.status,
+      isEditable: match.isEditable,
+      revealedTickets,
+    }),
     statusVariant: deriveStatusVariant({
       status: match.status,
       isEditable: match.isEditable,
       revealedTickets,
     }),
+    draftState: match.userStateLabel === "Te falta jugar" ? "idle" : "saved_local",
+    form: {
+      ...match.form,
+      homeGoals: Number(match.form.homeGoals),
+      awayGoals: Number(match.form.awayGoals),
+    },
   };
 }
 
@@ -676,7 +701,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
             { label: "Clasifica Jordania", amount: "7.000" },
             { label: "Clasifica Alemania", amount: "3.000" },
           ],
-          netLabel: "+11.000",
+          netAmount: 11000,
         },
         {
           userName: "Mari",
@@ -684,7 +709,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
             { label: "Clasifica Jordania", amount: "2.000" },
             { label: "Clasifica Alemania", amount: "8.000" },
           ],
-          netLabel: "-4.000",
+          netAmount: -4000,
         },
         {
           userName: "Bato",
@@ -692,7 +717,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
             { label: "Clasifica Jordania", amount: "1.000" },
             { label: "Clasifica Alemania", amount: "9.000" },
           ],
-          netLabel: "-7.000",
+          netAmount: -7000,
         },
       ],
     },
@@ -765,7 +790,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
             { label: "Clasifica Estados Unidos", amount: "3.000" },
             { label: "Clasifica Paises Bajos", amount: "7.000" },
           ],
-          netLabel: "-3.800",
+          netAmount: -3800,
         },
         {
           userName: "Mari",
@@ -773,7 +798,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
             { label: "Clasifica Estados Unidos", amount: "3.000" },
             { label: "Clasifica Paises Bajos", amount: "7.000" },
           ],
-          netLabel: "+2.400",
+          netAmount: 2400,
         },
       ],
     },
@@ -802,7 +827,7 @@ export function getFallbackMatches(persona?: string | null) {
   return createMatchSet(normalizeDemoPersonaSlug(persona));
 }
 
-export function getFallbackMatchesByStage(persona?: string | null) {
+export function getFallbackMatchesByStage(persona?: string | null): MatchStageGroup[] {
   const matches = getFallbackMatches(persona);
 
   return [
@@ -841,9 +866,9 @@ export function getFallbackHomeSummary(persona?: string | null) {
   const profile = getFallbackProfile(slug);
 
   return {
-    liveMatches: String(matches.filter((match) => match.status === "live").length),
-    pendingPicks: String(matches.filter((match) => match.userStateLabel === "Te falta jugar").length),
-    settledToday: String(matches.filter((match) => match.status === "finished").length),
-    yourNet: profile.netLabel,
+    liveMatches: matches.filter((match) => match.status === "live").length,
+    pendingPicks: matches.filter((match) => match.userStateLabel === "Te falta jugar").length,
+    settledToday: matches.filter((match) => match.status === "finished").length,
+    yourNetAmount: profile.netAmount,
   };
 }

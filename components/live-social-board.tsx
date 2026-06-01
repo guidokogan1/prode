@@ -1,5 +1,6 @@
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { deriveResolvedOutcome, formatCompactCredits, getOutcomeColor, getOutcomeFlag, parseAmount } from "@/lib/match-ui";
+import { formatCredits, formatNetAmount } from "@/lib/format";
+import { deriveResolvedOutcome, formatCompactCredits, getOutcomeColor, getOutcomeFlag } from "@/lib/match-ui";
 
 type LiveSocialBoardProps = {
   match: MatchViewModel;
@@ -15,7 +16,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
         userName: string;
         amount: number;
         amountLabel: string;
-        netLabel?: string;
+        netAmount?: number;
       }[];
     }
   >();
@@ -25,8 +26,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
   }
 
   for (const ticket of match.revealedTickets) {
-    const dominant = [...ticket.allocations]
-      .sort((left, right) => parseAmount(right.amount) - parseAmount(left.amount))[0];
+    const dominant = [...ticket.allocations].sort((left, right) => right.amount - left.amount)[0];
 
     if (!dominant) {
       continue;
@@ -39,14 +39,14 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
 
     bucket.tickets.push({
       userName: ticket.userName,
-      amount: parseAmount(dominant.amount),
-      amountLabel: dominant.amount,
-      netLabel: ticket.netLabel,
+      amount: dominant.amount,
+      amountLabel: formatCredits(dominant.amount),
+      netAmount: ticket.netAmount,
     });
   }
 
   const totalPot = match.revealedTickets.reduce(
-    (sum, ticket) => sum + ticket.allocations.reduce((ticketTotal, item) => ticketTotal + parseAmount(item.amount), 0),
+    (sum, ticket) => sum + ticket.allocations.reduce((ticketTotal, item) => ticketTotal + item.amount, 0),
     0,
   );
 
@@ -54,8 +54,8 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
     <section style={{ display: "grid", gap: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <div>
-          <p className="eyebrow">Se reveló</p>
-          <h2 className="section-title">Así entró el grupo</h2>
+          <p className="eyebrow">Grupo</p>
+          <h2 className="section-title">Reveal</h2>
         </div>
         <span className="pill">{match.revealedTickets.length} picks</span>
       </div>
@@ -95,12 +95,12 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                         color: getOutcomeColor(group.outcome.code),
                       }}
                     >
-                      ganando
+                      gana
                     </span>
                   ) : null}
                 </div>
               </div>
-              <span className="micro-copy">{group.tickets.length} del grupo</span>
+              <span className="micro-copy">{group.tickets.length}</span>
             </div>
 
             <div style={{ display: "grid", gap: 10, padding: 14 }}>
@@ -125,7 +125,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                       </span>
                       <div style={{ display: "grid", gap: 2 }}>
                         <span style={{ fontFamily: "var(--font-body)", fontSize: ".92rem", fontStyle: "normal", fontWeight: 700 }}>{ticket.userName}</span>
-                        {ticket.netLabel ? <span className="micro-copy">{ticket.netLabel}</span> : null}
+                        {ticket.netAmount != null ? <span className="micro-copy">{formatNetAmount(ticket.netAmount)}</span> : null}
                       </div>
                     </div>
                     <strong style={{ color: isWinning ? getOutcomeColor(group.outcome.code) : "#97AD99", fontFamily: "var(--font-accent)", fontSize: ".98rem", letterSpacing: "-0.04em" }}>
@@ -134,7 +134,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                   </div>
                 ))
               ) : (
-                <span className="micro-copy">Nadie cargó este lado como jugada fuerte.</span>
+                <span className="micro-copy">Sin jugadas</span>
               )}
             </div>
           </article>
@@ -142,7 +142,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
       })}
 
       <div className="surface-card-soft" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(212,166,75,0.07)", borderColor: "rgba(212,166,75,0.18)" }}>
-        <span className="muted-copy">Pozo del partido</span>
+        <span className="muted-copy">Pozo</span>
         <strong style={{ color: "#D8B56A", fontFamily: "var(--font-accent)", fontSize: "1.28rem", letterSpacing: "-0.05em" }}>{formatCompactCredits(totalPot)} cr</strong>
       </div>
     </section>

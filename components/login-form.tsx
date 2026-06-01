@@ -37,10 +37,6 @@ export function LoginForm() {
       });
 
       if (response.ok) {
-        saveStoredSession({
-          displayName: trimmedName,
-          joinedAt: new Date().toISOString(),
-        });
         router.push("/profile");
         router.refresh();
         return;
@@ -57,6 +53,7 @@ export function LoginForm() {
     saveStoredSession({
       displayName: trimmedName,
       joinedAt: new Date().toISOString(),
+      kind: "local",
     });
     router.push("/profile");
     router.refresh();

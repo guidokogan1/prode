@@ -116,10 +116,11 @@ describe("read repositories", () => {
 
     expect(profile).toEqual({
       name: "Mari",
-      netLabel: "+5.523",
+      netAmount: 5523,
       positiveTickets: 17,
-      bestHit: "+9.800",
+      bestHitAmount: 9800,
       championPick: "Brasil",
+      isCurrentUser: true,
     });
   });
 
@@ -205,11 +206,10 @@ describe("read repositories", () => {
         title: "Argentina vs Japon",
         stage: "Fase de grupos",
         description: "Jugada liquidada en positivo.",
-        net: 2200,
-        netLabel: "+2.200",
+        netAmount: 2200,
         allocations: [
-          { label: "Argentina", amount: "7.000" },
-          { label: "Empate", amount: "3.000" },
+          { label: "Argentina", amount: 7000 },
+          { label: "Empate", amount: 3000 },
         ],
       },
     ]);
@@ -339,15 +339,15 @@ describe("read repositories", () => {
 
     expect(match?.isEditable).toBe(false);
     expect(match?.userStateLabel).toBe("Resultado +6.154");
-    expect(match?.allocation[0]?.amount).toBe("7.000");
+    expect(match?.allocation[0]?.amount).toBe(7000);
     expect(match?.revealedTickets[0]).toEqual({
       userName: "Guido",
       allocations: [
-        { code: "home", label: "Argentina", shortLabel: "Argentina", amount: "7.000" },
-        { code: "draw", label: "Empate", shortLabel: "EMP", amount: "2.000" },
-        { code: "away", label: "Japon", shortLabel: "Japon", amount: "1.000" },
+        { code: "home", label: "Argentina", shortLabel: "Argentina", amount: 7000 },
+        { code: "draw", label: "Empate", shortLabel: "EMP", amount: 2000 },
+        { code: "away", label: "Japon", shortLabel: "Japon", amount: 1000 },
       ],
-      netLabel: "+6.154",
+      netAmount: 6154,
     });
   });
 });

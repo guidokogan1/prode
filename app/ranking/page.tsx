@@ -1,37 +1,36 @@
 import { LeaderboardPodium } from "@/components/leaderboard-podium";
 import { RankingList } from "@/components/ranking-list";
+import { formatNetAmount } from "@/lib/format";
 import { getRanking } from "@/lib/repositories/ranking";
 
 export default async function RankingPage() {
   const ranking = await getRanking();
+  const currentUser = ranking.find((item) => item.isCurrentUser) ?? null;
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
       <section style={{ display: "grid", gap: 6, paddingTop: 8 }}>
         <p className="eyebrow">Tabla</p>
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(2.15rem, 8.6vw, 3rem)",
-            lineHeight: 0.96,
-            fontWeight: 700,
-            letterSpacing: "-0.05em",
-            color: "var(--text-primary)",
-            textWrap: "balance",
-          }}
-        >
-          Quién va arriba
-        </h1>
-        <p className="muted-copy" style={{ fontFamily: "var(--font-body)" }}>{ranking.length} jugadores peleando la punta del grupo.</p>
+        <h1 className="display-title">Ranking</h1>
+        <p className="muted-copy" style={{ fontFamily: "var(--font-body)" }}>Ordenado por ganancia</p>
       </section>
+
+      {currentUser ? (
+        <section className="surface-card-soft" style={{ padding: 16, display: "grid", gap: 6 }}>
+          <span className="micro-copy">Tu puesto</span>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+            <strong style={{ fontSize: "1.05rem" }}>#{currentUser.position} {currentUser.name}</strong>
+            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", letterSpacing: "-0.04em" }}>{formatNetAmount(currentUser.netAmount)}</strong>
+          </div>
+        </section>
+      ) : null}
 
       <LeaderboardPodium items={ranking} />
 
       <section style={{ display: "grid", gap: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-          <h2 className="section-title" style={{ fontFamily: "var(--font-body)", fontWeight: 700 }}>Leaderboard</h2>
-          <span className="pill">general</span>
+          <h2 className="section-title" style={{ fontFamily: "var(--font-body)", fontWeight: 700 }}>General</h2>
+          <span className="pill">{ranking.length}</span>
         </div>
         <RankingList items={ranking} />
       </section>

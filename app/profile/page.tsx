@@ -19,17 +19,17 @@ export default async function ProfilePage() {
 
       <section className="surface-card-soft" style={{ padding: 18, display: "grid", gap: 14 }}>
         <div>
-          <p className="eyebrow">Tu cuenta</p>
-          <h2 className="section-title">Entrás fácil</h2>
+          <p className="eyebrow">Accesos</p>
+          <h2 className="section-title">Qué hacer</h2>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
           <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
-            <strong>PIN corto</strong>
-            <p className="muted-copy">Sin mail, sin vueltas, directo al juego.</p>
+            <strong>Historial</strong>
+            <p className="muted-copy">Ver jugadas</p>
           </div>
           <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
-            <strong>Historial</strong>
-            <p className="muted-copy">Tus rondas quedan guardadas y se leen rápido.</p>
+            <strong>Acceso</strong>
+            <p className="muted-copy">Cambiar sesión</p>
           </div>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

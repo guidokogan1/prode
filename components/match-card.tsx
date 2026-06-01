@@ -2,27 +2,16 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { getLeadingOutcome, getOutcomeColor } from "@/lib/match-ui";
+import type { MatchViewModel } from "@/lib/domain";
+import { getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
 
 type MatchCardProps = {
   match: MatchViewModel;
 };
 
-function getOutcomeChipLabel(code: MatchOutcomeCode, match: MatchViewModel) {
-  if (code === "draw") {
-    return "EMP";
-  }
-
-  if (code === "home" || code === "home_qualifies") {
-    return match.home.name.slice(0, 3).toUpperCase();
-  }
-
-  return match.away.name.slice(0, 3).toUpperCase();
-}
-
 export function MatchCard({ match }: MatchCardProps) {
-  const leading = getLeadingOutcome(match);
+  const matchState = getMatchStateLabel(match);
+  const pickState = getPickStateLabel(match);
   const statusTone =
     match.statusVariant === "live"
       ? "rgba(255,59,48,0.07)"
@@ -63,8 +52,8 @@ export function MatchCard({ match }: MatchCardProps) {
             <span style={{ width: 8, height: 8, borderRadius: 999, background: "#FF3B30", boxShadow: "0 0 12px rgba(255,59,48,.6)" }} />
           ) : match.statusVariant === "locked" ? (
             <span className="micro-copy">🔒</span>
-          ) : leading ? (
-            <span className="micro-copy" style={{ color: getOutcomeColor(leading.code) }}>✓</span>
+          ) : match.isEditable && pickState === "Sin jugar" ? (
+            <span className="micro-copy" style={{ color: "#D4A64B" }}>●</span>
           ) : null}
         </div>
 
@@ -78,12 +67,11 @@ export function MatchCard({ match }: MatchCardProps) {
                   fontSize: ".98rem",
                   fontStyle: "normal",
                   fontWeight: 700,
-                  whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
               >
-                {match.home.name.slice(0, 3).toUpperCase()}
+                {match.home.name}
               </strong>
             </div>
 
@@ -110,46 +98,59 @@ export function MatchCard({ match }: MatchCardProps) {
                   fontSize: ".98rem",
                   fontStyle: "normal",
                   fontWeight: 700,
-                  whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  textAlign: "right",
                 }}
               >
-                {match.away.name.slice(0, 3).toUpperCase()}
+                {match.away.name}
               </strong>
               <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>{match.away.flag}</span>
             </div>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>{match.kickoffLabel}</span>
             <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>{match.stage}</span>
-            <span style={{ color: "#7A9A81", fontFamily: "var(--font-body)", fontSize: ".78rem", fontStyle: "normal", fontWeight: 700, whiteSpace: "nowrap" }}>{match.kickoffLabel}</span>
           </div>
         </div>
 
-        {leading ? (
-          <div
-            style={{
-              flexShrink: 0,
-              borderRadius: 999,
-              padding: "6px 10px",
-              background: `${getOutcomeColor(leading.code)}18`,
-              border: `1px solid ${getOutcomeColor(leading.code)}30`,
-              color: getOutcomeColor(leading.code),
-              fontFamily: "var(--font-body)",
-              fontSize: ".68rem",
-              fontStyle: "normal",
-              fontWeight: 800,
-              letterSpacing: ".1em",
-              textTransform: "uppercase",
-              whiteSpace: "nowrap",
-              minWidth: 56,
-              textAlign: "center",
-            }}
-          >
-            {getOutcomeChipLabel(leading.code, match)}
-          </div>
-        ) : null}
+        <div
+          style={{
+            flexShrink: 0,
+            borderRadius: 999,
+            padding: "6px 10px",
+            background:
+              matchState === "En vivo"
+                ? "rgba(255,59,48,0.12)"
+                : pickState === "Sin jugar"
+                  ? "rgba(212,166,75,0.12)"
+                  : "rgba(255,255,255,0.04)",
+            border:
+              matchState === "En vivo"
+                ? "1px solid rgba(255,59,48,0.24)"
+                : pickState === "Sin jugar"
+                  ? "1px solid rgba(212,166,75,0.24)"
+                  : "1px solid rgba(255,255,255,0.08)",
+            color:
+              matchState === "En vivo"
+                ? "#FF8B84"
+                : pickState === "Sin jugar"
+                  ? "#D4A64B"
+                  : "#EDE8D9",
+            fontFamily: "var(--font-body)",
+            fontSize: ".68rem",
+            fontStyle: "normal",
+            fontWeight: 800,
+            letterSpacing: ".08em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+            minWidth: 72,
+            textAlign: "center",
+          }}
+        >
+          {pickState === "Sin jugar" ? pickState : matchState}
+        </div>
       </Link>
     </motion.div>
   );

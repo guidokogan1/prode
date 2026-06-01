@@ -1,13 +1,6 @@
-import { getFallbackRanking } from "@/lib/mock-data";
-import { getRankingFromSnapshots } from "@/lib/repositories/settlements";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getProductProvider } from "@/lib/product";
 
 export async function getRanking() {
-  const supabase = getSupabaseServerClient();
-
-  if (!supabase) {
-    return getFallbackRanking();
-  }
-
-  return getRankingFromSnapshots();
+  const provider = await getProductProvider();
+  return provider.getRanking();
 }

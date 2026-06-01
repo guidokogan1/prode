@@ -251,6 +251,30 @@ input,
   font-weight: 500;
 }
 
+.stack-sm {
+  display: grid;
+  gap: 4px;
+}
+
+.panel-stack {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .pill,
 .status-pill {
   font-family: var(--font-barlow), system-ui, sans-serif !important;

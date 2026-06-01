@@ -38,9 +38,9 @@ describe("demo mock data", () => {
   it("computes home summary from the selected persona dataset", () => {
     const summary = getFallbackHomeSummary("pepo");
 
-    expect(summary.liveMatches).toBe("1");
-    expect(summary.pendingPicks).toBe("2");
-    expect(summary.yourNet).toBe("-3.151");
+    expect(summary.liveMatches).toBe(1);
+    expect(summary.pendingPicks).toBe(2);
+    expect(summary.yourNetAmount).toBe(-3151);
   });
 
   it("returns persona-specific match states", () => {

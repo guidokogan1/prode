@@ -19,6 +19,9 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
 
   return (
     <section className="surface-card-strong" style={{ padding: 18, fontFamily: "var(--font-body)" }}>
+      <div style={{ display: "grid", gap: 4, marginBottom: 14 }}>
+        <span className="micro-copy">Top 3</span>
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, alignItems: "end" }}>
         {podiumOrder.map((item, index) => {
           const actualRank = actualRanks[index] ?? index;
@@ -34,9 +37,9 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
                   borderRadius: 999,
                   display: "grid",
                   placeItems: "center",
-                  background: item.name === "Vos" ? "rgba(212,166,75,0.2)" : "rgba(255,255,255,0.07)",
-                  color: item.name === "Vos" ? "#D4A64B" : "#EDE8D9",
-                  border: item.name === "Vos" ? "2px solid rgba(212,166,75,0.4)" : "0",
+                  background: item.isCurrentUser ? "rgba(212,166,75,0.2)" : "rgba(255,255,255,0.07)",
+                  color: item.isCurrentUser ? "#D4A64B" : "#EDE8D9",
+                  border: item.isCurrentUser ? "2px solid rgba(212,166,75,0.4)" : "0",
                   fontFamily: "var(--font-accent)",
                   fontWeight: 800,
                 }}
@@ -56,10 +59,10 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
                 }}
               >
                 <span style={{ fontFamily: "var(--font-accent)", fontWeight: 800, fontStyle: "normal", letterSpacing: "-0.04em", color }}>
-                  {formatCompactCredits(Math.abs(item.net))}
+                  {formatCompactCredits(Math.abs(item.netAmount))}
                 </span>
               </div>
-              <span style={{ fontFamily: "var(--font-body)", fontSize: ".8rem", fontWeight: 700, fontStyle: "normal", letterSpacing: "-0.01em" }}>{item.name}</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: ".8rem", fontWeight: 700, fontStyle: "normal", letterSpacing: "-0.01em", textAlign: "center" }}>{item.name}</span>
             </div>
           );
         })}

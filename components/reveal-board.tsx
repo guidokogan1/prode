@@ -3,6 +3,7 @@
 import { useContext, useMemo } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
+import { formatCredits, formatNetAmount } from "@/lib/format";
 
 type RevealBoardProps = {
   tickets: MatchViewModel["revealedTickets"];
@@ -22,18 +23,13 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
     const groups = new Map<string, OutcomeGroup>();
 
     for (const ticket of tickets) {
-      const sortedAllocations = [...ticket.allocations].sort(
-        (left, right) => Number(right.amount.replace(/\./g, "")) - Number(left.amount.replace(/\./g, "")),
-      );
+      const sortedAllocations = [...ticket.allocations].sort((left, right) => right.amount - left.amount);
       const dominant = sortedAllocations[0];
       if (!dominant) {
         continue;
       }
 
-      const totalAmount = ticket.allocations.reduce(
-        (sum, allocation) => sum + Number(allocation.amount.replace(/\./g, "")),
-        0,
-      );
+      const totalAmount = ticket.allocations.reduce((sum, allocation) => sum + allocation.amount, 0);
 
       const existing = groups.get(dominant.label);
       if (existing) {
@@ -61,8 +57,8 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
             return 1;
           }
 
-          const leftTop = Math.max(...a.allocations.map((allocation) => Number(allocation.amount.replace(/\./g, ""))));
-          const rightTop = Math.max(...b.allocations.map((allocation) => Number(allocation.amount.replace(/\./g, ""))));
+          const leftTop = Math.max(...a.allocations.map((allocation) => allocation.amount));
+          const rightTop = Math.max(...b.allocations.map((allocation) => allocation.amount));
           return rightTop - leftTop;
         }),
       }));
@@ -73,10 +69,7 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
       tickets.reduce(
         (sum, ticket) =>
           sum +
-          ticket.allocations.reduce(
-            (ticketTotal, allocation) => ticketTotal + Number(allocation.amount.replace(/\./g, "")),
-            0,
-          ),
+          ticket.allocations.reduce((ticketTotal, allocation) => ticketTotal + allocation.amount, 0),
         0,
       ),
     [tickets],
@@ -86,7 +79,7 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
     <div className="reveal-board reveal-board-groups">
       <div className="reveal-pot-card">
         <span className="eyebrow">Pozo de esta ronda</span>
-        <strong>{Math.round(totalPot).toLocaleString("es-AR")} créditos</strong>
+        <strong>{formatCredits(totalPot)} créditos</strong>
         <span className="subtle">Así está cayendo el grupo ahora mismo.</span>
       </div>
 
@@ -106,9 +99,7 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
           <div className="reveal-board">
             {group.tickets.map((ticket) => {
               const isMe = sessionName ? ticket.userName === sessionName : false;
-              const mainPick = [...ticket.allocations].sort(
-                (left, right) => Number(right.amount.replace(/\./g, "")) - Number(left.amount.replace(/\./g, "")),
-              )[0];
+              const mainPick = [...ticket.allocations].sort((left, right) => right.amount - left.amount)[0];
 
               return (
                 <article className={`reveal-card${isMe ? " reveal-card-me" : ""}`} key={`${group.label}-${ticket.userName}`}>
@@ -124,9 +115,9 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
                         </p>
                       </div>
                     </div>
-                    {ticket.netLabel ? (
-                      <strong className={ticket.netLabel.startsWith("-") ? "money-negative" : "money-positive"}>
-                        {ticket.netLabel}
+                    {ticket.netAmount != null ? (
+                      <strong className={ticket.netAmount < 0 ? "money-negative" : "money-positive"}>
+                        {formatNetAmount(ticket.netAmount)}
                       </strong>
                     ) : (
                       <span className="pill">En juego</span>
@@ -140,7 +131,7 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
                         key={`${ticket.userName}-${allocation.label}`}
                       >
                         <span>{allocation.label}</span>
-                        <strong>{allocation.amount}</strong>
+                        <strong>{formatCredits(allocation.amount)}</strong>
                       </div>
                     ))}
                   </div>

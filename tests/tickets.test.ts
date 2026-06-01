@@ -7,9 +7,13 @@ const { getFallbackMatchByIdMock, getSupabaseServerClientMock, getCurrentSession
   getCurrentSessionMock: vi.fn(),
 }));
 
-vi.mock("@/lib/mock-data", () => ({
-  getFallbackMatchById: getFallbackMatchByIdMock,
-}));
+vi.mock("@/lib/mock-data", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/mock-data")>();
+  return {
+    ...actual,
+    getFallbackMatchById: getFallbackMatchByIdMock,
+  };
+});
 
 vi.mock("@/lib/supabase/server", () => ({
   getSupabaseServerClient: getSupabaseServerClientMock,
@@ -92,7 +96,7 @@ function makeSupabaseMock(config: {
 describe("saveTicket", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    getCurrentSessionMock.mockResolvedValue({ userId: "user-1", displayName: "Guido", mode: "remote" });
+    getCurrentSessionMock.mockResolvedValue({ userId: "user-1", displayName: "Guido" });
     getFallbackMatchByIdMock.mockReturnValue({
       id: "arg-jpn",
       isEditable: true,
@@ -114,7 +118,7 @@ describe("saveTicket", () => {
     if (!result.ok) {
       expect(result.reason).toContain("10000");
     }
-    expect(getSupabaseServerClientMock).not.toHaveBeenCalled();
+    expect(getCurrentSessionMock).not.toHaveBeenCalled();
   });
 
   it("rejects unknown matches", async () => {
@@ -132,6 +136,7 @@ describe("saveTicket", () => {
 
     expect(result).toEqual({
       ok: false,
+      state: "sync_error",
       reason: "Partido no encontrado.",
     });
   });
@@ -152,7 +157,8 @@ describe("saveTicket", () => {
     expect(result).toEqual({
       ok: true,
       mode: "local",
-      message: "Guardado en este dispositivo.",
+      state: "saved_local",
+      message: "Borrador guardado en este dispositivo.",
     });
   });
 
@@ -178,7 +184,8 @@ describe("saveTicket", () => {
 
     expect(result).toEqual({
       ok: false,
-      reason: "Este mercado ya cerro y no admite cambios.",
+      state: "sync_error",
+      reason: "Este mercado ya cerró y no admite cambios.",
     });
   });
 
@@ -212,6 +219,7 @@ describe("saveTicket", () => {
 
     expect(result).toEqual({
       ok: false,
+      state: "sync_error",
       reason: "No coinciden las opciones de la jugada con las del mercado.",
     });
   });
@@ -248,6 +256,7 @@ describe("saveTicket", () => {
     expect(result).toEqual({
       ok: true,
       mode: "remote",
+      state: "saved_remote",
       message: "Jugada guardada en backend.",
     });
   });

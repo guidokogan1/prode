@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { saveStoredSession } from "@/lib/local-store";
 import type { DemoPersona, DemoPersonaSlug } from "@/lib/mock-data";
 
 type DemoSwitcherProps = {
@@ -29,11 +28,6 @@ export function DemoSwitcher({ activePersona, personas }: DemoSwitcherProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ persona: persona.slug }),
-      });
-
-      saveStoredSession({
-        displayName: persona.name,
-        joinedAt: new Date().toISOString(),
       });
 
       router.refresh();

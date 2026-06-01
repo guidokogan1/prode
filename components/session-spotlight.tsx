@@ -17,14 +17,14 @@ export function SessionSpotlight() {
         <span className="pill">
           {session
             ? `Modo ${
-                session.mode === "remote" ? "remoto" : session.mode === "demo" ? "demo" : "local"
+                session.kind === "remote" ? "remoto" : session.kind === "demo" ? "demo" : session.kind === "local" ? "local" : "anon"
               }`
             : "Nombre + PIN"}
         </span>
       </div>
       <p className="body-copy">
         {session
-          ? session.mode === "demo"
+          ? session.kind === "demo"
             ? "Estas navegando con un perfil de prueba. Cambialo desde el selector para inspeccionar leaders, perseguidores, contrarians y estados pendientes."
             : "Ya tenes una sesion activa en este dispositivo. Si hay backend, entra por cookie; si no, sigue todo igual en local."
           : "No hace falta mail ni password: con nombre + PIN el grupo entra rapido y se concentra en jugar."}

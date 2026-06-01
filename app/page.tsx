@@ -1,16 +1,22 @@
+import Link from "next/link";
 import { QuickPlayDeck } from "@/components/quick-play-deck";
-import { getCurrentSession } from "@/lib/server-session";
+import { formatNetAmount } from "@/lib/format";
+import { getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
+import { getProductProvider } from "@/lib/product";
 import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
 
 export default async function HomePage() {
+  const provider = await getProductProvider();
   const [summary, featuredMatches, session] = await Promise.all([
     getHomeSummary(),
     getMatchesForHome(),
-    getCurrentSession(),
+    provider.getSessionState(),
   ]);
 
-  const pendingLabel = Number(summary.pendingPicks || "0");
-  const initial = session?.displayName?.slice(0, 1).toUpperCase() ?? "V";
+  const pendingLabel = summary.pendingPicks;
+  const initial = session.displayName?.slice(0, 1).toUpperCase() ?? "V";
+  const nextMatch = featuredMatches.find((match) => match.isEditable && getPickStateLabel(match) === "Sin jugar") ?? featuredMatches[0] ?? null;
+  const headline = pendingLabel > 0 ? `${pendingLabel} por jugar` : "Todo al día";
 
   return (
     <main
@@ -64,18 +70,37 @@ export default async function HomePage() {
       <section style={{ display: "grid", gap: 8 }}>
         <div style={{ display: "grid", gap: 8 }}>
           <div style={{ display: "grid", gap: 4 }}>
-            <p className="eyebrow">Jugada rápida</p>
-            <h1 className="display-title">¿Qué sale?</h1>
-            <p className="muted-copy">Elegí de una y seguí con la próxima ronda.</p>
+            <p className="eyebrow">Inicio</p>
+            <h1 className="display-title">{headline}</h1>
+            {nextMatch ? <p className="muted-copy">{nextMatch.home.name} vs {nextMatch.away.name}</p> : null}
           </div>
+          {nextMatch ? (
+            <Link
+              href={`/matches/${nextMatch.id}`}
+              className="surface-card-soft"
+              style={{ padding: "14px 16px", borderRadius: 18, display: "grid", gap: 8 }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                <span className="pill">{getPickStateLabel(nextMatch)}</span>
+                <span className="micro-copy">{getMatchStateLabel(nextMatch)}</span>
+              </div>
+              <strong style={{ fontSize: "1rem", letterSpacing: "-0.02em" }}>
+                {nextMatch.home.flag} {nextMatch.home.name} vs {nextMatch.away.flag} {nextMatch.away.name}
+              </strong>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                <span className="micro-copy">{nextMatch.kickoffLabel}</span>
+                <span className="micro-copy">{nextMatch.stage}</span>
+              </div>
+            </Link>
+          ) : null}
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
               <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", letterSpacing: "-0.04em" }}>{summary.liveMatches}</strong>
-              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>LIVE</span>
+              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>En vivo</span>
             </div>
             <div className="surface-card-soft" style={{ padding: "8px 12px", borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
-              <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", color: "#D8B56A", letterSpacing: "-0.04em" }}>{summary.yourNet}</strong>
-              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>TU TABLA</span>
+              <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", color: "#D8B56A", letterSpacing: "-0.04em" }}>{formatNetAmount(summary.yourNetAmount)}</strong>
+              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>Tabla</span>
             </div>
           </div>
         </div>

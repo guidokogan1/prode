@@ -1,8 +1,17 @@
 import { notFound } from "next/navigation";
 import { AllocationCard } from "@/components/allocation-card";
 import { LiveSocialBoard } from "@/components/live-social-board";
+import { formatCredits } from "@/lib/format";
 import { getMatchById } from "@/lib/repositories/matches";
-import { deriveResolvedOutcome, getLeadingOutcome, getOutcomeColor, getOutcomeFlag, getOutcomeHint } from "@/lib/match-ui";
+import {
+  deriveResolvedOutcome,
+  getLeadingOutcome,
+  getMatchStateLabel,
+  getOutcomeColor,
+  getOutcomeFlag,
+  getOutcomeHint,
+  getPickStateLabel,
+} from "@/lib/match-ui";
 
 type MatchPageProps = {
   params: Promise<{ id: string }>;
@@ -50,7 +59,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 18 }}>
           <div style={{ display: "grid", gap: 6 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              {match.statusVariant === "live" ? <span className="status-pill status-pill-live">LIVE · {match.statusLabel}</span> : <span className="pill">{match.statusLabel}</span>}
+              {match.statusVariant === "live" ? <span className="status-pill status-pill-live">{getMatchStateLabel(match)}</span> : <span className="pill">{getMatchStateLabel(match)}</span>}
+              <span className="pill">{getPickStateLabel(match)}</span>
               <span className="pill">{match.stage}</span>
             </div>
             <span className="muted-copy">{match.kickoffLabel} · {match.venue}</span>
@@ -80,13 +90,13 @@ export default async function MatchPage({ params }: MatchPageProps) {
         <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
           <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
             <div style={{ display: "grid", gap: 3 }}>
-              <span className="micro-copy">{isReveal ? "Tu lado fuerte" : "Tu jugada"}</span>
-              <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Todavía no cargaste"}</strong>
+              <span className="micro-copy">Tu jugada</span>
+              <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Sin jugar"}</strong>
             </div>
             {leadingAllocation ? (
               <div style={{ textAlign: "right" }}>
                 <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", color: getOutcomeColor(leadingAllocation.code), letterSpacing: "-0.04em" }}>
-                  {leadingAllocation.amount}
+                  {formatCredits(leadingAllocation.amount)}
                 </strong>
                 <div className="micro-copy">{getOutcomeHint(leadingAllocation.code, match.marketType)}</div>
               </div>
@@ -116,8 +126,8 @@ export default async function MatchPage({ params }: MatchPageProps) {
         <section className="surface-card-soft" style={{ padding: 18 }}>
           <div style={{ display: "grid", gap: 14 }}>
             <div>
-              <p className="eyebrow">Cómo llegan</p>
-              <h2 className="section-title">Antes del reveal</h2>
+              <p className="eyebrow">Forma</p>
+              <h2 className="section-title">Antes de cerrar</h2>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
               <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
@@ -131,7 +141,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
                 <span className="micro-copy">Goles recientes: {match.form.awayGoals}</span>
               </div>
             </div>
-            <span className="muted-copy">Hasta que arranque, ves el termómetro del grupo pero no cómo entró cada uno.</span>
           </div>
         </section>
       )}

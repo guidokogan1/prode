@@ -1,4 +1,5 @@
 import type { RankingEntry } from "@/lib/domain";
+import { formatNetAmount } from "@/lib/format";
 
 type RankingListProps = {
   items: RankingEntry[];
@@ -18,8 +19,8 @@ export function RankingList({ items }: RankingListProps) {
             gridTemplateColumns: "24px 38px minmax(0, 1fr) auto",
             alignItems: "center",
             gap: 12,
-            background: item.name === "Vos" ? "rgba(212,166,75,0.08)" : "rgba(255,255,255,0.03)",
-            borderColor: item.name === "Vos" ? "rgba(212,166,75,0.25)" : "rgba(255,255,255,0.06)",
+            background: item.isCurrentUser ? "rgba(212,166,75,0.08)" : "rgba(255,255,255,0.03)",
+            borderColor: item.isCurrentUser ? "rgba(212,166,75,0.25)" : "rgba(255,255,255,0.06)",
           }}
         >
           <span
@@ -41,8 +42,8 @@ export function RankingList({ items }: RankingListProps) {
               borderRadius: 999,
               display: "grid",
               placeItems: "center",
-              background: item.name === "Vos" ? "rgba(212,166,75,0.18)" : "rgba(255,255,255,0.07)",
-              color: item.name === "Vos" ? "#D8B56A" : "#EDE8D9",
+              background: item.isCurrentUser ? "rgba(212,166,75,0.18)" : "rgba(255,255,255,0.07)",
+              color: item.isCurrentUser ? "#D8B56A" : "#EDE8D9",
               fontFamily: "var(--font-accent)",
               fontWeight: 800,
               flexShrink: 0,
@@ -53,20 +54,24 @@ export function RankingList({ items }: RankingListProps) {
           <div style={{ display: "grid", gap: 3, flex: 1, minWidth: 0 }}>
             <strong
               style={{
-                color: item.name === "Vos" ? "#D8B56A" : "#EDE8D9",
+                color: item.isCurrentUser ? "#D8B56A" : "#EDE8D9",
                 fontFamily: "var(--font-body)",
                 fontWeight: 700,
                 fontStyle: "normal",
                 letterSpacing: "-0.02em",
               }}
             >
-              {item.name === "Vos" ? "Vos" : item.name}
+              {item.name}
             </strong>
-            <span className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", lineHeight: 1.45 }}>{item.positiveTickets} POSITIVAS · MEJOR {item.bestHit}</span>
+            <span className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", lineHeight: 1.45 }}>
+              {item.positiveTickets} positivas · mejor {formatNetAmount(item.bestHitAmount)}
+            </span>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0, minWidth: 68 }}>
-            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.18rem", color: item.net >= 0 ? "#EDE8D9" : "#E8413A", whiteSpace: "nowrap", letterSpacing: "-0.04em" }}>{item.netLabel}</strong>
-            <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", letterSpacing: ".08em", textTransform: "uppercase" }}>GANANCIA</div>
+            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.18rem", color: item.netAmount >= 0 ? "#EDE8D9" : "#E8413A", whiteSpace: "nowrap", letterSpacing: "-0.04em" }}>{formatNetAmount(item.netAmount)}</strong>
+            <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", letterSpacing: ".08em", textTransform: "uppercase" }}>
+              {item.isCurrentUser ? "vos" : "neto"}
+            </div>
           </div>
         </article>
       ))}

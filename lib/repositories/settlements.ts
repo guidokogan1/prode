@@ -266,9 +266,8 @@ export async function getRankingFromSnapshots() {
   return query.data.map((row) => ({
     position: row.rank_position,
     name: row.user?.display_name ?? "Jugador",
-    net: row.total_net_amount,
-    netLabel: formatNetAmount(row.total_net_amount),
+    netAmount: row.total_net_amount,
     positiveTickets: row.positive_tickets_count,
-    bestHit: formatNetAmount(row.best_single_net_amount ?? 0),
+    bestHitAmount: row.best_single_net_amount ?? 0,
   }));
 }

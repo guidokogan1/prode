@@ -3,8 +3,9 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
-import { buildWeightedAllocation, MATCH_CREDIT, sumAllocations, validateAllocations } from "@/lib/game";
-import { getOutcomeColor } from "@/lib/match-ui";
+import { formatCredits } from "@/lib/format";
+import { buildBalancedAllocation, buildWeightedAllocation, MATCH_CREDIT, OUTCOME_CAP, sumAllocations, validateAllocations } from "@/lib/game";
+import { getOutcomeColor, getPickStateLabel } from "@/lib/match-ui";
 import { ALLOCATION_EVENT, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 
 type AllocationCardProps = {
@@ -25,7 +26,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
         id: `${match.id}-${index}`,
         code: item.code,
         label: item.label,
-        amount: Number(item.amount.replace(/\./g, "")),
+        amount: item.amount,
       })),
     [match],
   );
@@ -35,15 +36,24 @@ export function AllocationCard({ match }: AllocationCardProps) {
 
   useEffect(() => {
     const syncAllocation = () => {
-      const stored = getStoredAllocation(match.id);
-      if (stored) {
+      const storedDraft = getStoredAllocation(match.id);
+      if (storedDraft?.allocations?.length) {
         setAllocations(
-          stored.map((item, index) => ({
+          storedDraft.allocations.map((item, index) => ({
             id: `${match.id}-${index}`,
             code: match.allocation[index]?.code ?? match.allocation[0]?.code ?? "home",
             label: item.label,
             amount: item.amount,
           })),
+        );
+        setSaveMessage(
+          storedDraft.status === "saved_remote"
+            ? "Guardado"
+            : storedDraft.status === "saved_local"
+              ? "Guardado local"
+              : storedDraft.status === "sync_error"
+                ? "Error"
+                : null,
         );
         return;
       }
@@ -65,6 +75,8 @@ export function AllocationCard({ match }: AllocationCardProps) {
   const remaining = MATCH_CREDIT - total;
   const validation = validateAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })));
   const leadingAllocation = [...allocations].sort((left, right) => right.amount - left.amount)[0] ?? null;
+  const remainingTone = remaining === 0 ? "#3D9B5F" : remaining > 0 ? "#D4A64B" : "#E8413A";
+  const remainingLabel = remaining === 0 ? "Listo" : remaining > 0 ? `Faltan ${formatCredits(remaining)}` : `Sobran ${formatCredits(Math.abs(remaining))}`;
 
   function updateAmount(index: number, rawValue: string) {
     const nextAmount = Number(rawValue);
@@ -83,6 +95,21 @@ export function AllocationCard({ match }: AllocationCardProps) {
       label,
       amount,
     );
+
+    setAllocations(
+      preset.map((item, index) => ({
+        id: `${match.id}-${index}`,
+        code: match.allocation[index]?.code ?? match.allocation[0]?.code ?? "home",
+        label: item.outcomeCode,
+        amount: item.amount,
+      })),
+    );
+    setSaveState("idle");
+    setSaveMessage(null);
+  }
+
+  function applyBalancedAllocation() {
+    const preset = buildBalancedAllocation(allocations.map((item) => item.label));
 
     setAllocations(
       preset.map((item, index) => ({
@@ -115,7 +142,11 @@ export function AllocationCard({ match }: AllocationCardProps) {
       amount: item.amount,
     }));
 
-    saveStoredAllocation(match.id, payload);
+    saveStoredAllocation(match.id, {
+      allocations: payload,
+      savedAt: new Date().toISOString(),
+      status: "draft",
+    });
 
     try {
       const response = await fetch("/api/tickets", {
@@ -129,23 +160,34 @@ export function AllocationCard({ match }: AllocationCardProps) {
         }),
       });
 
-      const result = (await response.json()) as {
-        ok: boolean;
-        message?: string;
-        reason?: string;
-      };
+      const result = (await response.json()) as { ok: boolean; message?: string; reason?: string; state?: string };
 
       if (!response.ok || !result.ok) {
+        saveStoredAllocation(match.id, {
+          allocations: payload,
+          savedAt: new Date().toISOString(),
+          status: "sync_error",
+        });
         setSaveState("error");
         setSaveMessage(result.reason ?? "No se pudo guardar la jugada.");
         return;
       }
 
+      saveStoredAllocation(match.id, {
+        allocations: payload,
+        savedAt: new Date().toISOString(),
+        status: result.state === "saved_remote" ? "saved_remote" : "saved_local",
+      });
       setSaveState("saved");
-      setSaveMessage(result.message ?? "Jugada guardada.");
+      setSaveMessage(result.state === "saved_remote" ? "Guardado" : "Guardado local");
     } catch {
+      saveStoredAllocation(match.id, {
+        allocations: payload,
+        savedAt: new Date().toISOString(),
+        status: "sync_error",
+      });
       setSaveState("saved");
-      setSaveMessage(session?.mode === "remote" ? "Guardado local mientras reconecta." : "Guardado en este dispositivo.");
+      setSaveMessage(session?.kind === "remote" ? "Guardado local" : "Guardado local");
     }
   }
 
@@ -161,10 +203,10 @@ export function AllocationCard({ match }: AllocationCardProps) {
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 4 }}>
-          <p className="eyebrow">{match.isEditable ? "Tu jugada" : "Así entraste"}</p>
-          <h2 className="section-title">{match.isEditable ? "Armá la ronda" : "Ronda cerrada"}</h2>
+          <p className="eyebrow">Tu jugada</p>
+          <h2 className="section-title">{match.isEditable ? "Repartí 10.000" : "Distribución"}</h2>
         </div>
-        <span className="pill">{match.userStateLabel}</span>
+        <span className="pill">{getPickStateLabel(match)}</span>
       </div>
 
       {match.isEditable ? (
@@ -173,17 +215,21 @@ export function AllocationCard({ match }: AllocationCardProps) {
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div style={{ display: "grid", gap: 4 }}>
                 <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.24rem", letterSpacing: "-0.04em" }}>
-                  {remaining.toLocaleString("es-AR")} cr
+                  {formatCredits(total)} / {formatCredits(MATCH_CREDIT)}
                 </strong>
-                <span className="micro-copy">
-                  {leadingAllocation ? `Tu fuerte hoy: ${leadingAllocation.label}` : "Elegí tu lado y cargale fuerte"}
-                </span>
+                <span className="micro-copy" style={{ color: remainingTone }}>{remainingLabel}</span>
               </div>
-              <span className="micro-copy">{session?.displayName ? `${session.displayName}` : "Sin sesión remota"}</span>
+              <span className="micro-copy">{session?.displayName ?? "Sin sesión"}</span>
             </div>
           </div>
 
           <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="button-secondary" style={{ minHeight: 36, borderRadius: 999, padding: "0 12px", fontSize: ".74rem" }} onClick={applyBalancedAllocation} type="button">
+                Balanceado
+              </button>
+              <span className="micro-copy" style={{ alignSelf: "center" }}>Máx. {formatCredits(OUTCOME_CAP)}</span>
+            </div>
             {allocations.map((item, index) => (
               <article
                 key={item.id}
@@ -197,12 +243,10 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 10 }}>
                   <div style={{ display: "grid", gap: 4 }}>
                     <strong>{item.label}</strong>
-                    <span className="micro-copy">
-                      {leadingAllocation?.label === item.label && item.amount > 0 ? "tu fuerte" : "tope 7.000"}
-                    </span>
+                    <span className="micro-copy">{leadingAllocation?.label === item.label && item.amount > 0 ? "principal" : "tope 7.000"}</span>
                   </div>
                   <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.04em" }}>
-                    {item.amount.toLocaleString("es-AR")}
+                    {formatCredits(item.amount)}
                   </strong>
                 </div>
 
@@ -241,13 +285,13 @@ export function AllocationCard({ match }: AllocationCardProps) {
 
           <div style={{ display: "grid", gap: 10 }}>
             <button className="button-primary" onClick={() => void saveAllocation()} disabled={!validation.ok || saveState === "saving"}>
-              {saveState === "saving" ? "Guardando..." : "Guardar ronda"}
+              {saveState === "saving" ? "Guardando..." : "Guardar"}
             </button>
             {saveMessage ? (
               <span className={saveState === "error" ? "error-copy" : "micro-copy"}>{saveMessage}</span>
             ) : (
               <span className={validation.ok ? "micro-copy" : "error-copy"}>
-                {validation.ok ? "Cuando arranca, se revela lo tuyo y lo del grupo." : validation.reason}
+                {validation.ok ? "Listo para guardar" : validation.reason}
               </span>
             )}
           </div>
@@ -260,7 +304,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 <strong>{item.label}</strong>
                 <span className="micro-copy">{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
               </div>
-              <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.14rem", letterSpacing: "-0.04em" }}>{item.amount.toLocaleString("es-AR")}</strong>
+              <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.14rem", letterSpacing: "-0.04em" }}>{formatCredits(item.amount)}</strong>
             </div>
           ))}
         </div>

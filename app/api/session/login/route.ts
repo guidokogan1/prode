@@ -37,8 +37,9 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     session: {
+      kind: "remote",
+      appMode: "supabase",
       displayName: result.displayName,
-      mode: "remote",
     },
   });
 }
