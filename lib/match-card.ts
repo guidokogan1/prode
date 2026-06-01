@@ -29,6 +29,7 @@ export type MatchCardState = {
   leadingUserOutcome: MatchViewModel["allocation"][number] | null;
   leadingConsensus: MatchViewModel["consensus"][number] | null;
   scoreOrKickoffLabel: string;
+  centerTopLabel: string | null;
 };
 
 export function getMatchCardState(match: MatchViewModel, density: MatchCardDensity): MatchCardState {
@@ -66,6 +67,7 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       leadingUserOutcome,
       leadingConsensus,
       scoreOrKickoffLabel: `${match.home.score} - ${match.away.score}`,
+      centerTopLabel: null,
     };
   }
 
@@ -80,7 +82,7 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       density,
       primaryStatusLabel: "En vivo",
       secondaryStatusLabel: null,
-      defaultTab: "group",
+      defaultTab: "play",
       isInteractive: false,
       showDrawGesture: false,
       heroValue,
@@ -90,6 +92,7 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       leadingUserOutcome,
       leadingConsensus,
       scoreOrKickoffLabel: `${match.home.score} - ${match.away.score}`,
+      centerTopLabel: null,
     };
   }
 
@@ -114,6 +117,7 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       leadingUserOutcome,
       leadingConsensus,
       scoreOrKickoffLabel: match.kickoffLabel,
+      centerTopLabel: match.kickoffLabel,
     };
   }
 
@@ -138,6 +142,7 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       leadingUserOutcome,
       leadingConsensus,
       scoreOrKickoffLabel: match.kickoffLabel,
+      centerTopLabel: match.kickoffLabel,
     };
   }
 
@@ -156,5 +161,6 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
     leadingUserOutcome,
     leadingConsensus,
     scoreOrKickoffLabel: match.kickoffLabel,
+    centerTopLabel: match.kickoffLabel,
   };
 }

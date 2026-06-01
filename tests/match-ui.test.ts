@@ -156,7 +156,7 @@ describe("match ui helpers", () => {
     ).toMatchObject({
       mode: "live",
       primaryStatusLabel: "En vivo",
-      defaultTab: "group",
+      defaultTab: "play",
       isInteractive: false,
     });
 

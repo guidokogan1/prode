@@ -1,20 +1,70 @@
-import type { MatchViewModel } from "@/lib/domain";
+import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 
 type VoteFaceProps = {
   match: MatchViewModel;
   showDrawGesture: boolean;
   centerMode?: "vs" | "score";
   topRightLabel?: string;
+  outcomeTargets?: {
+    left: MatchOutcomeCode;
+    right: MatchOutcomeCode;
+    draw: MatchOutcomeCode | null;
+  };
+  onSelectOutcome?: (code: MatchOutcomeCode) => void;
 };
 
-export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLabel }: VoteFaceProps) {
+export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLabel, outcomeTargets, onSelectOutcome }: VoteFaceProps) {
+  const leftControl = outcomeTargets && onSelectOutcome ? (
+    <button
+      type="button"
+      className="button-ghost"
+      style={{ minHeight: 0, padding: 0, color: "#3D9B5F", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em", justifyContent: "flex-start" }}
+      onClick={() => onSelectOutcome(outcomeTargets.left)}
+    >
+      ← {match.home.name}
+    </button>
+  ) : (
+    <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>← {match.home.name}</span>
+  );
+
+  const drawControl =
+    showDrawGesture && outcomeTargets?.draw && onSelectOutcome ? (
+      <button
+        type="button"
+        className="button-ghost"
+        style={{ minHeight: 0, padding: 0, color: "#5B8FF0", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}
+        onClick={() => onSelectOutcome(outcomeTargets.draw!)}
+      >
+        ↑ Empate
+      </button>
+    ) : showDrawGesture ? (
+      <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>↑ Empate</span>
+    ) : (
+      <span className="micro-copy">{match.marketTypeLabel}</span>
+    );
+
+  const rightControl = outcomeTargets && onSelectOutcome ? (
+    <button
+      type="button"
+      className="button-ghost"
+      style={{ minHeight: 0, padding: 0, color: "#E8413A", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em", justifyContent: "flex-end" }}
+      onClick={() => onSelectOutcome(outcomeTargets.right)}
+    >
+      {match.away.name} →
+    </button>
+  ) : (
+    <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{match.away.name} →</span>
+  );
+
   return (
     <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", padding: 16, position: "relative", zIndex: 1, fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
         <span className="eyebrow" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>{match.stage}</span>
-        <div className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>
-          <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>{topRightLabel ?? match.kickoffLabel}</span>
-        </div>
+        {topRightLabel ? (
+          <div className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>
+            <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>{topRightLabel}</span>
+          </div>
+        ) : null}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", paddingTop: 2, paddingBottom: 6 }}>
@@ -39,15 +89,15 @@ export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLa
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 8, paddingTop: 10, marginTop: 2, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 6 }}>
-          <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>← {match.home.name}</span>
+          {leftControl}
         </div>
         {showDrawGesture ? (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>↑ Empate</span>
+            {drawControl}
           </div>
-        ) : <span className="micro-copy">{centerMode === "score" ? match.marketTypeLabel : match.marketTypeLabel}</span>}
+        ) : drawControl}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
-          <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{match.away.name} →</span>
+          {rightControl}
         </div>
       </div>
     </div>

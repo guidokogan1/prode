@@ -42,6 +42,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const cardState = useMemo(() => getMatchCardState(effectiveMatch, "hero"), [effectiveMatch]);
   const [activeTab, setActiveTab] = useState<MatchCardTab>(cardState.defaultTab);
   const [phase, setPhase] = useState<CardPhase>("idle");
+  const [isEditingSaved, setIsEditingSaved] = useState(false);
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
   const [chosenIntensity, setChosenIntensity] = useState<IntensityOption | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
   useEffect(() => {
     setActiveTab(cardState.defaultTab);
+    setIsEditingSaved(false);
   }, [cardState.defaultTab, effectiveMatch.id]);
 
   const quickPlayTargets = useMemo(() => getQuickPlayOutcomeTargets(effectiveMatch), [effectiveMatch]);
@@ -114,6 +116,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     setSaveMessage(null);
     setSaveTone("default");
     setIsSaving(false);
+    setIsEditingSaved(false);
     x.set(0);
     y.set(0);
     cardOpacity.set(1);
@@ -127,6 +130,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     isChoosingRef.current = true;
     setExitDir(code);
     setActiveTab("play");
+    setIsEditingSaved(true);
     const targetX = code === "home" || code === "home_qualifies" ? -168 : code === "away" || code === "away_qualifies" ? 168 : 0;
     const targetY = code === "draw" ? -148 : 0;
 
@@ -212,6 +216,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     }
   }
 
+  const isInteractiveEditor =
+    cardState.mode === "editable-empty" || (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
+
   const idleExit =
     exitDir === "home" || exitDir === "home_qualifies"
       ? { x: -380, opacity: 0, rotate: -14, transition: { duration: 0.28 } }
@@ -228,16 +235,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           ? "#FF8B84"
           : "#EDE8D9";
 
-  const interactiveChoices = effectiveMatch.allocation.map((item) => ({
-    code: item.code,
-    label: item.label,
-    tone: getOutcomeColor(item.code),
-    icon: getOutcomeFlag(item.code, effectiveMatch),
-  }));
-
   return (
     <section className="section-stack-lg">
-      <div className="surface-card" style={{ padding: 18, display: "grid", gap: 16 }}>
+      <div className="surface-card" style={{ padding: 18, display: "grid", gap: 18 }}>
         <div className="split-row" style={{ alignItems: "start", flexWrap: "wrap" }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <span className="pill">{cardState.primaryStatusLabel}</span>
@@ -246,12 +246,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <span className="micro-copy">{effectiveMatch.stage}</span>
         </div>
 
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
           <AnimatePresence mode="wait">
             {phase === "idle" ? (
               <motion.div
                 key={`detail-idle-${effectiveMatch.id}`}
-                drag={cardState.isInteractive}
+                drag={isInteractiveEditor}
                 dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                 dragElastic={0.3}
                 onDragEnd={async (_, info) => {
@@ -265,20 +265,19 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   y,
                   rotate,
                   opacity: cardOpacity,
-                  minHeight: 318,
+                  minHeight: 302,
                   position: "relative",
                   overflow: "hidden",
-                  borderRadius: 22,
-                  background: "linear-gradient(160deg, #1F3E28 0%, #0E1D13 100%)",
-                  border: "1px solid rgba(255,255,255,0.09)",
+                  borderRadius: 18,
+                  background: "transparent",
                 }}
                 initial={{ opacity: 0, y: 24, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={idleExit}
                 transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                whileDrag={cardState.isInteractive ? { scale: 1.018 } : undefined}
+                whileDrag={isInteractiveEditor ? { scale: 1.018 } : undefined}
               >
-                {cardState.isInteractive ? (
+                {isInteractiveEditor ? (
                   <>
                     <motion.div style={{ opacity: homeOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(135deg, rgba(61,155,95,0.55) 0%, transparent 55%)" }} />
                     <motion.div style={{ opacity: awayOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(225deg, rgba(232,65,58,0.55) 0%, transparent 55%)" }} />
@@ -287,9 +286,11 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 ) : null}
                 <VoteFace
                   match={effectiveMatch}
-                  showDrawGesture={cardState.isInteractive && cardState.showDrawGesture}
+                  showDrawGesture={isInteractiveEditor && cardState.showDrawGesture}
                   centerMode={cardState.mode === "live" || cardState.mode === "settled" ? "score" : "vs"}
-                  topRightLabel={cardState.scoreOrKickoffLabel}
+                  topRightLabel={cardState.centerTopLabel ?? undefined}
+                  outcomeTargets={isInteractiveEditor ? quickPlayTargets : undefined}
+                  onSelectOutcome={isInteractiveEditor ? (code) => void chooseOutcome(code) : undefined}
                 />
               </motion.div>
             ) : null}
@@ -303,7 +304,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 transition={{ type: "spring", stiffness: 250, damping: 24 }}
                 className="surface-card-soft soft-panel"
                 style={{
-                  minHeight: 318,
+                  minHeight: 302,
                   background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
                   border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
                   display: "grid",
@@ -360,7 +361,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 exit={{ scale: 0.94, opacity: 0, y: -24 }}
                 transition={{ type: "spring", stiffness: 250, damping: 24 }}
                 className="surface-card-soft soft-panel"
-                style={{ minHeight: 318, display: "grid", placeItems: "center", textAlign: "center" }}
+                style={{ minHeight: 302, display: "grid", placeItems: "center", textAlign: "center" }}
               >
                 <div className="section-stack" style={{ justifyItems: "center" }}>
                   <div style={{ width: 64, height: 64, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(61,155,95,0.18)", border: "2px solid #3D9B5F" }}>
@@ -379,7 +380,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           </AnimatePresence>
         </div>
 
-        <div className="surface-card-soft soft-panel" style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gap: 12 }}>
           <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
             <div className="title-stack">
               <p className="eyebrow">{activeTab === "play" ? "Jugada" : "Grupo"}</p>
@@ -400,32 +401,27 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           {activeTab === "play" ? (
             cardState.mode === "editable-empty" || cardState.mode === "editable-saved" ? (
               <div style={{ display: "grid", gap: 10 }}>
-                {phase === "idle" ? (
+                {phase === "idle" && cardState.mode === "editable-empty" ? (
+                  <span className="micro-copy">Elegí un lado desde la cancha de arriba.</span>
+                ) : null}
+                {phase === "idle" && cardState.mode === "editable-saved" && !isEditingSaved ? (
                   <>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {interactiveChoices.map((choice) => (
-                        <button
-                          key={choice.code}
-                          className="button-secondary"
-                          style={{ minHeight: 38, borderRadius: 999, padding: "0 12px", borderColor: `${choice.tone}30`, color: choice.tone }}
-                          onClick={() => void chooseOutcome(choice.code)}
-                          type="button"
-                        >
-                          <span>{choice.icon}</span>
-                          <span>{choice.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {cardState.leadingUserOutcome ? (
-                      <div className="surface-card-soft soft-panel-md" style={{ display: "grid", gap: 4, borderColor: `${getOutcomeColor(cardState.leadingUserOutcome.code)}30` }}>
-                        <span className="micro-copy">Tu pick</span>
-                        <strong>{cardState.leadingUserOutcome.label}</strong>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <span className="micro-copy">Tu pick</span>
+                      <strong>{cardState.leadingUserOutcome?.label ?? "Sin jugar"}</strong>
+                      {cardState.leadingUserOutcome ? (
                         <span className="micro-copy" style={{ color: getOutcomeColor(cardState.leadingUserOutcome.code) }}>
                           {formatCredits(cardState.leadingUserOutcome.amount)} · {getOutcomeHint(cardState.leadingUserOutcome.code, effectiveMatch.marketType)}
                         </span>
-                      </div>
-                    ) : null}
+                      ) : null}
+                    </div>
+                    <button className="button-secondary" style={{ minHeight: 42, borderRadius: 999, justifySelf: "start", paddingInline: 14 }} onClick={() => setIsEditingSaved(true)} type="button">
+                      Cambiar jugada
+                    </button>
                   </>
+                ) : null}
+                {phase === "idle" && cardState.mode === "editable-saved" && isEditingSaved ? (
+                  <span className="micro-copy">Elegí el nuevo lado desde la cancha de arriba.</span>
                 ) : null}
                 {phase === "saved" && saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : "#7A9A81" }}>{saveMessage}</span> : null}
               </div>
@@ -438,7 +434,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", borderColor: cardState.leadingUserOutcome?.code === item.code && item.amount > 0 ? `${getOutcomeColor(item.code)}30` : "rgba(255,255,255,0.08)" }}
                   >
                     <div style={{ display: "grid", gap: 4 }}>
-                      <strong>{item.label}</strong>
+                      <strong style={{ color: cardState.leadingUserOutcome?.code === item.code ? getOutcomeColor(item.code) : undefined }}>{item.label}</strong>
                       <span className="micro-copy">{item.percentage}%</span>
                     </div>
                     <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.12rem", letterSpacing: "-0.04em" }}>
@@ -449,34 +445,26 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               </div>
             )
           ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              {cardState.leadingConsensus ? (
-                <div className="surface-card-soft soft-panel-md">
-                  <div className="split-row">
+            <div style={{ display: "grid", gap: 12 }}>
+              {cardState.mode === "editable-empty" || cardState.mode === "editable-saved" ? (
+                cardState.leadingConsensus ? (
+                  <div style={{ display: "grid", gap: 4 }}>
                     <span className="micro-copy">Grupo</span>
-                    <span className="micro-copy">{cardState.leadingConsensus.percentage}%</span>
+                    <strong style={{ color: getOutcomeColor(cardState.leadingConsensus.code) }}>
+                      {cardState.leadingConsensus.label} {cardState.leadingConsensus.percentage}%
+                    </strong>
                   </div>
-                  <strong style={{ display: "block", marginTop: 6, color: getOutcomeColor(cardState.leadingConsensus.code) }}>
-                    {cardState.leadingConsensus.label}
-                  </strong>
-                </div>
+                ) : (
+                  <span className="micro-copy">Todavía sin lectura del grupo.</span>
+                )
               ) : null}
               {groupBuckets.map((bucket) => {
                 const isWinning = resolvedOutcome === bucket.outcome.code;
 
                 return (
-                  <article
-                    key={bucket.outcome.code}
-                    className="surface-card-soft soft-panel-md"
-                    style={{
-                      display: "grid",
-                      gap: 10,
-                      borderColor: isWinning ? `${getOutcomeColor(bucket.outcome.code)}30` : "rgba(255,255,255,0.08)",
-                      background: isWinning ? `${getOutcomeColor(bucket.outcome.code)}0A` : "rgba(255,255,255,0.04)",
-                    }}
-                  >
+                  <article key={bucket.outcome.code} style={{ display: "grid", gap: 10, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                     <div className="split-row">
-                      <strong style={{ color: isWinning ? getOutcomeColor(bucket.outcome.code) : "#EDE8D9" }}>
+                      <strong style={{ color: isWinning ? getOutcomeColor(bucket.outcome.code) : "#EDE8D9", fontSize: "1rem" }}>
                         {getOutcomeFlag(bucket.outcome.code, effectiveMatch)} {bucket.outcome.label}
                       </strong>
                       <span className="micro-copy">{bucket.tickets.length} picks</span>
@@ -502,7 +490,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 );
               })}
               {totalPot > 0 ? (
-                <div className="surface-card-soft soft-panel-md split-row" style={{ background: "rgba(212,166,75,0.07)", borderColor: "rgba(212,166,75,0.18)" }}>
+                <div className="split-row" style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                   <span className="muted-copy">Pozo</span>
                   <strong style={{ color: "#D8B56A", fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.05em" }}>
                     {formatCompactCredits(totalPot)} cr
