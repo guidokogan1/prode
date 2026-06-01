@@ -39,7 +39,7 @@ describe("demo mock data", () => {
     const summary = getFallbackHomeSummary("pepo");
 
     expect(summary.liveMatches).toBe(1);
-    expect(summary.pendingPicks).toBe(2);
+    expect(summary.pendingPicks).toBe(14);
     expect(summary.yourNetAmount).toBe(-3151);
   });
 
@@ -54,6 +54,6 @@ describe("demo mock data", () => {
   it("validates demo persona slugs", () => {
     expect(isDemoPersonaSlug("guido")).toBe(true);
     expect(isDemoPersonaSlug("random")).toBe(false);
-    expect(getFallbackMatches("cami")).toHaveLength(6);
+    expect(getFallbackMatches("cami")).toHaveLength(18);
   });
 });

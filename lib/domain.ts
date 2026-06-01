@@ -91,7 +91,7 @@ export type ProfileViewModel = {
   netAmount: number;
   positiveTickets: number;
   bestHitAmount: number;
-  championPick: string;
+  championPick: string | null;
   isCurrentUser?: boolean;
 };
 

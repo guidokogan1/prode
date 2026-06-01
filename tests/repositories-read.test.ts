@@ -35,7 +35,7 @@ describe("read repositories", () => {
     const profile = await getProfile();
 
     expect(profile.name).toBe("Guido");
-    expect(profile.championPick).toBe("Argentina");
+    expect(profile.championPick).toBeNull();
   });
 
   it("maps remote profile data into ui shape", async () => {

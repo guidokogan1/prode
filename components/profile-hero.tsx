@@ -46,7 +46,7 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         {[
           { label: "Positivas", value: String(profile.positiveTickets), icon: "🎯" },
           { label: "Mejor", value: formatNetAmount(profile.bestHitAmount), icon: "🔥" },
-          { label: "Campeón", value: profile.championPick, icon: "🏆" },
+          { label: "Campeón", value: profile.championPick ?? "Sin elegir", icon: "🏆" },
         ].map((item) => (
           <div key={item.label} className="surface-card-soft soft-panel-md" style={{ textAlign: "center" }}>
             <div style={{ display: "grid", gap: 5 }}>

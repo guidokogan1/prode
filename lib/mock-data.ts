@@ -69,7 +69,7 @@ const personaProfiles: Record<DemoPersonaSlug, ProfileViewModel> = {
     netAmount: 12222,
     positiveTickets: 19,
     bestHitAmount: 18000,
-    championPick: "Argentina",
+    championPick: null,
   },
   mari: {
     name: "Mari",
@@ -406,6 +406,183 @@ function decorateMatch(match: RawMatchViewModel): MatchViewModel {
       awayGoals: Number(match.form.awayGoals),
     },
   };
+}
+
+type PendingGroupFixture = {
+  id: string;
+  groupLabel: string;
+  venue: string;
+  kickoffLabel: string;
+  statusLabel: string;
+  home: { name: string; flag: string };
+  away: { name: string; flag: string };
+  consensus: [number, number, number];
+  form: { home: string; away: string; homeGoals: string; awayGoals: string };
+};
+
+const pendingGroupFixtures: PendingGroupFixture[] = [
+  {
+    id: "eng-cro",
+    groupLabel: "Grupo D",
+    venue: "Atlanta",
+    kickoffLabel: "14 Jun · 16:00",
+    statusLabel: "En 3 dias",
+    home: { name: "Inglaterra", flag: "🏴" },
+    away: { name: "Croacia", flag: "🇭🇷" },
+    consensus: [52, 26, 22],
+    form: { home: "V V E V D", away: "V E V V D", homeGoals: "11", awayGoals: "9" },
+  },
+  {
+    id: "sui-ecu",
+    groupLabel: "Grupo D",
+    venue: "Seattle",
+    kickoffLabel: "14 Jun · 19:30",
+    statusLabel: "En 3 dias",
+    home: { name: "Suiza", flag: "🇨🇭" },
+    away: { name: "Ecuador", flag: "🇪🇨" },
+    consensus: [38, 30, 32],
+    form: { home: "E V D V V", away: "V V E D V", homeGoals: "7", awayGoals: "8" },
+  },
+  {
+    id: "cro-sui",
+    groupLabel: "Grupo D",
+    venue: "Atlanta",
+    kickoffLabel: "19 Jun · 16:00",
+    statusLabel: "En 8 dias",
+    home: { name: "Croacia", flag: "🇭🇷" },
+    away: { name: "Suiza", flag: "🇨🇭" },
+    consensus: [41, 30, 29],
+    form: { home: "V E V V D", away: "E V D V V", homeGoals: "9", awayGoals: "7" },
+  },
+  {
+    id: "eng-ecu",
+    groupLabel: "Grupo D",
+    venue: "Toronto",
+    kickoffLabel: "19 Jun · 19:30",
+    statusLabel: "En 8 dias",
+    home: { name: "Inglaterra", flag: "🏴" },
+    away: { name: "Ecuador", flag: "🇪🇨" },
+    consensus: [58, 24, 18],
+    form: { home: "V V E V D", away: "V V E D V", homeGoals: "11", awayGoals: "8" },
+  },
+  {
+    id: "ecu-cro",
+    groupLabel: "Grupo D",
+    venue: "Seattle",
+    kickoffLabel: "24 Jun · 16:00",
+    statusLabel: "En 13 dias",
+    home: { name: "Ecuador", flag: "🇪🇨" },
+    away: { name: "Croacia", flag: "🇭🇷" },
+    consensus: [29, 31, 40],
+    form: { home: "V V E D V", away: "V E V V D", homeGoals: "8", awayGoals: "9" },
+  },
+  {
+    id: "sui-eng",
+    groupLabel: "Grupo D",
+    venue: "Toronto",
+    kickoffLabel: "24 Jun · 19:30",
+    statusLabel: "En 13 dias",
+    home: { name: "Suiza", flag: "🇨🇭" },
+    away: { name: "Inglaterra", flag: "🏴" },
+    consensus: [22, 26, 52],
+    form: { home: "E V D V V", away: "V V E V D", homeGoals: "7", awayGoals: "11" },
+  },
+  {
+    id: "fra-col",
+    groupLabel: "Grupo E",
+    venue: "Guadalajara",
+    kickoffLabel: "15 Jun · 16:00",
+    statusLabel: "En 4 dias",
+    home: { name: "Francia", flag: "🇫🇷" },
+    away: { name: "Colombia", flag: "🇨🇴" },
+    consensus: [49, 27, 24],
+    form: { home: "V V V E D", away: "V E V V D", homeGoals: "12", awayGoals: "9" },
+  },
+  {
+    id: "den-kor",
+    groupLabel: "Grupo E",
+    venue: "Kansas City",
+    kickoffLabel: "15 Jun · 19:30",
+    statusLabel: "En 4 dias",
+    home: { name: "Dinamarca", flag: "🇩🇰" },
+    away: { name: "Corea del Sur", flag: "🇰🇷" },
+    consensus: [44, 30, 26],
+    form: { home: "V E V D V", away: "V D V E V", homeGoals: "8", awayGoals: "7" },
+  },
+  {
+    id: "col-den",
+    groupLabel: "Grupo E",
+    venue: "Guadalajara",
+    kickoffLabel: "20 Jun · 16:00",
+    statusLabel: "En 9 dias",
+    home: { name: "Colombia", flag: "🇨🇴" },
+    away: { name: "Dinamarca", flag: "🇩🇰" },
+    consensus: [40, 30, 30],
+    form: { home: "V E V V D", away: "V E V D V", homeGoals: "9", awayGoals: "8" },
+  },
+  {
+    id: "fra-kor",
+    groupLabel: "Grupo E",
+    venue: "Mexico DF",
+    kickoffLabel: "20 Jun · 19:30",
+    statusLabel: "En 9 dias",
+    home: { name: "Francia", flag: "🇫🇷" },
+    away: { name: "Corea del Sur", flag: "🇰🇷" },
+    consensus: [62, 22, 16],
+    form: { home: "V V V E D", away: "V D V E V", homeGoals: "12", awayGoals: "7" },
+  },
+  {
+    id: "kor-col",
+    groupLabel: "Grupo E",
+    venue: "Kansas City",
+    kickoffLabel: "25 Jun · 16:00",
+    statusLabel: "En 14 dias",
+    home: { name: "Corea del Sur", flag: "🇰🇷" },
+    away: { name: "Colombia", flag: "🇨🇴" },
+    consensus: [27, 29, 44],
+    form: { home: "V D V E V", away: "V E V V D", homeGoals: "7", awayGoals: "9" },
+  },
+  {
+    id: "den-fra",
+    groupLabel: "Grupo E",
+    venue: "Mexico DF",
+    kickoffLabel: "25 Jun · 19:30",
+    statusLabel: "En 14 dias",
+    home: { name: "Dinamarca", flag: "🇩🇰" },
+    away: { name: "Francia", flag: "🇫🇷" },
+    consensus: [24, 27, 49],
+    form: { home: "V E V D V", away: "V V V E D", homeGoals: "8", awayGoals: "12" },
+  },
+];
+
+function buildPendingGroupMatches(): RawMatchViewModel[] {
+  return pendingGroupFixtures.map((fixture) => ({
+    id: fixture.id,
+    stage: "Fase de grupos",
+    groupLabel: fixture.groupLabel,
+    venue: fixture.venue,
+    kickoffLabel: fixture.kickoffLabel,
+    status: "scheduled",
+    statusLabel: fixture.statusLabel,
+    marketType: "1x2",
+    marketTypeLabel: "1X2",
+    userStateLabel: "Te falta jugar",
+    isEditable: true,
+    home: { ...fixture.home, score: 0 },
+    away: { ...fixture.away, score: 0 },
+    allocation: [
+      { label: fixture.home.name, amount: "0", percentage: 0 },
+      { label: "Empate", amount: "0", percentage: 0 },
+      { label: fixture.away.name, amount: "0", percentage: 0 },
+    ],
+    consensus: [
+      { label: fixture.home.name, percentage: fixture.consensus[0] },
+      { label: "Empate", percentage: fixture.consensus[1] },
+      { label: fixture.away.name, percentage: fixture.consensus[2] },
+    ],
+    form: fixture.form,
+    revealedTickets: [],
+  }));
 }
 
 function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
@@ -805,6 +982,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
         },
       ],
     },
+    ...buildPendingGroupMatches(),
   ];
 
   return matches.map((match) => decorateMatch(match));
