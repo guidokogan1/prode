@@ -219,8 +219,11 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const isInteractiveEditor =
     cardState.mode === "editable-empty" || (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
   const showMatchCenter =
-    cardState.mode !== "editable-saved" || isEditingSaved || phase !== "idle";
+    cardState.mode === "editable-empty" ||
+    (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
   const showSavedSummaryHero = cardState.mode === "editable-saved" && !isEditingSaved && phase === "idle";
+  const showLiveSummaryHero = cardState.mode === "live" && phase === "idle";
+  const showSettledSummaryHero = cardState.mode === "settled" && phase === "idle";
 
   const idleExit =
     exitDir === "home" || exitDir === "home_qualifies"
@@ -412,10 +415,81 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               </button>
             </div>
           </div>
+        ) : showLiveSummaryHero ? (
+          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+            <div
+              style={{
+                minHeight: 302,
+                borderRadius: 18,
+                display: "grid",
+                alignContent: "center",
+                justifyItems: "start",
+                gap: 14,
+                padding: 20,
+                background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+              }}
+            >
+              <div className="title-stack">
+                <p className="eyebrow">Esta es tu jugada</p>
+                <h2 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.7rem)", lineHeight: 0.98 }}>
+                  {cardState.heroValue}
+                </h2>
+                <p className="muted-copy" style={{ color: cardState.leadingUserOutcome ? getOutcomeColor(cardState.leadingUserOutcome.code) : undefined }}>
+                  {cardState.heroDescription}
+                </p>
+              </div>
+
+              <div className="split-row" style={{ width: "100%", alignItems: "end" }}>
+                <div className="title-stack">
+                  <span className="micro-copy">Marcador</span>
+                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "2rem", letterSpacing: "-0.06em" }}>{cardState.scoreOrKickoffLabel}</strong>
+                </div>
+                <span className="micro-copy">
+                  {effectiveMatch.home.flag} {effectiveMatch.home.name} vs {effectiveMatch.away.flag} {effectiveMatch.away.name}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : showSettledSummaryHero ? (
+          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+            <div
+              style={{
+                minHeight: 302,
+                borderRadius: 18,
+                display: "grid",
+                alignContent: "center",
+                justifyItems: "start",
+                gap: 14,
+                padding: 20,
+                background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+              }}
+            >
+              <div className="title-stack">
+                <p className="eyebrow">Resultado final</p>
+                <h2 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.7rem)", lineHeight: 0.98, color: heroToneColor }}>
+                  {cardState.heroValue}
+                </h2>
+                <p className="muted-copy">{cardState.heroDescription}</p>
+              </div>
+
+              <div className="split-row" style={{ width: "100%", alignItems: "end" }}>
+                <div className="title-stack">
+                  <span className="micro-copy">Ganó</span>
+                  <strong style={{ color: cardState.winningOutcome ? getOutcomeColor(cardState.winningOutcome) : undefined }}>
+                    {cardState.winningOutcome ? `${getOutcomeFlag(cardState.winningOutcome, effectiveMatch)} ${effectiveMatch.consensus.find((item) => item.code === cardState.winningOutcome)?.label ?? "Resultado"}` : "Final"}
+                  </strong>
+                </div>
+                <div className="title-stack text-right">
+                  <span className="micro-copy">Marcador</span>
+                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "2rem", letterSpacing: "-0.06em" }}>{cardState.scoreOrKickoffLabel}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : null}
 
         <div style={{ display: "grid", gap: 12 }}>
-          {!showSavedSummaryHero ? (
+          {!showSavedSummaryHero && !showLiveSummaryHero && !showSettledSummaryHero ? (
             <>
               <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
                 <div className="title-stack">
