@@ -151,6 +151,39 @@ export function getMatchActionLabel(match: MatchViewModel) {
   return pickState === "Sin jugar" ? "Jugar" : "Editar";
 }
 
+export function getMatchActionPriority(match: MatchViewModel) {
+  const action = getMatchActionLabel(match);
+
+  if (action === "Jugar") {
+    return 0;
+  }
+
+  if (action === "Editar") {
+    return 1;
+  }
+
+  if (action === "Bloqueado") {
+    return 2;
+  }
+
+  if (action === "En vivo") {
+    return 3;
+  }
+
+  return 4;
+}
+
+export function getMatchPickSummary(match: MatchViewModel) {
+  const pickState = getPickStateLabel(match);
+
+  if (pickState === "Sin jugar") {
+    return "Sin jugar";
+  }
+
+  const leading = [...match.allocation].sort((left, right) => right.amount - left.amount)[0];
+  return leading ? `Más a ${leading.label}` : pickState;
+}
+
 export type MatchUrgencyBucket = "pending" | "live" | "upcoming" | "settled";
 
 export function getMatchUrgencyBucket(match: MatchViewModel): MatchUrgencyBucket {

@@ -1,4 +1,5 @@
 import { MatchCard } from "@/components/match-card";
+import { getMatchActionPriority } from "@/lib/match-ui";
 import { getHomeSummary } from "@/lib/repositories/home";
 import { listMatches } from "@/lib/repositories/matches";
 
@@ -13,6 +14,7 @@ export default async function MatchesPage() {
         <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
           <div style={{ display: "grid", gap: 4 }}>
             <h1 className="display-title">{summary.pendingPicks} por jugar</h1>
+            <p className="muted-copy">Entrá a corregir por grupo o llave</p>
           </div>
           <span className="status-pill status-pill-gold" style={{ whiteSpace: "nowrap", minWidth: 102, justifyContent: "center", flexShrink: 0 }}>
             {summary.liveMatches} en vivo
@@ -27,7 +29,7 @@ export default async function MatchesPage() {
               <h2 className="section-title">{group.title}</h2>
             </div>
             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
-            <span className="micro-copy">{group.matches.length}</span>
+            <span className="micro-copy">{group.pendingCount > 0 ? `${group.pendingCount} por jugar` : group.matches.length}</span>
           </div>
 
           <div style={{ display: "grid", gap: 10 }}>
@@ -50,7 +52,9 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
     .map((groupLabel) => ({
       id: String(groupLabel),
       title: String(groupLabel),
-      matches: groupStageMatches.filter((match) => match.groupLabel === groupLabel),
+      matches: groupStageMatches
+        .filter((match) => match.groupLabel === groupLabel)
+        .sort((left, right) => getMatchActionPriority(left) - getMatchActionPriority(right)),
     }));
 
   const knockoutOrder = [
@@ -64,9 +68,14 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
     .map((stage) => ({
       id: stage,
       title: stage,
-      matches: knockoutMatches.filter((match) => match.stage === stage),
+      matches: knockoutMatches
+        .filter((match) => match.stage === stage)
+        .sort((left, right) => getMatchActionPriority(left) - getMatchActionPriority(right)),
     }))
     .filter((group) => group.matches.length > 0);
 
-  return [...groupStageGroups, ...knockoutGroups];
+  return [...groupStageGroups, ...knockoutGroups].map((group) => ({
+    ...group,
+    pendingCount: group.matches.filter((match) => getMatchActionPriority(match) === 0).length,
+  }));
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import type { MatchViewModel } from "@/lib/domain";
-import { getMatchActionLabel, getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
+import { getMatchActionLabel, getMatchPickSummary, getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
 
 type MatchCardProps = {
   match: MatchViewModel;
@@ -11,6 +11,7 @@ type MatchCardProps = {
 
 export function MatchCard({ match }: MatchCardProps) {
   const actionLabel = getMatchActionLabel(match);
+  const pickSummary = getMatchPickSummary(match);
   const matchState = getMatchStateLabel(match);
   const pickState = getPickStateLabel(match);
   const statusTone =
@@ -112,7 +113,7 @@ export function MatchCard({ match }: MatchCardProps) {
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
             <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>{match.kickoffLabel}</span>
-            <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>{match.stage}</span>
+            <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>{pickSummary}</span>
           </div>
         </div>
 
