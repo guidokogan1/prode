@@ -218,6 +218,8 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
   const isInteractiveEditor =
     cardState.mode === "editable-empty" || (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
+  const showMatchCenter =
+    cardState.mode !== "editable-saved" || isEditingSaved || phase !== "idle";
 
   const idleExit =
     exitDir === "home" || exitDir === "home_qualifies"
@@ -246,139 +248,141 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <span className="micro-copy">{effectiveMatch.stage}</span>
         </div>
 
-        <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
-          <AnimatePresence mode="wait">
-            {phase === "idle" ? (
-              <motion.div
-                key={`detail-idle-${effectiveMatch.id}`}
-                drag={isInteractiveEditor}
-                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                dragElastic={0.3}
-                onDragEnd={async (_, info) => {
-                  const outcome = getQuickPlaySwipeOutcome(effectiveMatch, info.offset.x, info.offset.y);
-                  if (outcome) {
-                    await chooseOutcome(outcome);
-                  }
-                }}
-                style={{
-                  x,
-                  y,
-                  rotate,
-                  opacity: cardOpacity,
-                  minHeight: 302,
-                  position: "relative",
-                  overflow: "hidden",
-                  borderRadius: 18,
-                  background: "transparent",
-                }}
-                initial={{ opacity: 0, y: 24, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={idleExit}
-                transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                whileDrag={isInteractiveEditor ? { scale: 1.018 } : undefined}
-              >
-                {isInteractiveEditor ? (
-                  <>
-                    <motion.div style={{ opacity: homeOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(135deg, rgba(61,155,95,0.55) 0%, transparent 55%)" }} />
-                    <motion.div style={{ opacity: awayOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(225deg, rgba(232,65,58,0.55) 0%, transparent 55%)" }} />
-                    {cardState.showDrawGesture ? <motion.div style={{ opacity: drawOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(0deg, rgba(91,143,240,0.5) 0%, transparent 50%)" }} /> : null}
-                  </>
-                ) : null}
-                <VoteFace
-                  match={effectiveMatch}
-                  showDrawGesture={isInteractiveEditor && cardState.showDrawGesture}
-                  centerMode={cardState.mode === "live" || cardState.mode === "settled" ? "score" : "vs"}
-                  topRightLabel={cardState.centerTopLabel ?? undefined}
-                  outcomeTargets={isInteractiveEditor ? quickPlayTargets : undefined}
-                  onSelectOutcome={isInteractiveEditor ? (code) => void chooseOutcome(code) : undefined}
-                />
-              </motion.div>
-            ) : null}
+        {showMatchCenter ? (
+          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+            <AnimatePresence mode="wait">
+              {phase === "idle" ? (
+                <motion.div
+                  key={`detail-idle-${effectiveMatch.id}`}
+                  drag={isInteractiveEditor}
+                  dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                  dragElastic={0.3}
+                  onDragEnd={async (_, info) => {
+                    const outcome = getQuickPlaySwipeOutcome(effectiveMatch, info.offset.x, info.offset.y);
+                    if (outcome) {
+                      await chooseOutcome(outcome);
+                    }
+                  }}
+                  style={{
+                    x,
+                    y,
+                    rotate,
+                    opacity: cardOpacity,
+                    minHeight: 302,
+                    position: "relative",
+                    overflow: "hidden",
+                    borderRadius: 18,
+                    background: "transparent",
+                  }}
+                  initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={idleExit}
+                  transition={{ type: "spring", stiffness: 250, damping: 24 }}
+                  whileDrag={isInteractiveEditor ? { scale: 1.018 } : undefined}
+                >
+                  {isInteractiveEditor ? (
+                    <>
+                      <motion.div style={{ opacity: homeOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(135deg, rgba(61,155,95,0.55) 0%, transparent 55%)" }} />
+                      <motion.div style={{ opacity: awayOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(225deg, rgba(232,65,58,0.55) 0%, transparent 55%)" }} />
+                      {cardState.showDrawGesture ? <motion.div style={{ opacity: drawOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(0deg, rgba(91,143,240,0.5) 0%, transparent 50%)" }} /> : null}
+                    </>
+                  ) : null}
+                  <VoteFace
+                    match={effectiveMatch}
+                    showDrawGesture={isInteractiveEditor && cardState.showDrawGesture}
+                    centerMode={cardState.mode === "live" || cardState.mode === "settled" ? "score" : "vs"}
+                    topRightLabel={cardState.centerTopLabel ?? undefined}
+                    outcomeTargets={isInteractiveEditor ? quickPlayTargets : undefined}
+                    onSelectOutcome={isInteractiveEditor ? (code) => void chooseOutcome(code) : undefined}
+                  />
+                </motion.div>
+              ) : null}
 
-            {phase === "chosen" && chosenOutcome ? (
-              <motion.div
-                key={`detail-chosen-${effectiveMatch.id}-${chosenOutcome}`}
-                initial={{ scale: 0.94, opacity: 0, y: 14 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.94, opacity: 0, y: -14 }}
-                transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                className="surface-card-soft soft-panel"
-                style={{
-                  minHeight: 302,
-                  background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
-                  border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
-                  display: "grid",
-                  gap: 16,
-                  alignContent: "start",
-                }}
-              >
-                <div className="title-stack">
-                  <p className="eyebrow">Elegiste</p>
-                  <h2 className="section-title">{effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</h2>
-                  <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>{getOutcomeHint(chosenOutcome, effectiveMatch.marketType)}</p>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
-                  {INTENSITIES.map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <motion.button
-                        key={option.id}
-                        whileTap={{ scale: 0.94 }}
-                        whileHover={{ scale: 1.03 }}
-                        onClick={() => void handleIntensityPick(option)}
-                        style={{
-                          minHeight: 108,
-                          borderRadius: 16,
-                          border: "1px solid rgba(255,255,255,0.09)",
-                          background: "rgba(255,255,255,0.04)",
-                          display: "grid",
-                          placeItems: "center",
-                          gap: 8,
-                          padding: 14,
-                          color: "#EDE8D9",
-                        }}
-                      >
-                        <Icon size={24} />
-                        <span style={{ fontFamily: "var(--font-display)", fontSize: ".94rem", fontWeight: 700 }}>{option.label}</span>
-                        <span className="micro-copy">{option.hint}</span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                <button className="button-ghost" onClick={resetPhase}>
-                  Cambiar
-                </button>
-              </motion.div>
-            ) : null}
-
-            {phase === "saved" && chosenOutcome && chosenIntensity ? (
-              <motion.div
-                key={`detail-saved-${effectiveMatch.id}-${chosenOutcome}-${chosenIntensity}`}
-                initial={{ scale: 0.96, opacity: 0, y: 16 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.94, opacity: 0, y: -24 }}
-                transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                className="surface-card-soft soft-panel"
-                style={{ minHeight: 302, display: "grid", placeItems: "center", textAlign: "center" }}
-              >
-                <div className="section-stack" style={{ justifyItems: "center" }}>
-                  <div style={{ width: 64, height: 64, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(61,155,95,0.18)", border: "2px solid #3D9B5F" }}>
-                    <Check size={28} style={{ color: "#3D9B5F" }} />
+              {phase === "chosen" && chosenOutcome ? (
+                <motion.div
+                  key={`detail-chosen-${effectiveMatch.id}-${chosenOutcome}`}
+                  initial={{ scale: 0.94, opacity: 0, y: 14 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.94, opacity: 0, y: -14 }}
+                  transition={{ type: "spring", stiffness: 250, damping: 24 }}
+                  className="surface-card-soft soft-panel"
+                  style={{
+                    minHeight: 302,
+                    background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
+                    border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
+                    display: "grid",
+                    gap: 16,
+                    alignContent: "start",
+                  }}
+                >
+                  <div className="title-stack">
+                    <p className="eyebrow">Elegiste</p>
+                    <h2 className="section-title">{effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</h2>
+                    <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>{getOutcomeHint(chosenOutcome, effectiveMatch.marketType)}</p>
                   </div>
-                  <p className="section-title">Guardado</p>
-                  <p className="muted-copy">
-                    {getOutcomeFlag(chosenOutcome, effectiveMatch)} {effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label}
-                    {" · "}
-                    {INTENSITIES.find((item) => item.id === chosenIntensity)?.hint}
-                  </p>
-                  {saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : saveTone === "loading" ? "#EDE8D9" : "#7A9A81" }}>{saveMessage}</span> : null}
-                </div>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-        </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                    {INTENSITIES.map((option) => {
+                      const Icon = option.icon;
+                      return (
+                        <motion.button
+                          key={option.id}
+                          whileTap={{ scale: 0.94 }}
+                          whileHover={{ scale: 1.03 }}
+                          onClick={() => void handleIntensityPick(option)}
+                          style={{
+                            minHeight: 108,
+                            borderRadius: 16,
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            background: "rgba(255,255,255,0.04)",
+                            display: "grid",
+                            placeItems: "center",
+                            gap: 8,
+                            padding: 14,
+                            color: "#EDE8D9",
+                          }}
+                        >
+                          <Icon size={24} />
+                          <span style={{ fontFamily: "var(--font-display)", fontSize: ".94rem", fontWeight: 700 }}>{option.label}</span>
+                          <span className="micro-copy">{option.hint}</span>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  <button className="button-ghost" onClick={resetPhase}>
+                    Cambiar
+                  </button>
+                </motion.div>
+              ) : null}
+
+              {phase === "saved" && chosenOutcome && chosenIntensity ? (
+                <motion.div
+                  key={`detail-saved-${effectiveMatch.id}-${chosenOutcome}-${chosenIntensity}`}
+                  initial={{ scale: 0.96, opacity: 0, y: 16 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.94, opacity: 0, y: -24 }}
+                  transition={{ type: "spring", stiffness: 250, damping: 24 }}
+                  className="surface-card-soft soft-panel"
+                  style={{ minHeight: 302, display: "grid", placeItems: "center", textAlign: "center" }}
+                >
+                  <div className="section-stack" style={{ justifyItems: "center" }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(61,155,95,0.18)", border: "2px solid #3D9B5F" }}>
+                      <Check size={28} style={{ color: "#3D9B5F" }} />
+                    </div>
+                    <p className="section-title">Guardado</p>
+                    <p className="muted-copy">
+                      {getOutcomeFlag(chosenOutcome, effectiveMatch)} {effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label}
+                      {" · "}
+                      {INTENSITIES.find((item) => item.id === chosenIntensity)?.hint}
+                    </p>
+                    {saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : saveTone === "loading" ? "#EDE8D9" : "#7A9A81" }}>{saveMessage}</span> : null}
+                  </div>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        ) : null}
 
         <div style={{ display: "grid", gap: 12 }}>
           <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
@@ -406,15 +410,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 ) : null}
                 {phase === "idle" && cardState.mode === "editable-saved" && !isEditingSaved ? (
                   <>
-                    <div style={{ display: "grid", gap: 6 }}>
-                      <span className="micro-copy">Tu pick</span>
-                      <strong>{cardState.leadingUserOutcome?.label ?? "Sin jugar"}</strong>
-                      {cardState.leadingUserOutcome ? (
-                        <span className="micro-copy" style={{ color: getOutcomeColor(cardState.leadingUserOutcome.code) }}>
-                          {formatCredits(cardState.leadingUserOutcome.amount)} · {getOutcomeHint(cardState.leadingUserOutcome.code, effectiveMatch.marketType)}
-                        </span>
-                      ) : null}
-                    </div>
                     <button className="button-secondary" style={{ minHeight: 42, borderRadius: 999, justifySelf: "start", paddingInline: 14 }} onClick={() => setIsEditingSaved(true)} type="button">
                       Cambiar jugada
                     </button>
