@@ -9,16 +9,16 @@ export default async function RankingPage() {
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
-      <section style={{ display: "grid", gap: 6, paddingTop: 8 }}>
+      <section className="title-stack" style={{ paddingTop: 8 }}>
         <p className="eyebrow">Tabla</p>
         <h1 className="display-title">Ranking</h1>
         <p className="muted-copy" style={{ fontFamily: "var(--font-body)" }}>Ordenado por ganancia</p>
       </section>
 
       {currentUser ? (
-        <section className="surface-card-soft" style={{ padding: 16, display: "grid", gap: 6 }}>
+        <section className="surface-card-soft soft-panel section-stack">
           <span className="micro-copy">Tu puesto</span>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+          <div className="split-row">
             <strong style={{ fontSize: "1.05rem" }}>#{currentUser.position} {currentUser.name}</strong>
             <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", letterSpacing: "-0.04em" }}>{formatNetAmount(currentUser.netAmount)}</strong>
           </div>
@@ -27,8 +27,8 @@ export default async function RankingPage() {
 
       <LeaderboardPodium items={ranking} />
 
-      <section style={{ display: "grid", gap: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+      <section className="section-stack" style={{ gap: 12 }}>
+        <div className="split-row">
           <h2 className="section-title" style={{ fontFamily: "var(--font-body)", fontWeight: 700 }}>General</h2>
           <span className="pill">{ranking.length}</span>
         </div>

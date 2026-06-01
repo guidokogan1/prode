@@ -14,26 +14,10 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         background: "radial-gradient(ellipse 140% 80% at 50% 0%, #1C3522 0%, #091409 70%)",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "start", marginBottom: 22, flexWrap: "wrap" }}>
+      <div className="split-row-start" style={{ marginBottom: 22, flexWrap: "wrap", gap: 16 }}>
         <div style={{ display: "grid", gap: 10 }}>
-          <span
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 999,
-              display: "grid",
-              placeItems: "center",
-              background: "rgba(212,166,75,0.18)",
-              border: "2px solid rgba(212,166,75,0.4)",
-              color: "#D8B56A",
-              fontFamily: "var(--font-accent)",
-              fontWeight: 800,
-              fontSize: "1.7rem",
-            }}
-          >
-            {profile.name.slice(0, 1)}
-          </span>
-          <div style={{ display: "grid", gap: 4 }}>
+          <span className="hero-avatar">{profile.name.slice(0, 1)}</span>
+          <div className="title-stack">
             <p className="eyebrow">Perfil</p>
             <h1 className="display-title">{profile.name}</h1>
             <p className="muted-copy">Tu resumen</p>
@@ -41,13 +25,12 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         </div>
 
         <div
-          className="surface-card-soft"
+          className="surface-card-soft text-right"
           style={{
             padding: "14px 16px",
             borderRadius: 16,
             background: "rgba(212,166,75,0.08)",
             borderColor: "rgba(212,166,75,0.2)",
-            textAlign: "right",
             minWidth: 132,
             marginLeft: "auto",
           }}
@@ -59,13 +42,13 @@ export function ProfileHero({ profile }: ProfileHeroProps) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(108px, 1fr))", gap: 12 }}>
+      <div className="stats-grid">
         {[
           { label: "Positivas", value: String(profile.positiveTickets), icon: "🎯" },
           { label: "Mejor", value: formatNetAmount(profile.bestHitAmount), icon: "🔥" },
           { label: "Campeón", value: profile.championPick, icon: "🏆" },
         ].map((item) => (
-          <div key={item.label} className="surface-card-soft" style={{ padding: "14px 12px", borderRadius: 16, textAlign: "center" }}>
+          <div key={item.label} className="surface-card-soft soft-panel-md" style={{ textAlign: "center" }}>
             <div style={{ display: "grid", gap: 5 }}>
               <span>{item.icon}</span>
               <strong style={{ fontFamily: item.label === "Campeón" ? "var(--font-display)" : "var(--font-accent)", fontSize: "1.15rem", letterSpacing: item.label === "Campeón" ? "-0.02em" : "-0.04em" }}>{item.value}</strong>

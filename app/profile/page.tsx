@@ -17,17 +17,17 @@ export default async function ProfilePage() {
 
       <DemoSwitcher activePersona={activePersona} personas={getDemoPersonas()} />
 
-      <section className="surface-card-soft" style={{ padding: 18, display: "grid", gap: 14 }}>
-        <div>
+      <section className="surface-card-soft panel-stack">
+        <div className="title-stack">
           <p className="eyebrow">Accesos</p>
           <h2 className="section-title">Qué hacer</h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
-          <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
+        <div className="two-col-grid">
+          <div className="surface-card-soft soft-panel-md">
             <strong>Historial</strong>
             <p className="muted-copy">Ver jugadas</p>
           </div>
-          <div className="surface-card-soft" style={{ padding: 14, borderRadius: 16 }}>
+          <div className="surface-card-soft soft-panel-md">
             <strong>Acceso</strong>
             <p className="muted-copy">Cambiar sesión</p>
           </div>

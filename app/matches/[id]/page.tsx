@@ -1,16 +1,16 @@
 import { notFound } from "next/navigation";
 import { AllocationCard } from "@/components/allocation-card";
 import { LiveSocialBoard } from "@/components/live-social-board";
+import { MatchSummaryCard } from "@/components/match-summary-card";
+import { MatchVoteCard } from "@/components/match-vote-card";
 import { formatCredits } from "@/lib/format";
 import { getMatchById } from "@/lib/repositories/matches";
 import {
   deriveResolvedOutcome,
   getLeadingOutcome,
-  getMatchStateLabel,
   getOutcomeColor,
   getOutcomeFlag,
   getOutcomeHint,
-  getPickStateLabel,
 } from "@/lib/match-ui";
 
 type MatchPageProps = {
@@ -29,96 +29,53 @@ export default async function MatchPage({ params }: MatchPageProps) {
   const resolvedOutcome = deriveResolvedOutcome(match);
   const leadingConsensus = [...match.consensus].sort((left, right) => right.percentage - left.percentage)[0] ?? null;
   const leadingAllocation = getLeadingOutcome(match);
-  const heroBackground =
-    match.statusVariant === "live"
-      ? "radial-gradient(ellipse 120% 50% at 50% 0%, #2A1010 0%, #091409 50%)"
-      : isReveal
-        ? "radial-gradient(ellipse 140% 60% at 50% 0%, rgba(61,155,95,.18) 0%, #091409 55%)"
-        : "linear-gradient(180deg, rgba(12,24,15,.9) 0%, rgba(9,20,9,1) 100%)";
 
   return (
-    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, background: heroBackground }}>
-      <section
-        className={match.statusVariant === "live" || isReveal ? "surface-card-strong" : "surface-card"}
-        style={{
-          padding: 22,
-          background:
-            match.statusVariant === "live"
-              ? "linear-gradient(160deg, #2A1818 0%, #1A1010 100%)"
-              : isReveal
-                ? "linear-gradient(160deg, #173021 0%, #0E1D13 100%)"
-                : undefined,
-          borderColor:
-            match.statusVariant === "live"
-              ? "rgba(255,59,48,0.2)"
-              : resolvedOutcome
-                ? `${getOutcomeColor(resolvedOutcome)}30`
-                : undefined,
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start", marginBottom: 18 }}>
-          <div style={{ display: "grid", gap: 6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              {match.statusVariant === "live" ? <span className="status-pill status-pill-live">{getMatchStateLabel(match)}</span> : <span className="pill">{getMatchStateLabel(match)}</span>}
-              <span className="pill">{getPickStateLabel(match)}</span>
-              <span className="pill">{match.stage}</span>
-            </div>
-            <span className="muted-copy">{match.kickoffLabel} · {match.venue}</span>
-          </div>
-          {!isReveal && leadingConsensus ? (
-            <span className="status-pill status-pill-gold">
-              {leadingConsensus.shortLabel} {leadingConsensus.percentage}%
-            </span>
-          ) : null}
-        </div>
+    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
+      <section className="section-stack">
+        <MatchSummaryCard
+          match={match}
+          trailing={
+            !isReveal && leadingConsensus ? (
+              <span className="status-pill status-pill-gold">
+                {leadingConsensus.shortLabel} {leadingConsensus.percentage}%
+              </span>
+            ) : (
+              <span className="micro-copy">{match.venue}</span>
+            )
+          }
+        />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 16, alignItems: "center" }}>
-          <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
-            <span style={{ fontSize: "3.7rem", lineHeight: 1 }}>{match.home.flag}</span>
-            <span className="team-display" style={{ textAlign: "center" }}>{match.home.name}</span>
+        <div className="surface-card-soft soft-panel split-row" style={{ alignItems: "center" }}>
+          <div style={{ display: "grid", gap: 3 }}>
+            <span className="micro-copy">Tu jugada</span>
+            <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Sin jugar"}</strong>
           </div>
-          <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
-            <strong className="score-display">{match.home.score} - {match.away.score}</strong>
-            <span className="micro-copy">{isReveal ? "Se abrió la ronda" : match.marketTypeLabel}</span>
-          </div>
-          <div style={{ display: "grid", justifyItems: "center", gap: 10 }}>
-            <span style={{ fontSize: "3.7rem", lineHeight: 1 }}>{match.away.flag}</span>
-            <span className="team-display" style={{ textAlign: "center" }}>{match.away.name}</span>
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
-          <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-            <div style={{ display: "grid", gap: 3 }}>
-              <span className="micro-copy">Tu jugada</span>
-              <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Sin jugar"}</strong>
-            </div>
-            {leadingAllocation ? (
-              <div style={{ textAlign: "right" }}>
-                <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", color: getOutcomeColor(leadingAllocation.code), letterSpacing: "-0.04em" }}>
-                  {formatCredits(leadingAllocation.amount)}
-                </strong>
-                <div className="micro-copy">{getOutcomeHint(leadingAllocation.code, match.marketType)}</div>
-              </div>
-            ) : null}
-          </div>
-
-          {!isReveal ? (
-            <div className="surface-card-soft" style={{ padding: "14px 16px", borderRadius: 16 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                {match.consensus.map((item) => (
-                  <div key={item.code} style={{ display: "grid", gap: 4, minWidth: 82 }}>
-                    <span className="micro-copy">{item.label}</span>
-                    <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.16rem", letterSpacing: "-0.04em" }}>{item.percentage}%</strong>
-                  </div>
-                ))}
-              </div>
+          {leadingAllocation ? (
+            <div className="text-right">
+              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", color: getOutcomeColor(leadingAllocation.code), letterSpacing: "-0.04em" }}>
+                {formatCredits(leadingAllocation.amount)}
+              </strong>
+              <div className="micro-copy">{getOutcomeHint(leadingAllocation.code, match.marketType)}</div>
             </div>
           ) : null}
         </div>
+
+        {!isReveal ? (
+          <div className="surface-card-soft soft-panel">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              {match.consensus.map((item) => (
+                <div key={item.code} style={{ display: "grid", gap: 4, minWidth: 82 }}>
+                  <span className="micro-copy">{item.label}</span>
+                  <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.16rem", letterSpacing: "-0.04em" }}>{item.percentage}%</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
-      <AllocationCard match={match} />
+      {match.isEditable ? <MatchVoteCard match={match} /> : <AllocationCard match={match} />}
 
       {isReveal ? (
         <LiveSocialBoard match={match} />
