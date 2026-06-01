@@ -306,14 +306,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.94, opacity: 0, y: -14 }}
                   transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                  className="surface-card-soft soft-panel"
                   style={{
                     minHeight: 302,
-                    background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
-                    border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
                     display: "grid",
                     gap: 16,
                     alignContent: "start",
+                    padding: 18,
                   }}
                 >
                   <div className="title-stack">
@@ -364,8 +362,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.94, opacity: 0, y: -24 }}
                   transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                  className="surface-card-soft soft-panel"
-                  style={{ minHeight: 302, display: "grid", placeItems: "center", textAlign: "center" }}
+                  style={{ minHeight: 302, display: "grid", placeItems: "center", textAlign: "center", padding: 18 }}
                 >
                   <div className="section-stack" style={{ justifyItems: "center" }}>
                     <div style={{ width: 64, height: 64, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(61,155,95,0.18)", border: "2px solid #3D9B5F" }}>
