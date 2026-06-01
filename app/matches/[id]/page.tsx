@@ -2,12 +2,11 @@ import { notFound } from "next/navigation";
 import { AllocationCard } from "@/components/allocation-card";
 import { LiveSocialBoard } from "@/components/live-social-board";
 import { MatchOverview } from "@/components/match-overview";
+import { MatchSettledSummary } from "@/components/match-settled-summary";
 import { MatchVoteCard } from "@/components/match-vote-card";
 import { getMatchById } from "@/lib/repositories/matches";
 import {
   deriveResolvedOutcome,
-  getOutcomeColor,
-  getOutcomeFlag,
 } from "@/lib/match-ui";
 
 type MatchPageProps = {
@@ -26,7 +25,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
-      <MatchOverview match={match} />
+      {resolvedOutcome ? <MatchSettledSummary match={match} /> : <MatchOverview match={match} />}
 
       {match.isEditable ? <MatchVoteCard match={match} /> : <AllocationCard match={match} />}
 
@@ -55,32 +54,6 @@ export default async function MatchPage({ params }: MatchPageProps) {
         </section>
       )}
 
-      {resolvedOutcome ? (
-        <section
-          className="surface-card-soft"
-          style={{
-            padding: 16,
-            borderRadius: 20,
-            background: `${getOutcomeColor(resolvedOutcome)}12`,
-            borderColor: `${getOutcomeColor(resolvedOutcome)}30`,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: "1.8rem" }}>{getOutcomeFlag(resolvedOutcome, match)}</span>
-            <div style={{ display: "grid", gap: 4 }}>
-              <span className="micro-copy">Outcome ganador</span>
-              <strong style={{ color: getOutcomeColor(resolvedOutcome) }}>
-                {match.consensus.find((item) => item.code === resolvedOutcome)?.label ?? "Resultado"}
-              </strong>
-            </div>
-          </div>
-          <span className="pill">Liquidado</span>
-        </section>
-      ) : null}
     </main>
   );
 }
