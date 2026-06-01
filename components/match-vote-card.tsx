@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
+import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildWeightedAllocation } from "@/lib/game";
 import {
@@ -233,33 +234,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                 />
               ) : null}
 
-              <div className="panel-stack" style={{ position: "relative", zIndex: 1, gap: 18 }}>
-                <div className="split-row" style={{ flexWrap: "wrap" }}>
-                  <span className="pill">{match.marketTypeLabel}</span>
-                  <span className="micro-copy">{match.kickoffLabel}</span>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 12, alignItems: "center" }}>
-                  <div style={{ display: "grid", justifyItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.home.flag}</span>
-                    <strong style={{ textAlign: "center", fontSize: "1.05rem" }}>{match.home.name}</strong>
-                  </div>
-                  <div style={{ display: "grid", justifyItems: "center", gap: 8 }}>
-                    <strong className="score-display">{match.home.score} - {match.away.score}</strong>
-                    <span className="micro-copy">{match.stage}</span>
-                  </div>
-                  <div style={{ display: "grid", justifyItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.away.flag}</span>
-                    <strong style={{ textAlign: "center", fontSize: "1.05rem" }}>{match.away.name}</strong>
-                  </div>
-                </div>
-
-                <div className="split-row" style={{ flexWrap: "wrap" }}>
-                  <span style={{ color: "#3D9B5F", fontWeight: 700 }}>← {match.home.name}</span>
-                  {showDrawGesture ? <span style={{ color: "#5B8FF0", fontWeight: 700 }}>↑ Empate</span> : <span className="micro-copy">{match.marketTypeLabel}</span>}
-                  <span style={{ color: "#E8413A", fontWeight: 700 }}>{match.away.name} →</span>
-                </div>
-              </div>
+              <VoteFace match={match} showDrawGesture={showDrawGesture} />
             </motion.div>
           ) : null}
 

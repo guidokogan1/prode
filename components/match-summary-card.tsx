@@ -7,9 +7,10 @@ type MatchSummaryCardProps = {
   match: MatchViewModel;
   href?: string;
   trailing?: ReactNode;
+  footer?: ReactNode;
 };
 
-export function MatchSummaryCard({ match, href, trailing }: MatchSummaryCardProps) {
+export function MatchSummaryCard({ match, href, trailing, footer }: MatchSummaryCardProps) {
   const actionLabel = getMatchActionLabel(match);
   const pickState = getPickStateLabel(match);
   const showPickState = match.isEditable && pickState !== "Sin jugar";
@@ -30,8 +31,10 @@ export function MatchSummaryCard({ match, href, trailing }: MatchSummaryCardProp
 
       <div className="split-row" style={{ flexWrap: "wrap" }}>
         <span className="micro-copy">{match.kickoffLabel}</span>
-        <span className="micro-copy">{match.stage}</span>
+        {trailing ? null : <span className="micro-copy">{match.stage}</span>}
       </div>
+
+      {footer ? <div style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>{footer}</div> : null}
     </div>
   );
 

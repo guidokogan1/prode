@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchViewModel } from "@/lib/domain";
-import { getMatchStateLabel, getMatchUrgencyBucket, getPickStateLabel, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome, sortMatchesByUrgency } from "@/lib/match-ui";
+import { getMatchStateLabel, getMatchUrgencyBucket, getPickStateLabel, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome, getUserNetLabel, getUserResultPill, getUserResultTone, sortMatchesByUrgency } from "@/lib/match-ui";
 
 function createMatch(overrides: Partial<MatchViewModel> = {}): MatchViewModel {
   return {
@@ -111,5 +111,15 @@ describe("match ui helpers", () => {
       "upcoming",
       "settled",
     ]);
+  });
+
+  it("parses settled net labels for simple summaries", () => {
+    expect(getUserResultTone("Ganaste +2.400")).toBe("positive");
+    expect(getUserResultTone("Perdiste -3.800")).toBe("negative");
+    expect(getUserResultPill("Perdiste -3.800")).toBe("Perdiste");
+    expect(getUserResultPill("Resultado +6.154")).toBe("Ganaste");
+    expect(getUserNetLabel("Ganaste +2.400")).toBe("+2.400");
+    expect(getUserNetLabel("Perdiste -3.800")).toBe("-3.800");
+    expect(getUserNetLabel("Resultado +6.154")).toBe("+6.154");
   });
 });

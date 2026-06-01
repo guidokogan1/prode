@@ -70,37 +70,29 @@ export function MatchOverview({ match }: MatchOverviewProps) {
             <span className="micro-copy">{effectiveMatch.venue}</span>
           )
         }
-      />
-
-      <div className="surface-card-soft soft-panel split-row" style={{ alignItems: "center" }}>
-        <div style={{ display: "grid", gap: 3 }}>
-          <span className="micro-copy">Tu jugada</span>
-          <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Sin jugar"}</strong>
-        </div>
-        {leadingAllocation ? (
-          <div className="text-right">
-            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", color: getOutcomeColor(leadingAllocation.code), letterSpacing: "-0.04em" }}>
-              {formatCredits(leadingAllocation.amount)}
-            </strong>
-            <div className="micro-copy">{getOutcomeHint(leadingAllocation.code, effectiveMatch.marketType)}</div>
-          </div>
-        ) : null}
-      </div>
-
-      {!isReveal ? (
-        <div className="surface-card-soft soft-panel">
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            {effectiveMatch.consensus.map((item) => (
-              <div key={item.code} style={{ display: "grid", gap: 4, minWidth: 82 }}>
-                <span className="micro-copy">{item.label}</span>
-                <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.16rem", letterSpacing: "-0.04em" }}>
-                  {item.percentage}%
-                </strong>
+        footer={
+          <div className="split-row" style={{ alignItems: "start", gap: 14 }}>
+            <div style={{ display: "grid", gap: 3 }}>
+              <span className="micro-copy">Tu jugada</span>
+              <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Sin jugar"}</strong>
+              {leadingAllocation ? (
+                <span className="micro-copy" style={{ color: getOutcomeColor(leadingAllocation.code) }}>
+                  {formatCredits(leadingAllocation.amount)} · {getOutcomeHint(leadingAllocation.code, effectiveMatch.marketType)}
+                </span>
+              ) : null}
+            </div>
+            {!isReveal && leadingConsensus ? (
+              <div className="text-right" style={{ display: "grid", gap: 3 }}>
+                <span className="micro-copy">Grupo</span>
+                <strong>{leadingConsensus.label}</strong>
+                <span className="micro-copy" style={{ color: getOutcomeColor(leadingConsensus.code) }}>
+                  {leadingConsensus.percentage}%
+                </span>
               </div>
-            ))}
+            ) : null}
           </div>
-        </div>
-      ) : null}
+        }
+      />
     </section>
   );
 }

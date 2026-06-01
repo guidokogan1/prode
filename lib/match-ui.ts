@@ -53,6 +53,40 @@ export function getOutcomeHint(code: MatchOutcomeCode, marketType: MatchViewMode
   return "Empate";
 }
 
+export function getUserResultTone(label: string) {
+  if (label.startsWith("Ganaste") || label.startsWith("Resultado +")) {
+    return "positive";
+  }
+
+  if (label.startsWith("Perdiste") || label.startsWith("Resultado -")) {
+    return "negative";
+  }
+
+  return "neutral";
+}
+
+export function getUserResultPill(label: string) {
+  if (label.startsWith("Ganaste") || label.startsWith("Resultado +")) {
+    return "Ganaste";
+  }
+
+  if (label.startsWith("Perdiste") || label.startsWith("Resultado -")) {
+    return "Perdiste";
+  }
+
+  return "Final";
+}
+
+export function getUserNetLabel(label: string) {
+  const cleaned = label
+    .replace(/^Ganaste\s*/u, "")
+    .replace(/^Perdiste\s*/u, "")
+    .replace(/^Resultado\s*/u, "")
+    .trim();
+
+  return cleaned || "0";
+}
+
 export function getLeadingOutcome(match: MatchViewModel) {
   return [...match.allocation].sort((left, right) => right.percentage - left.percentage)[0] ?? null;
 }
