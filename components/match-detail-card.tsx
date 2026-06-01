@@ -224,6 +224,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const showSavedSummaryHero = cardState.mode === "editable-saved" && !isEditingSaved && phase === "idle";
   const showLiveSummaryHero = cardState.mode === "live" && phase === "idle";
   const showSettledSummaryHero = cardState.mode === "settled" && phase === "idle";
+  const compactHeroMinHeight = 176;
 
   const idleExit =
     exitDir === "home" || exitDir === "home_qualifies"
@@ -390,13 +391,13 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
             <div
               style={{
-                minHeight: 302,
+                minHeight: compactHeroMinHeight,
                 borderRadius: 18,
                 display: "grid",
-                alignContent: "center",
+                alignContent: "start",
                 justifyItems: "start",
-                gap: 14,
-                padding: 20,
+                gap: 12,
+                padding: 18,
                 background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
               }}
             >
@@ -419,13 +420,13 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
             <div
               style={{
-                minHeight: 302,
+                minHeight: compactHeroMinHeight,
                 borderRadius: 18,
                 display: "grid",
-                alignContent: "center",
+                alignContent: "start",
                 justifyItems: "start",
-                gap: 14,
-                padding: 20,
+                gap: 12,
+                padding: 18,
                 background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
               }}
             >
@@ -454,13 +455,13 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
             <div
               style={{
-                minHeight: 302,
+                minHeight: compactHeroMinHeight,
                 borderRadius: 18,
                 display: "grid",
-                alignContent: "center",
+                alignContent: "start",
                 justifyItems: "start",
-                gap: 14,
-                padding: 20,
+                gap: 12,
+                padding: 18,
                 background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
               }}
             >
