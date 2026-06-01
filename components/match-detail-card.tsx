@@ -3,7 +3,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
-import { Check, Droplets, Flame, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
 import { getMatchCardState } from "@/lib/match-card";
@@ -255,17 +255,26 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       : cardState.heroTone === "negative"
         ? "#FF8B84"
         : cardState.heroTone === "live"
-          ? "#FF8B84"
+        ? "#FF8B84"
           : "#EDE8D9";
+
+  function handleBack() {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push("/matches");
+  }
 
   return (
     <section className="section-stack-lg">
       <div style={{ display: "grid", gap: 16 }}>
         <div className="split-row" style={{ alignItems: "start", flexWrap: "wrap", paddingInline: 4 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span className="pill">{cardState.primaryStatusLabel}</span>
-            {cardState.secondaryStatusLabel ? <span className="pill">{cardState.secondaryStatusLabel}</span> : null}
-          </div>
+          <button className="button-ghost" onClick={handleBack} type="button" style={{ minHeight: 42, borderRadius: 999, paddingInline: 14, display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <ArrowLeft size={16} />
+            <span>Volver</span>
+          </button>
           <span className="micro-copy">{effectiveMatch.stage}</span>
         </div>
 
