@@ -49,18 +49,28 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
     (sum, ticket) => sum + ticket.allocations.reduce((ticketTotal, item) => ticketTotal + item.amount, 0),
     0,
   );
+  const groups = [...grouped.values()].sort((left, right) => {
+    const leftWinning = resolvedOutcome === left.outcome.code ? 0 : 1;
+    const rightWinning = resolvedOutcome === right.outcome.code ? 0 : 1;
+
+    if (leftWinning !== rightWinning) {
+      return leftWinning - rightWinning;
+    }
+
+    return right.tickets.length - left.tickets.length;
+  });
 
   return (
-    <section style={{ display: "grid", gap: 12 }}>
+    <section className="section-stack-lg">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <div>
           <p className="eyebrow">Grupo</p>
-          <h2 className="section-title">Reveal</h2>
+          <h2 className="section-title">Cómo entró</h2>
         </div>
         <span className="pill">{match.revealedTickets.length} picks</span>
       </div>
 
-      {[...grouped.values()].map((group) => {
+      {groups.map((group) => {
         const isWinning = resolvedOutcome === group.outcome.code;
 
         return (
@@ -95,12 +105,12 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                         color: getOutcomeColor(group.outcome.code),
                       }}
                     >
-                      gana
+                      ganó
                     </span>
                   ) : null}
                 </div>
               </div>
-              <span className="micro-copy">{group.tickets.length}</span>
+              <span className="micro-copy">{group.tickets.length} picks</span>
             </div>
 
             <div style={{ display: "grid", gap: 10, padding: 14 }}>
@@ -141,7 +151,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
         );
       })}
 
-      <div className="surface-card-soft" style={{ padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(212,166,75,0.07)", borderColor: "rgba(212,166,75,0.18)" }}>
+      <div className="surface-card-soft soft-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(212,166,75,0.07)", borderColor: "rgba(212,166,75,0.18)" }}>
         <span className="muted-copy">Pozo</span>
         <strong style={{ color: "#D8B56A", fontFamily: "var(--font-accent)", fontSize: "1.28rem", letterSpacing: "-0.05em" }}>{formatCompactCredits(totalPot)} cr</strong>
       </div>

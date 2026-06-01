@@ -204,9 +204,9 @@ export function AllocationCard({ match }: AllocationCardProps) {
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 4 }}>
           <p className="eyebrow">Tu jugada</p>
-          <h2 className="section-title">{match.isEditable ? "Repartí 10.000" : "Distribución"}</h2>
+          <h2 className="section-title">{match.isEditable ? "Repartí 10.000" : "Tu reparto"}</h2>
         </div>
-        <span className="pill">{getPickStateLabel(match)}</span>
+        {match.isEditable ? <span className="pill">{getPickStateLabel(match)}</span> : null}
       </div>
 
       {match.isEditable ? (
@@ -299,7 +299,19 @@ export function AllocationCard({ match }: AllocationCardProps) {
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
           {allocations.map((item) => (
-            <div key={item.id} className="surface-card-soft" style={{ padding: "12px 14px", borderRadius: 16, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+            <div
+              key={item.id}
+              className="surface-card-soft"
+              style={{
+                padding: "12px 14px",
+                borderRadius: 16,
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                alignItems: "center",
+                borderColor: leadingAllocation?.label === item.label && item.amount > 0 ? `${getOutcomeColor(item.code)}30` : "rgba(255,255,255,0.08)",
+              }}
+            >
               <div style={{ display: "grid", gap: 4 }}>
                 <strong>{item.label}</strong>
                 <span className="micro-copy">{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>

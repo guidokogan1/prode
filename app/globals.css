@@ -280,6 +280,11 @@ input,
   gap: 8px;
 }
 
+.section-stack-lg {
+  display: grid;
+  gap: 14px;
+}
+
 .title-stack {
   display: grid;
   gap: 4px;
@@ -361,6 +366,12 @@ input,
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.compact-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .text-right {
