@@ -48,6 +48,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [exitDir, setExitDir] = useState<MatchOutcomeCode>("home");
   const isChoosingRef = useRef(false);
+  const saveResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -94,6 +95,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     setIsEditingSaved(false);
   }, [effectiveMatch.id]);
 
+  useEffect(() => {
+    return () => {
+      if (saveResetTimeoutRef.current) {
+        clearTimeout(saveResetTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const quickPlayTargets = useMemo(() => getQuickPlayOutcomeTargets(effectiveMatch), [effectiveMatch]);
   const resolvedOutcome = deriveResolvedOutcome(effectiveMatch);
   const groupBuckets = useMemo(() => buildGroupBuckets(effectiveMatch), [effectiveMatch]);
@@ -107,6 +116,10 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   );
 
   function resetPhase() {
+    if (saveResetTimeoutRef.current) {
+      clearTimeout(saveResetTimeoutRef.current);
+      saveResetTimeoutRef.current = null;
+    }
     setPhase("idle");
     setChosenOutcome(null);
     setChosenIntensity(null);
@@ -209,6 +222,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     } finally {
       setIsSaving(false);
       router.refresh();
+      if (saveResetTimeoutRef.current) {
+        clearTimeout(saveResetTimeoutRef.current);
+      }
+      saveResetTimeoutRef.current = setTimeout(() => {
+        resetPhase();
+      }, 900);
     }
   }
 
