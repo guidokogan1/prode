@@ -244,8 +244,8 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
   return (
     <section className="section-stack-lg">
-      <div className="surface-card" style={{ padding: 18, display: "grid", gap: 18 }}>
-        <div className="split-row" style={{ alignItems: "start", flexWrap: "wrap" }}>
+      <div style={{ display: "grid", gap: 16 }}>
+        <div className="split-row" style={{ alignItems: "start", flexWrap: "wrap", paddingInline: 4 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <span className="pill">{cardState.primaryStatusLabel}</span>
             {cardState.secondaryStatusLabel ? <span className="pill">{cardState.secondaryStatusLabel}</span> : null}
@@ -254,7 +254,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
         </div>
 
         {showMatchCenter ? (
-          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+          <div className="surface-card" style={{ position: "relative", padding: 12 }}>
             <AnimatePresence mode="wait">
               {phase === "idle" ? (
                 <motion.div
@@ -388,17 +388,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
             </AnimatePresence>
           </div>
         ) : showSavedSummaryHero ? (
-          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+          <div className="surface-card" style={{ position: "relative", padding: 18 }}>
             <div
               style={{
                 minHeight: compactHeroMinHeight,
-                borderRadius: 18,
                 display: "grid",
                 alignContent: "start",
                 justifyItems: "start",
                 gap: 12,
-                padding: 18,
-                background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
               }}
             >
               <div className="title-stack">
@@ -417,17 +414,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
             </div>
           </div>
         ) : showLiveSummaryHero ? (
-          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+          <div className="surface-card" style={{ position: "relative", padding: 18 }}>
             <div
               style={{
                 minHeight: compactHeroMinHeight,
-                borderRadius: 18,
                 display: "grid",
                 alignContent: "start",
                 justifyItems: "start",
                 gap: 12,
-                padding: 18,
-                background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
               }}
             >
               <div className="title-stack">
@@ -452,17 +446,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
             </div>
           </div>
         ) : showSettledSummaryHero ? (
-          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+          <div className="surface-card" style={{ position: "relative", padding: 18 }}>
             <div
               style={{
                 minHeight: compactHeroMinHeight,
-                borderRadius: 18,
                 display: "grid",
                 alignContent: "start",
                 justifyItems: "start",
                 gap: 12,
-                padding: 18,
-                background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
               }}
             >
               <div className="title-stack">
@@ -489,7 +480,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           </div>
         ) : null}
 
-        <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "grid", gap: 12, paddingInline: 4 }}>
           {!showSavedSummaryHero && !showLiveSummaryHero && !showSettledSummaryHero ? (
             <>
               <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
