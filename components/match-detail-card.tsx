@@ -220,6 +220,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     cardState.mode === "editable-empty" || (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
   const showMatchCenter =
     cardState.mode !== "editable-saved" || isEditingSaved || phase !== "idle";
+  const showSavedSummaryHero = cardState.mode === "editable-saved" && !isEditingSaved && phase === "idle";
 
   const idleExit =
     exitDir === "home" || exitDir === "home_qualifies"
@@ -382,17 +383,52 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               ) : null}
             </AnimatePresence>
           </div>
+        ) : showSavedSummaryHero ? (
+          <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.06)", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBlock: 8 }}>
+            <div
+              style={{
+                minHeight: 302,
+                borderRadius: 18,
+                display: "grid",
+                alignContent: "center",
+                justifyItems: "start",
+                gap: 14,
+                padding: 20,
+                background: "linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)",
+              }}
+            >
+              <div className="title-stack">
+                <p className="eyebrow">Esta es tu jugada</p>
+                <h2 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.7rem)", lineHeight: 0.98 }}>
+                  {cardState.heroValue}
+                </h2>
+                <p className="muted-copy" style={{ color: cardState.leadingUserOutcome ? getOutcomeColor(cardState.leadingUserOutcome.code) : undefined }}>
+                  {cardState.heroDescription}
+                </p>
+              </div>
+
+              <button className="button-secondary" style={{ minHeight: 44, borderRadius: 999, paddingInline: 16 }} onClick={() => setIsEditingSaved(true)} type="button">
+                Cambiar jugada
+              </button>
+            </div>
+          </div>
         ) : null}
 
         <div style={{ display: "grid", gap: 12 }}>
-          <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
-            <div className="title-stack">
-              <p className="eyebrow">{activeTab === "play" ? "Jugada" : "Grupo"}</p>
-              <h2 className="section-title" style={{ color: heroToneColor }}>{cardState.heroValue}</h2>
-            </div>
-            {cardState.secondaryStatusLabel && activeTab === "play" ? <span className="pill">{cardState.secondaryStatusLabel}</span> : null}
-          </div>
-          <p className="muted-copy">{cardState.heroDescription}</p>
+          {!showSavedSummaryHero ? (
+            <>
+              <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
+                <div className="title-stack">
+                  <p className="eyebrow">{activeTab === "play" ? "Jugada" : "Grupo"}</p>
+                  <h2 className="section-title" style={{ color: heroToneColor }}>{cardState.heroValue}</h2>
+                </div>
+                {cardState.secondaryStatusLabel && activeTab === "play" ? <span className="pill">{cardState.secondaryStatusLabel}</span> : null}
+              </div>
+              <p className="muted-copy">{cardState.heroDescription}</p>
+            </>
+          ) : (
+            <p className="eyebrow">{activeTab === "play" ? "Jugada" : "Grupo"}</p>
+          )}
           <div style={{ display: "flex", gap: 8 }}>
             <button className={activeTab === "play" ? "button-secondary" : "button-ghost"} style={{ minHeight: 38, borderRadius: 999, paddingInline: 14 }} onClick={() => setActiveTab("play")} type="button">
               Jugada
@@ -407,13 +443,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               <div style={{ display: "grid", gap: 10 }}>
                 {phase === "idle" && cardState.mode === "editable-empty" ? (
                   <span className="micro-copy">Elegí un lado desde la cancha de arriba.</span>
-                ) : null}
-                {phase === "idle" && cardState.mode === "editable-saved" && !isEditingSaved ? (
-                  <>
-                    <button className="button-secondary" style={{ minHeight: 42, borderRadius: 999, justifySelf: "start", paddingInline: 14 }} onClick={() => setIsEditingSaved(true)} type="button">
-                      Cambiar jugada
-                    </button>
-                  </>
                 ) : null}
                 {phase === "idle" && cardState.mode === "editable-saved" && isEditingSaved ? (
                   <span className="micro-copy">Elegí el nuevo lado desde la cancha de arriba.</span>
