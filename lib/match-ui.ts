@@ -175,7 +175,7 @@ export function getMatchActionLabel(match: MatchViewModel) {
   }
 
   if (matchState === "Liquidado") {
-    return "Liquidado";
+    return "Final";
   }
 
   if (!match.isEditable) {

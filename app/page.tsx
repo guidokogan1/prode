@@ -1,7 +1,5 @@
-import { MatchSummaryCard } from "@/components/match-summary-card";
 import { QuickPlayDeck } from "@/components/quick-play-deck";
 import { formatNetAmount } from "@/lib/format";
-import { getPickStateLabel } from "@/lib/match-ui";
 import { getProductProvider } from "@/lib/product";
 import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
 
@@ -15,7 +13,6 @@ export default async function HomePage() {
 
   const pendingLabel = summary.pendingPicks;
   const initial = session.displayName?.slice(0, 1).toUpperCase() ?? "V";
-  const nextMatch = featuredMatches.find((match) => match.isEditable && getPickStateLabel(match) === "Sin jugar") ?? featuredMatches[0] ?? null;
   const headline = pendingLabel > 0 ? `${pendingLabel} por jugar` : "Todo al día";
 
   return (
@@ -57,11 +54,7 @@ export default async function HomePage() {
           <div className="title-stack">
             <p className="eyebrow">Inicio</p>
             <h1 className="display-title">{headline}</h1>
-            {nextMatch ? <p className="muted-copy">{nextMatch.home.name} vs {nextMatch.away.name}</p> : null}
           </div>
-          {nextMatch ? (
-            <MatchSummaryCard match={nextMatch} href={`/matches/${nextMatch.id}`} />
-          ) : null}
           <div className="metric-chip-row">
             <div className="surface-card-soft metric-chip">
               <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", letterSpacing: "-0.04em" }}>{summary.liveMatches}</strong>

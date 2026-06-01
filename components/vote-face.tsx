@@ -3,15 +3,17 @@ import type { MatchViewModel } from "@/lib/domain";
 type VoteFaceProps = {
   match: MatchViewModel;
   showDrawGesture: boolean;
+  centerMode?: "vs" | "score";
+  topRightLabel?: string;
 };
 
-export function VoteFace({ match, showDrawGesture }: VoteFaceProps) {
+export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLabel }: VoteFaceProps) {
   return (
     <div style={{ display: "grid", gridTemplateRows: "auto auto auto", alignContent: "start", padding: 16, position: "relative", zIndex: 1, fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 6 }}>
         <span className="eyebrow" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>{match.stage}</span>
         <div className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>
-          <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>{match.kickoffLabel}</span>
+          <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif" }}>{topRightLabel ?? match.kickoffLabel}</span>
         </div>
       </div>
 
@@ -23,7 +25,9 @@ export function VoteFace({ match, showDrawGesture }: VoteFaceProps) {
             <span className="micro-copy" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontStyle: "normal", fontSize: ".66rem", letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(151,173,153,0.74)" }}>Local</span>
           </div>
           <div style={{ display: "grid", placeItems: "center" }}>
-            <span style={{ fontFamily: "var(--font-body)", fontSize: "1rem", fontWeight: 600, color: "rgba(255,255,255,0.12)", letterSpacing: "-0.03em" }}>vs</span>
+            <span style={{ fontFamily: centerMode === "score" ? "var(--font-accent)" : "var(--font-body)", fontSize: centerMode === "score" ? "2rem" : "1rem", fontWeight: centerMode === "score" ? 800 : 600, color: centerMode === "score" ? "#EDE8D9" : "rgba(255,255,255,0.12)", letterSpacing: centerMode === "score" ? "-0.06em" : "-0.03em" }}>
+              {centerMode === "score" ? `${match.home.score} - ${match.away.score}` : "vs"}
+            </span>
           </div>
           <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
             <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.away.flag}</span>
@@ -41,7 +45,7 @@ export function VoteFace({ match, showDrawGesture }: VoteFaceProps) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>↑ Empate</span>
           </div>
-        ) : <span className="micro-copy">{match.marketTypeLabel}</span>}
+        ) : <span className="micro-copy">{centerMode === "score" ? match.marketTypeLabel : match.marketTypeLabel}</span>}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
           <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{match.away.name} →</span>
         </div>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getMatchCardState } from "@/lib/match-card";
 import type { MatchViewModel } from "@/lib/domain";
 import { getMatchStateLabel, getMatchUrgencyBucket, getPickStateLabel, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome, getUserNetLabel, getUserResultPill, getUserResultTone, sortMatchesByUrgency } from "@/lib/match-ui";
 
@@ -121,5 +122,68 @@ describe("match ui helpers", () => {
     expect(getUserNetLabel("Ganaste +2.400")).toBe("+2.400");
     expect(getUserNetLabel("Perdiste -3.800")).toBe("-3.800");
     expect(getUserNetLabel("Resultado +6.154")).toBe("+6.154");
+  });
+
+  it("derives unified card states for editable, live and settled screens", () => {
+    expect(getMatchCardState(createMatch(), "hero")).toMatchObject({
+      mode: "editable-empty",
+      primaryStatusLabel: "Jugar",
+      defaultTab: "play",
+      isInteractive: true,
+    });
+
+    expect(
+      getMatchCardState(
+        createMatch({
+          draftState: "saved_remote",
+          allocation: [
+            { code: "home", label: "Argentina", shortLabel: "ARG", amount: 7000, percentage: 70 },
+            { code: "draw", label: "Empate", shortLabel: "X", amount: 2000, percentage: 20 },
+            { code: "away", label: "Japon", shortLabel: "JPN", amount: 1000, percentage: 10 },
+          ],
+        }),
+        "hero",
+      ),
+    ).toMatchObject({
+      mode: "editable-saved",
+      primaryStatusLabel: "Editar",
+      secondaryStatusLabel: "Guardado",
+      isInteractive: true,
+    });
+
+    expect(
+      getMatchCardState(createMatch({ status: "live", statusVariant: "live", marketStatus: "revealed", isEditable: false }), "hero"),
+    ).toMatchObject({
+      mode: "live",
+      primaryStatusLabel: "En vivo",
+      defaultTab: "group",
+      isInteractive: false,
+    });
+
+    expect(
+      getMatchCardState(
+        createMatch({
+          status: "finished",
+          statusVariant: "settled",
+          marketStatus: "settled",
+          isEditable: false,
+          home: { name: "Argentina", flag: "🇦🇷", score: 2 },
+          away: { name: "Japon", flag: "🇯🇵", score: 1 },
+          allocation: [
+            { code: "home", label: "Argentina", shortLabel: "ARG", amount: 7000, percentage: 70 },
+            { code: "draw", label: "Empate", shortLabel: "X", amount: 2000, percentage: 20 },
+            { code: "away", label: "Japon", shortLabel: "JPN", amount: 1000, percentage: 10 },
+          ],
+          userStateLabel: "Ganaste +6.154",
+        }),
+        "hero",
+      ),
+    ).toMatchObject({
+      mode: "settled",
+      primaryStatusLabel: "Final",
+      secondaryStatusLabel: "Acertaste",
+      isInteractive: false,
+      heroValue: "+6.154",
+    });
   });
 });
