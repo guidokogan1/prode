@@ -7,7 +7,8 @@ import { Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { buildWeightedAllocation } from "@/lib/game";
+import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
+import { formatCredits } from "@/lib/format";
 import {
   getOutcomeColor,
   getOutcomeFlag,
@@ -24,11 +25,21 @@ type MatchVoteCardProps = {
 type CardPhase = "idle" | "chosen" | "saved";
 type IntensityOption = "soft" | "medium" | "hard";
 
-const INTENSITIES: { id: IntensityOption; label: string; hint: string; amount: number; icon: typeof Droplets }[] = [
-  { id: "soft", label: "Suave", hint: "4.000 cr", amount: 4000, icon: Droplets },
-  { id: "medium", label: "Media", hint: "5.500 cr", amount: 5500, icon: Sparkles },
-  { id: "hard", label: "Fuerte", hint: "7.000 cr", amount: 7000, icon: Flame },
+const INTENSITIES: { id: IntensityOption; label: string; icon: typeof Droplets }[] = [
+  { id: "soft", label: "Suave", icon: Droplets },
+  { id: "medium", label: "Media", icon: Sparkles },
+  { id: "hard", label: "Fuerte", icon: Flame },
 ];
+
+function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCode, intensity: IntensityPreset) {
+  const preset = buildPresetAllocation(
+    match.allocation.map((item) => item.code),
+    selectedOutcome,
+    intensity,
+  );
+
+  return preset.map((item) => formatCredits(item.amount)).join(" · ");
+}
 
 export function MatchVoteCard({ match }: MatchVoteCardProps) {
   const router = useRouter();
@@ -94,17 +105,12 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
       return;
     }
 
-    const chosenAllocation = match.allocation.find((item) => item.code === chosenOutcome);
-    if (!chosenAllocation) {
-      return;
-    }
-
-    const payload = buildWeightedAllocation(
-      match.allocation.map((item) => item.label),
-      chosenAllocation.label,
-      option.amount,
+    const payload = buildPresetAllocation(
+      match.allocation.map((item) => item.code),
+      chosenOutcome,
+      option.id,
     ).map((item) => ({
-      label: item.outcomeCode,
+      label: match.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
       amount: item.amount,
     }));
 
@@ -257,6 +263,11 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                 gap: 16,
               }}
             >
+              <div className="split-row">
+                <span className="eyebrow">{match.stage}</span>
+                <span className="micro-copy">{match.kickoffLabel}</span>
+              </div>
+
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "2.4rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, match)}</span>
                 <div className="title-stack">
@@ -293,7 +304,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                     >
                       <Icon size={26} />
                       <span style={{ fontFamily: "var(--font-display)", fontSize: ".98rem", fontWeight: 700 }}>{option.label}</span>
-                      <span className="micro-copy" style={{ color: "#7A9A81" }}>{option.hint}</span>
+                      <span className="micro-copy" style={{ color: "#7A9A81" }}>{buildPresetHint(match, chosenOutcome, option.id)}</span>
                     </motion.button>
                   );
                 })}

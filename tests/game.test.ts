@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildPresetAllocation,
   buildFocusedAllocation,
   buildWeightedAllocation,
   formatNetAmount,
@@ -33,13 +34,13 @@ describe("game rules", () => {
 
   it("rejects allocations above the outcome cap", () => {
     const result = validateAllocations([
-      { outcomeCode: "home", amount: 8000 },
-      { outcomeCode: "draw", amount: 1000 },
-      { outcomeCode: "away", amount: 1000 },
+      { outcomeCode: "home", amount: 11000 },
+      { outcomeCode: "draw", amount: 0 },
+      { outcomeCode: "away", amount: 0 },
     ]);
 
     expect(result.ok).toBe(false);
-    expect(result.reason).toContain("7000");
+    expect(result.reason).toContain("10000");
   });
 
   it("rejects negative allocations even when they sum 10k", () => {
@@ -125,14 +126,14 @@ describe("game rules", () => {
 
   it("builds a focused allocation preset for a selected outcome", () => {
     expect(buildFocusedAllocation(["1", "X", "2"], "1")).toEqual([
-      { outcomeCode: "1", amount: 7000 },
-      { outcomeCode: "X", amount: 1500 },
-      { outcomeCode: "2", amount: 1500 },
+      { outcomeCode: "1", amount: 9000 },
+      { outcomeCode: "X", amount: 1000 },
+      { outcomeCode: "2", amount: 0 },
     ]);
 
     expect(buildFocusedAllocation(["A", "B"], "B")).toEqual([
-      { outcomeCode: "A", amount: 3000 },
-      { outcomeCode: "B", amount: 7000 },
+      { outcomeCode: "A", amount: 0 },
+      { outcomeCode: "B", amount: 10000 },
     ]);
   });
 
@@ -141,6 +142,25 @@ describe("game rules", () => {
       { outcomeCode: "1", amount: 2250 },
       { outcomeCode: "X", amount: 5500 },
       { outcomeCode: "2", amount: 2250 },
+    ]);
+  });
+
+  it("builds the new intensity presets for 1X2 and draw selections", () => {
+    expect(buildPresetAllocation(["home", "draw", "away"], "home", "soft")).toEqual([
+      { outcomeCode: "home", amount: 5000 },
+      { outcomeCode: "draw", amount: 3000 },
+      { outcomeCode: "away", amount: 2000 },
+    ]);
+
+    expect(buildPresetAllocation(["home", "draw", "away"], "draw", "hard")).toEqual([
+      { outcomeCode: "home", amount: 1000 },
+      { outcomeCode: "draw", amount: 8000 },
+      { outcomeCode: "away", amount: 1000 },
+    ]);
+
+    expect(buildPresetAllocation(["home_qualifies", "away_qualifies"], "home_qualifies", "medium")).toEqual([
+      { outcomeCode: "home_qualifies", amount: 8000 },
+      { outcomeCode: "away_qualifies", amount: 2000 },
     ]);
   });
 });

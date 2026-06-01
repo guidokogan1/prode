@@ -4,7 +4,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
-import { buildBalancedAllocation, buildWeightedAllocation, MATCH_CREDIT, OUTCOME_CAP, sumAllocations, validateAllocations } from "@/lib/game";
+import { buildBalancedAllocation, buildPresetAllocation, MATCH_CREDIT, OUTCOME_CAP, sumAllocations, validateAllocations } from "@/lib/game";
 import { getOutcomeColor, getPickStateLabel } from "@/lib/match-ui";
 import { ALLOCATION_EVENT, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 
@@ -13,9 +13,9 @@ type AllocationCardProps = {
 };
 
 const QUICK_INTENSITIES = [
-  { label: "Suave", amount: 4000 },
-  { label: "Media", amount: 5500 },
-  { label: "Fuerte", amount: 7000 },
+  { label: "Suave", intensity: "soft" as const },
+  { label: "Media", intensity: "medium" as const },
+  { label: "Fuerte", intensity: "hard" as const },
 ];
 
 export function AllocationCard({ match }: AllocationCardProps) {
@@ -80,7 +80,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
 
   function updateAmount(index: number, rawValue: string) {
     const nextAmount = Number(rawValue);
-    const safeAmount = Number.isFinite(nextAmount) ? Math.max(0, Math.min(7000, nextAmount)) : 0;
+    const safeAmount = Number.isFinite(nextAmount) ? Math.max(0, Math.min(OUTCOME_CAP, nextAmount)) : 0;
 
     setAllocations((current) =>
       current.map((item, itemIndex) => (itemIndex === index ? { ...item, amount: safeAmount } : item)),
@@ -89,18 +89,18 @@ export function AllocationCard({ match }: AllocationCardProps) {
     setSaveMessage(null);
   }
 
-  function applyQuickIntensity(label: string, amount: number) {
-    const preset = buildWeightedAllocation(
-      allocations.map((item) => item.label),
-      label,
-      amount,
+  function applyQuickIntensity(code: string, intensity: "soft" | "medium" | "hard") {
+    const preset = buildPresetAllocation(
+      allocations.map((item) => item.code),
+      code,
+      intensity,
     );
 
     setAllocations(
       preset.map((item, index) => ({
         id: `${match.id}-${index}`,
-        code: match.allocation[index]?.code ?? match.allocation[0]?.code ?? "home",
-        label: item.outcomeCode,
+        code: item.outcomeCode as MatchViewModel["allocation"][number]["code"],
+        label: match.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
         amount: item.amount,
       })),
     );
@@ -243,7 +243,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 10 }}>
                   <div style={{ display: "grid", gap: 4 }}>
                     <strong>{item.label}</strong>
-                    <span className="micro-copy">{leadingAllocation?.label === item.label && item.amount > 0 ? "principal" : "tope 7.000"}</span>
+                    <span className="micro-copy">{leadingAllocation?.label === item.label && item.amount > 0 ? "principal" : `tope ${formatCredits(OUTCOME_CAP)}`}</span>
                   </div>
                   <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.04em" }}>
                     {formatCredits(item.amount)}
@@ -256,10 +256,10 @@ export function AllocationCard({ match }: AllocationCardProps) {
                       key={`${item.id}-${option.label}`}
                       className="button-secondary"
                       style={{ minHeight: 36, borderRadius: 999, padding: "0 12px", fontSize: ".74rem" }}
-                      onClick={() => applyQuickIntensity(item.label, option.amount)}
+                      onClick={() => applyQuickIntensity(item.code, option.intensity)}
                       type="button"
                     >
-                      {option.label} · {option.amount / 1000}k
+                      {option.label}
                     </button>
                   ))}
                 </div>
@@ -267,7 +267,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 <input
                   type="range"
                   min="0"
-                  max="7000"
+                  max={String(OUTCOME_CAP)}
                   step="500"
                   value={item.amount}
                   onChange={(event) => updateAmount(index, event.target.value)}

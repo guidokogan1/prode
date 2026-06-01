@@ -9,7 +9,7 @@ import { VoteFace } from "@/components/vote-face";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { formatCredits, formatNetAmount } from "@/lib/format";
-import { buildWeightedAllocation } from "@/lib/game";
+import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
 import { ALLOCATION_EVENT, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 import {
   deriveResolvedOutcome,
@@ -28,11 +28,21 @@ type MatchDetailCardProps = {
 type CardPhase = "idle" | "chosen" | "saved";
 type IntensityOption = "soft" | "medium" | "hard";
 
-const INTENSITIES: { id: IntensityOption; label: string; hint: string; amount: number; icon: typeof Droplets }[] = [
-  { id: "soft", label: "Suave", hint: "4.000 cr", amount: 4000, icon: Droplets },
-  { id: "medium", label: "Media", hint: "5.500 cr", amount: 5500, icon: Sparkles },
-  { id: "hard", label: "Fuerte", hint: "7.000 cr", amount: 7000, icon: Flame },
+const INTENSITIES: { id: IntensityOption; label: string; icon: typeof Droplets }[] = [
+  { id: "soft", label: "Suave", icon: Droplets },
+  { id: "medium", label: "Media", icon: Sparkles },
+  { id: "hard", label: "Fuerte", icon: Flame },
 ];
+
+function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCode, intensity: IntensityPreset) {
+  const preset = buildPresetAllocation(
+    match.allocation.map((item) => item.code),
+    selectedOutcome,
+    intensity,
+  );
+
+  return preset.map((item) => formatCredits(item.amount)).join(" · ");
+}
 
 export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const router = useRouter();
@@ -162,17 +172,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       return;
     }
 
-    const chosenAllocation = effectiveMatch.allocation.find((item) => item.code === chosenOutcome);
-    if (!chosenAllocation) {
-      return;
-    }
-
-    const payload = buildWeightedAllocation(
-      effectiveMatch.allocation.map((item) => item.label),
-      chosenAllocation.label,
-      option.amount,
+    const payload = buildPresetAllocation(
+      effectiveMatch.allocation.map((item) => item.code),
+      chosenOutcome,
+      option.id,
     ).map((item) => ({
-      label: item.outcomeCode,
+      label: effectiveMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
       amount: item.amount,
     }));
 
@@ -361,6 +366,11 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     padding: 18,
                   }}
                 >
+                  <div className="split-row" style={{ alignItems: "center", gap: 12 }}>
+                    <span className="eyebrow">{effectiveMatch.stage}</span>
+                    <span className="micro-copy">{effectiveMatch.kickoffLabel}</span>
+                  </div>
+
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: 999, background: chosenColor ?? "#EDE8D9" }} />
                     <p className="eyebrow">Elegiste</p>
@@ -394,7 +404,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                         >
                           <Icon size={24} />
                           <span style={{ fontFamily: "var(--font-display)", fontSize: ".94rem", fontWeight: 700 }}>{option.label}</span>
-                          <span className="micro-copy">{option.hint}</span>
+                          <span className="micro-copy">{buildPresetHint(effectiveMatch, chosenOutcome, option.id)}</span>
                         </motion.button>
                       );
                     })}
@@ -423,7 +433,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     <p className="muted-copy">
                       {getOutcomeFlag(chosenOutcome, effectiveMatch)} {effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label}
                       {" · "}
-                      {INTENSITIES.find((item) => item.id === chosenIntensity)?.hint}
+                      {buildPresetHint(effectiveMatch, chosenOutcome, chosenIntensity)}
                     </p>
                     {saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : saveTone === "loading" ? "#EDE8D9" : "#7A9A81" }}>{saveMessage}</span> : null}
                   </div>

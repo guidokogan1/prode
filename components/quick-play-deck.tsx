@@ -7,7 +7,8 @@ import { Check, Droplets, Flame, Sparkles, Zap } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { buildWeightedAllocation } from "@/lib/game";
+import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
+import { formatCredits } from "@/lib/format";
 import { getOutcomeColor, getOutcomeFlag, getOutcomeHint, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
 import { saveStoredAllocation } from "@/lib/local-store";
 
@@ -18,14 +19,24 @@ type QuickPlayDeckProps = {
 type CardPhase = "idle" | "chosen" | "saved";
 type IntensityOption = "soft" | "medium" | "hard";
 
-const INTENSITIES: { id: IntensityOption; label: string; hint: string; amount: number; icon: typeof Droplets }[] = [
-  { id: "soft", label: "Suave", hint: "4.000 cr", amount: 4000, icon: Droplets },
-  { id: "medium", label: "Media", hint: "5.500 cr", amount: 5500, icon: Sparkles },
-  { id: "hard", label: "Fuerte", hint: "7.000 cr", amount: 7000, icon: Flame },
+const INTENSITIES: { id: IntensityOption; label: string; icon: typeof Droplets }[] = [
+  { id: "soft", label: "Suave", icon: Droplets },
+  { id: "medium", label: "Media", icon: Sparkles },
+  { id: "hard", label: "Fuerte", icon: Flame },
 ];
 
 function isDrawCode(code: MatchOutcomeCode) {
   return code === "draw";
+}
+
+function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCode, intensity: IntensityPreset) {
+  const preset = buildPresetAllocation(
+    match.allocation.map((item) => item.code),
+    selectedOutcome,
+    intensity,
+  );
+
+  return preset.map((item) => formatCredits(item.amount)).join(" · ");
 }
 
 export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
@@ -117,17 +128,12 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       return;
     }
 
-    const chosenAllocation = match.allocation.find((item) => item.code === chosenOutcome);
-    if (!chosenAllocation) {
-      return;
-    }
-
-    const payload = buildWeightedAllocation(
-      match.allocation.map((item) => item.label),
-      chosenAllocation.label,
-      option.amount,
+    const payload = buildPresetAllocation(
+      match.allocation.map((item) => item.code),
+      chosenOutcome,
+      option.id,
     ).map((item) => ({
-      label: item.outcomeCode,
+      label: match.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
       amount: item.amount,
     }));
 
@@ -405,6 +411,11 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                         background: "linear-gradient(135deg, rgba(255,255,255,0.07), transparent 42%)",
                       }}
                     />
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, position: "relative", zIndex: 1 }}>
+                      <span className="eyebrow">{match.stage}</span>
+                      <span className="micro-copy">{match.kickoffLabel}</span>
+                    </div>
+
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, position: "relative", zIndex: 1 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 999, background: getOutcomeColor(chosenOutcome) }} />
                       <span className="eyebrow">Elegiste</span>
@@ -447,7 +458,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                             >
                               <Icon size={26} style={{ color: iconColor }} />
                               <span style={{ fontFamily: "var(--font-display)", fontSize: ".98rem", fontWeight: 700 }}>{option.label}</span>
-                              <span className="micro-copy" style={{ color: "#7A9A81" }}>{option.hint}</span>
+                              <span className="micro-copy" style={{ color: "#7A9A81" }}>{buildPresetHint(match, chosenOutcome, option.id)}</span>
                             </motion.button>
                           );
                         })}
@@ -511,7 +522,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                         <p className="muted-copy">
                           {getOutcomeFlag(chosenOutcome, match)} {match.allocation.find((item) => item.code === chosenOutcome)?.label}
                           {" · "}
-                          <span style={{ color: "#D4A64B" }}>{INTENSITIES.find((item) => item.id === chosenIntensity)?.hint}</span>
+                          <span style={{ color: "#D4A64B" }}>{buildPresetHint(match, chosenOutcome, chosenIntensity)}</span>
                         </p>
                         {saveMessage ? (
                           <span

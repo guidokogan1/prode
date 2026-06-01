@@ -1,7 +1,9 @@
 import { formatNetAmount as formatNetAmountValue } from "@/lib/format";
 
 export const MATCH_CREDIT = 10_000;
-export const OUTCOME_CAP = 7_000;
+export const OUTCOME_CAP = MATCH_CREDIT;
+
+export type IntensityPreset = "soft" | "medium" | "hard";
 
 export type AllocationInput = {
   outcomeCode: string;
@@ -9,7 +11,7 @@ export type AllocationInput = {
 };
 
 export function buildFocusedAllocation(outcomeCodes: string[], selectedOutcomeCode: string) {
-  return buildWeightedAllocation(outcomeCodes, selectedOutcomeCode, OUTCOME_CAP);
+  return buildPresetAllocation(outcomeCodes, selectedOutcomeCode, "hard");
 }
 
 export function buildBalancedAllocation(outcomeCodes: string[]) {
@@ -65,6 +67,73 @@ export function buildWeightedAllocation(
       amount: nextAmount,
     };
   });
+}
+
+export function buildPresetAllocation(
+  outcomeCodes: string[],
+  selectedOutcomeCode: string,
+  intensity: IntensityPreset,
+) {
+  if (!outcomeCodes.includes(selectedOutcomeCode)) {
+    throw new Error("selectedOutcomeCode invalido");
+  }
+
+  if (outcomeCodes.length < 2) {
+    throw new Error("Se necesitan al menos 2 outcomes");
+  }
+
+  if (outcomeCodes.length === 2) {
+    const selectedAmount = intensity === "soft" ? 6000 : intensity === "medium" ? 8000 : 10000;
+    const otherAmount = MATCH_CREDIT - selectedAmount;
+
+    return outcomeCodes.map((outcomeCode) => ({
+      outcomeCode,
+      amount: outcomeCode === selectedOutcomeCode ? selectedAmount : otherAmount,
+    }));
+  }
+
+  const drawLikeCode =
+    outcomeCodes.find((code) => code === "draw") ??
+    outcomeCodes.find((code) => code.toLowerCase() === "x") ??
+    null;
+
+  if (outcomeCodes.length === 3 && drawLikeCode) {
+    const drawCode = drawLikeCode;
+    const otherSideCode = outcomeCodes.find((code) => code !== selectedOutcomeCode && code !== drawCode) ?? null;
+
+    if (selectedOutcomeCode === drawCode) {
+      const drawAmount = intensity === "soft" ? 4000 : intensity === "medium" ? 6000 : 8000;
+      const sideAmount = intensity === "soft" ? 3000 : intensity === "medium" ? 2000 : 1000;
+
+      return outcomeCodes.map((outcomeCode) => ({
+        outcomeCode,
+        amount: outcomeCode === drawCode ? drawAmount : sideAmount,
+      }));
+    }
+
+    if (!otherSideCode) {
+      throw new Error("No se pudo resolver el outcome opuesto");
+    }
+
+    const selectedAmount = intensity === "soft" ? 5000 : intensity === "medium" ? 7000 : 9000;
+    const drawAmount = intensity === "soft" ? 3000 : intensity === "medium" ? 3000 : 1000;
+    const otherAmount = MATCH_CREDIT - selectedAmount - drawAmount;
+
+    return outcomeCodes.map((outcomeCode) => {
+      if (outcomeCode === selectedOutcomeCode) {
+        return { outcomeCode, amount: selectedAmount };
+      }
+
+      if (outcomeCode === drawCode) {
+        return { outcomeCode, amount: drawAmount };
+      }
+
+      return { outcomeCode, amount: otherAmount };
+    });
+  }
+
+  const focusedAmount = intensity === "soft" ? 6000 : intensity === "medium" ? 8000 : 10000;
+  return buildWeightedAllocation(outcomeCodes, selectedOutcomeCode, focusedAmount);
 }
 
 export type SettlementBreakdown = {
