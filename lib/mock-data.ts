@@ -601,6 +601,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "arg-jpn",
       stage: "Fase de grupos",
+      groupLabel: "Grupo A",
       venue: "Monterrey",
       kickoffLabel: "11 Jun · 22:00",
       status: "scheduled",
@@ -623,6 +624,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "bra-mex",
       stage: "Fase de grupos",
+      groupLabel: "Grupo B",
       venue: "Los Angeles",
       kickoffLabel: "12 Jun · 19:30",
       status: "live",
@@ -745,6 +747,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "mar-sen",
       stage: "Fase de grupos",
+      groupLabel: "Grupo C",
       venue: "Vancouver",
       kickoffLabel: "13 Jun · 16:00",
       status: "scheduled",

@@ -32,6 +32,7 @@ export type RevealedTicketViewModel = {
 export type MatchViewModel = {
   id: string;
   stage: string;
+  groupLabel?: string;
   venue: string;
   kickoffLabel: string;
   status: MatchStatus;

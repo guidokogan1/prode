@@ -1,16 +1,13 @@
 import { notFound } from "next/navigation";
 import { AllocationCard } from "@/components/allocation-card";
 import { LiveSocialBoard } from "@/components/live-social-board";
-import { MatchSummaryCard } from "@/components/match-summary-card";
+import { MatchOverview } from "@/components/match-overview";
 import { MatchVoteCard } from "@/components/match-vote-card";
-import { formatCredits } from "@/lib/format";
 import { getMatchById } from "@/lib/repositories/matches";
 import {
   deriveResolvedOutcome,
-  getLeadingOutcome,
   getOutcomeColor,
   getOutcomeFlag,
-  getOutcomeHint,
 } from "@/lib/match-ui";
 
 type MatchPageProps = {
@@ -25,59 +22,15 @@ export default async function MatchPage({ params }: MatchPageProps) {
     notFound();
   }
 
-  const isReveal = match.revealedTickets.length > 0;
   const resolvedOutcome = deriveResolvedOutcome(match);
-  const leadingConsensus = [...match.consensus].sort((left, right) => right.percentage - left.percentage)[0] ?? null;
-  const leadingAllocation = getLeadingOutcome(match);
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
-      <section className="section-stack">
-        <MatchSummaryCard
-          match={match}
-          trailing={
-            !isReveal && leadingConsensus ? (
-              <span className="status-pill status-pill-gold">
-                {leadingConsensus.shortLabel} {leadingConsensus.percentage}%
-              </span>
-            ) : (
-              <span className="micro-copy">{match.venue}</span>
-            )
-          }
-        />
-
-        <div className="surface-card-soft soft-panel split-row" style={{ alignItems: "center" }}>
-          <div style={{ display: "grid", gap: 3 }}>
-            <span className="micro-copy">Tu jugada</span>
-            <strong style={{ fontWeight: 700, letterSpacing: "-0.01em" }}>{leadingAllocation?.label ?? "Sin jugar"}</strong>
-          </div>
-          {leadingAllocation ? (
-            <div className="text-right">
-              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", color: getOutcomeColor(leadingAllocation.code), letterSpacing: "-0.04em" }}>
-                {formatCredits(leadingAllocation.amount)}
-              </strong>
-              <div className="micro-copy">{getOutcomeHint(leadingAllocation.code, match.marketType)}</div>
-            </div>
-          ) : null}
-        </div>
-
-        {!isReveal ? (
-          <div className="surface-card-soft soft-panel">
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              {match.consensus.map((item) => (
-                <div key={item.code} style={{ display: "grid", gap: 4, minWidth: 82 }}>
-                  <span className="micro-copy">{item.label}</span>
-                  <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.16rem", letterSpacing: "-0.04em" }}>{item.percentage}%</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </section>
+      <MatchOverview match={match} />
 
       {match.isEditable ? <MatchVoteCard match={match} /> : <AllocationCard match={match} />}
 
-      {isReveal ? (
+      {match.revealedTickets.length > 0 ? (
         <LiveSocialBoard match={match} />
       ) : (
         <section className="surface-card-soft" style={{ padding: 18 }}>

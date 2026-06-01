@@ -1,12 +1,10 @@
 import { MatchCard } from "@/components/match-card";
 import { getHomeSummary } from "@/lib/repositories/home";
-import { getMatchUrgencyBucket, sortMatchesByUrgency, type MatchUrgencyBucket } from "@/lib/match-ui";
 import { listMatches } from "@/lib/repositories/matches";
 
 export default async function MatchesPage() {
   const [matches, summary] = await Promise.all([listMatches(), getHomeSummary()]);
-  const sortedMatches = matches.slice().sort(sortMatchesByUrgency);
-  const groups = buildUrgencyGroups(sortedMatches);
+  const groups = buildCompetitionGroups(matches);
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 22 }}>
@@ -43,18 +41,32 @@ export default async function MatchesPage() {
   );
 }
 
-function buildUrgencyGroups(matches: Awaited<ReturnType<typeof listMatches>>) {
-  const order: { id: MatchUrgencyBucket; title: string }[] = [
-    { id: "pending", title: "Por cerrar pronto" },
-    { id: "live", title: "En vivo" },
-    { id: "upcoming", title: "Más tarde" },
-    { id: "settled", title: "Liquidados" },
+function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>) {
+  const groupStageMatches = matches.filter((match) => match.stage === "Fase de grupos");
+  const knockoutMatches = matches.filter((match) => match.stage !== "Fase de grupos");
+
+  const groupStageGroups = [...new Set(groupStageMatches.map((match) => match.groupLabel).filter(Boolean))]
+    .sort((left, right) => String(left).localeCompare(String(right)))
+    .map((groupLabel) => ({
+      id: String(groupLabel),
+      title: String(groupLabel),
+      matches: groupStageMatches.filter((match) => match.groupLabel === groupLabel),
+    }));
+
+  const knockoutOrder = [
+    "Octavos de final",
+    "Cuartos de final",
+    "Semifinales",
+    "Final",
   ];
 
-  return order
-    .map((group) => ({
-      ...group,
-      matches: matches.filter((match) => getMatchUrgencyBucket(match) === group.id),
+  const knockoutGroups = knockoutOrder
+    .map((stage) => ({
+      id: stage,
+      title: stage,
+      matches: knockoutMatches.filter((match) => match.stage === stage),
     }))
     .filter((group) => group.matches.length > 0);
+
+  return [...groupStageGroups, ...knockoutGroups];
 }
