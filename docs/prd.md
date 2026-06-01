@@ -66,10 +66,29 @@ La resolucion incluye:
 - alargue
 - penales
 
-### 4.4 Tope por outcome
+### 4.4 Distribucion de la jugada
 
-- Cada outcome tiene tope de `7.000`.
 - El total de la jugada debe sumar `10.000`.
+- Un outcome puede recibir hasta `10.000` (jugada concentrada permitida).
+- Los presets sugeridos son:
+
+En 1X2, si elegis local o visitante (selected / empate / otro lado):
+
+- Suave: `5.000` · `3.000` · `2.000`
+- Media: `7.000` · `3.000` · `0`
+- Fuerte: `9.000` · `1.000` · `0`
+
+En 1X2, si elegis empate (empate / lado / lado):
+
+- Suave: `4.000` · `3.000` · `3.000`
+- Media: `6.000` · `2.000` · `2.000`
+- Fuerte: `8.000` · `1.000` · `1.000`
+
+En mercados de dos resultados (selected / otro):
+
+- Suave: `6.000` · `4.000`
+- Media: `8.000` · `2.000`
+- Fuerte: `10.000` · `0`
 
 ### 4.5 Settlement
 
