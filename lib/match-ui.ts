@@ -132,6 +132,25 @@ export function getPickStateLabel(match: MatchViewModel) {
   return "Sin jugar";
 }
 
+export function getMatchActionLabel(match: MatchViewModel) {
+  const matchState = getMatchStateLabel(match);
+  const pickState = getPickStateLabel(match);
+
+  if (matchState === "En vivo") {
+    return "En vivo";
+  }
+
+  if (matchState === "Liquidado") {
+    return "Liquidado";
+  }
+
+  if (!match.isEditable) {
+    return "Bloqueado";
+  }
+
+  return pickState === "Sin jugar" ? "Jugar" : "Editar";
+}
+
 export type MatchUrgencyBucket = "pending" | "live" | "upcoming" | "settled";
 
 export function getMatchUrgencyBucket(match: MatchViewModel): MatchUrgencyBucket {

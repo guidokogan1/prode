@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import type { MatchViewModel } from "@/lib/domain";
-import { getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
+import { getMatchActionLabel, getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
 
 type MatchCardProps = {
   match: MatchViewModel;
 };
 
 export function MatchCard({ match }: MatchCardProps) {
+  const actionLabel = getMatchActionLabel(match);
   const matchState = getMatchStateLabel(match);
   const pickState = getPickStateLabel(match);
   const statusTone =
@@ -133,9 +134,9 @@ export function MatchCard({ match }: MatchCardProps) {
                   ? "1px solid rgba(212,166,75,0.24)"
                   : "1px solid rgba(255,255,255,0.08)",
             color:
-              matchState === "En vivo"
+              actionLabel === "En vivo"
                 ? "#FF8B84"
-                : pickState === "Sin jugar"
+                : actionLabel === "Jugar"
                   ? "#D4A64B"
                   : "#EDE8D9",
             fontFamily: "var(--font-body)",
@@ -149,7 +150,7 @@ export function MatchCard({ match }: MatchCardProps) {
             textAlign: "center",
           }}
         >
-          {pickState === "Sin jugar" ? pickState : matchState}
+          {actionLabel}
         </div>
       </Link>
     </motion.div>

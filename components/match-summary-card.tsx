@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { MatchViewModel } from "@/lib/domain";
-import { getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
+import { getMatchActionLabel, getMatchStateLabel, getPickStateLabel } from "@/lib/match-ui";
 
 type MatchSummaryCardProps = {
   match: MatchViewModel;
@@ -10,12 +10,16 @@ type MatchSummaryCardProps = {
 };
 
 export function MatchSummaryCard({ match, href, trailing }: MatchSummaryCardProps) {
+  const actionLabel = getMatchActionLabel(match);
+  const pickState = getPickStateLabel(match);
+  const showPickState = match.isEditable && pickState !== "Sin jugar";
+
   const content = (
     <div className="surface-card-soft soft-panel section-stack">
       <div className="split-row" style={{ flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span className="pill">{getMatchStateLabel(match)}</span>
-          <span className="pill">{getPickStateLabel(match)}</span>
+          <span className="pill">{actionLabel}</span>
+          {showPickState ? <span className="pill">{pickState}</span> : <span className="micro-copy">{getMatchStateLabel(match)}</span>}
         </div>
         {trailing ?? <span className="micro-copy">{match.stage}</span>}
       </div>

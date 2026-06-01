@@ -37,7 +37,7 @@ export class DemoProductProvider implements ProductProvider {
   async getMatchesForHome(): Promise<MatchViewModel[]> {
     const session = await this.getSessionState();
     const matches = getFallbackMatches(session.demoPersonaSlug);
-    return matches.slice().sort(sortMatchesForHome).slice(0, 5);
+    return matches.slice().sort(sortMatchesForHome);
   }
 
   async listMatches(): Promise<MatchViewModel[]> {

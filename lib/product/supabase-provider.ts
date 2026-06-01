@@ -63,7 +63,7 @@ export class SupabaseProductProvider implements ProductProvider {
 
   async getMatchesForHome(): Promise<MatchViewModel[]> {
     const groups = await this.listMatchesByStage();
-    return groups.flatMap((group) => group.matches).sort(sortMatchesForHome).slice(0, 5);
+    return groups.flatMap((group) => group.matches).sort(sortMatchesForHome);
   }
 
   async listMatches(): Promise<MatchViewModel[]> {
