@@ -221,6 +221,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const showLiveSummaryHero = cardState.mode === "live" && phase === "idle";
   const showSettledSummaryHero = cardState.mode === "settled" && phase === "idle";
   const compactHeroMinHeight = 176;
+  const chosenColor = chosenOutcome ? getOutcomeColor(chosenOutcome) : null;
 
   const idleExit =
     exitDir === "home" || exitDir === "home_qualifies"
@@ -250,7 +251,25 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
         </div>
 
         {showMatchCenter ? (
-          <div className="surface-card" style={{ position: "relative", padding: 12 }}>
+          <div
+            className="surface-card"
+            style={{
+              position: "relative",
+              padding: 12,
+              background:
+                phase === "chosen" && chosenColor
+                  ? `linear-gradient(160deg, color-mix(in srgb, ${chosenColor} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`
+                  : undefined,
+              border:
+                phase === "chosen" && chosenColor
+                  ? `1px solid ${chosenColor}30`
+                  : undefined,
+              boxShadow:
+                phase === "chosen" && chosenColor
+                  ? `0 32px 80px rgba(0,0,0,0.65), 0 0 50px ${chosenColor}15`
+                  : undefined,
+            }}
+          >
             <AnimatePresence mode="wait">
               {phase === "idle" ? (
                 <motion.div
@@ -314,8 +333,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     padding: 18,
                   }}
                 >
-                  <div className="title-stack">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 999, background: chosenColor ?? "#EDE8D9" }} />
                     <p className="eyebrow">Elegiste</p>
+                  </div>
+
+                  <div className="title-stack">
                     <h2 className="section-title">{effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</h2>
                     <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>{getOutcomeHint(chosenOutcome, effectiveMatch.marketType)}</p>
                   </div>
@@ -365,7 +388,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   style={{ minHeight: 302, display: "grid", placeItems: "center", textAlign: "center", padding: 18 }}
                 >
                   <div className="section-stack" style={{ justifyItems: "center" }}>
-                    <div style={{ width: 64, height: 64, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(61,155,95,0.18)", border: "2px solid #3D9B5F" }}>
+                    <div style={{ width: 64, height: 64, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(61,155,95,0.18)", border: "2px solid #3D9B5F", boxShadow: isSaving ? "0 0 0 12px rgba(61,155,95,0.08)" : "0 0 0 0 rgba(61,155,95,0)" }}>
                       <Check size={28} style={{ color: "#3D9B5F" }} />
                     </div>
                     <p className="section-title">Guardado</p>
