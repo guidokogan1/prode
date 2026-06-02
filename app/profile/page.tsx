@@ -23,14 +23,14 @@ export default async function ProfilePage() {
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
       <ProfileHero profile={profile} />
 
-      <SessionPanel />
-
       <ChampionPickCard
         initialPick={profile.championPick === "Sin elegir" ? null : profile.championPick}
         teams={teams}
         locked={isChampionPickLocked()}
         mode="summary"
       />
+
+      <SessionPanel />
 
       <section className="surface-card-soft panel-stack">
         <div className="title-stack">
