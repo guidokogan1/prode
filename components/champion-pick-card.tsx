@@ -79,6 +79,11 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
       .sort((left, right) => left.label.localeCompare(right.label));
   }, [teams]);
 
+  const selectedOption = useMemo(
+    () => teams.find((team) => team.name === selectedTeam) ?? null,
+    [selectedTeam, teams],
+  );
+
   async function handleSave() {
     if (!selectedTeam || locked) {
       return;
@@ -132,7 +137,9 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
       <section className="surface-card-soft panel-stack">
         <div className="title-stack">
           <p className="eyebrow">Campeón</p>
-          <h2 className="section-title">{selectedTeam || "Sin elegir"}</h2>
+          <h2 className="section-title">
+            {selectedOption ? `${selectedOption.flag} ${selectedOption.name}` : "Sin elegir"}
+          </h2>
           <p className="muted-copy">{locked ? "Ya quedó cerrado." : "Podés cambiarlo hasta que arranque el Mundial."}</p>
         </div>
 
@@ -153,10 +160,28 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
         <p className="muted-copy">{locked ? "Ya no se puede cambiar." : "Elegí uno antes de que arranque el Mundial."}</p>
       </div>
 
+      <section
+        className="surface-card-soft"
+        style={{
+          padding: 18,
+          display: "grid",
+          gap: 8,
+        }}
+      >
+        <span className="eyebrow">{selectedOption ? "Tu campeón" : "Sin elegir"}</span>
+        <strong style={{ fontSize: "1.2rem", color: "#EDE8D9" }}>
+          {selectedOption ? `${selectedOption.flag} ${selectedOption.name}` : "Elegí uno para arrancar"}
+        </strong>
+        <span className="micro-copy">
+          {locked ? "Quedó cerrado." : "Después lo podés editar desde tu perfil hasta que arranque el Mundial."}
+        </span>
+      </section>
+
       {groupedTeams.map((group) => (
         <section key={group.label} className="section-stack" style={{ gap: 12 }}>
-          <div className="title-stack">
+          <div className="split-row" style={{ alignItems: "center" }}>
             <p className="eyebrow">{group.label}</p>
+            <span className="micro-copy">{group.teams.length} equipos</span>
           </div>
           <div className="compact-grid-2">
             {group.teams.map((team) => {
@@ -169,16 +194,28 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
                   disabled={locked}
                   onClick={() => setSelectedTeam(team.name)}
                   style={{
-                    minHeight: 64,
+                    minHeight: 72,
                     borderRadius: 16,
                     border: selected ? "1px solid rgba(212,166,75,0.25)" : "1px solid rgba(255,255,255,0.08)",
                     background: selected ? "rgba(212,166,75,0.08)" : "rgba(255,255,255,0.03)",
-                    justifyContent: "flex-start",
+                    justifyContent: "space-between",
                     paddingInline: 14,
+                    gap: 10,
                   }}
                 >
-                  <span style={{ fontSize: "1.3rem" }}>{team.flag}</span>
-                  <span>{team.name}</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: "1.3rem" }}>{team.flag}</span>
+                    <span>{team.name}</span>
+                  </span>
+                  <span
+                    className="micro-copy"
+                    style={{
+                      color: selected ? "#D8B56A" : "#667D69",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {selected ? "Elegido" : "Elegir"}
+                  </span>
                 </button>
               );
             })}
@@ -186,14 +223,30 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
         </section>
       ))}
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+      <section
+        className="surface-card-soft"
+        style={{
+          padding: 18,
+          display: "grid",
+          gap: 12,
+        }}
+      >
+        <div className="split-row" style={{ alignItems: "center" }}>
+          <div className="title-stack">
+            <span className="eyebrow">Listo para guardar</span>
+            <strong style={{ fontSize: "1rem", color: "#EDE8D9" }}>
+              {selectedOption ? `${selectedOption.flag} ${selectedOption.name}` : "Todavía sin elegir"}
+            </strong>
+          </div>
+          {saveMessage ? <span className="micro-copy">{saveMessage}</span> : null}
+        </div>
+
         {!locked ? (
           <button className="button-primary" disabled={!selectedTeam || isSaving} onClick={() => void handleSave()} type="button">
             {isSaving ? "Guardando..." : "Guardar campeón"}
           </button>
         ) : null}
-        {saveMessage ? <span className="micro-copy">{saveMessage}</span> : null}
-      </div>
+      </section>
     </section>
   );
 }

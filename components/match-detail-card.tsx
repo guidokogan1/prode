@@ -263,6 +263,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
         ? "#FF8B84"
           : "#EDE8D9";
 
+  async function snapCardBack() {
+    await Promise.all([
+      animate(x, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
+      animate(y, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
+      animate(cardOpacity, 1, { duration: 0.14, ease: "easeOut" }).finished,
+    ]);
+  }
+
   function handleBack() {
     if (window.history.length > 1) {
       router.back();
@@ -308,13 +316,17 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 <motion.div
                   key={`detail-idle-${effectiveMatch.id}`}
                   drag={isInteractiveEditor}
+                  dragMomentum={false}
+                  dragDirectionLock
                   dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                  dragElastic={0.3}
+                  dragElastic={0.14}
                   onDragEnd={async (_, info) => {
                     const outcome = getQuickPlaySwipeOutcome(effectiveMatch, info.offset.x, info.offset.y);
                     if (outcome) {
                       await chooseOutcome(outcome);
+                      return;
                     }
+                    await snapCardBack();
                   }}
                   style={{
                     x,
@@ -326,12 +338,13 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     overflow: "hidden",
                     borderRadius: 18,
                     background: "transparent",
+                    willChange: "transform, opacity",
                   }}
                   initial={{ opacity: 0, y: 24, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={idleExit}
                   transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                  whileDrag={isInteractiveEditor ? { scale: 1.018 } : undefined}
+                  whileDrag={isInteractiveEditor ? { scale: 1.012 } : undefined}
                 >
                   {isInteractiveEditor ? (
                     <>

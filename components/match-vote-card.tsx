@@ -64,6 +64,14 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
   const quickPlayTargets = useMemo(() => getQuickPlayOutcomeTargets(match), [match]);
   const showDrawGesture = quickPlayTargets.draw != null;
 
+  async function snapCardBack() {
+    await Promise.all([
+      animate(x, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
+      animate(y, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
+      animate(cardOpacity, 1, { duration: 0.14, ease: "easeOut" }).finished,
+    ]);
+  }
+
   function resetPhase() {
     setPhase("idle");
     setChosenOutcome(null);
@@ -183,13 +191,17 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
             <motion.div
               key={`idle-${match.id}`}
               drag
+              dragMomentum={false}
+              dragDirectionLock
               dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-              dragElastic={0.3}
+              dragElastic={0.14}
               onDragEnd={async (_, info) => {
                 const outcome = getQuickPlaySwipeOutcome(match, info.offset.x, info.offset.y);
                 if (outcome) {
                   await chooseOutcome(outcome);
+                  return;
                 }
+                await snapCardBack();
               }}
               style={{
                 x,
@@ -200,13 +212,14 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                 zIndex: 2,
                 minHeight: 332,
                 fontFamily: "var(--font-barlow), system-ui, sans-serif",
+                willChange: "transform, opacity",
               }}
               className="surface-card"
               initial={{ scale: 0.92, opacity: 0, y: 40 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={idleExit}
               transition={{ type: "spring", stiffness: 250, damping: 24 }}
-              whileDrag={{ scale: 1.018 }}
+              whileDrag={{ scale: 1.012 }}
             >
               <motion.div
                 style={{
