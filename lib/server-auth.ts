@@ -10,6 +10,37 @@ type CredentialRow = {
   pin_hash: string;
 };
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object") {
+    const candidate = error as {
+      message?: unknown;
+      details?: unknown;
+      hint?: unknown;
+      code?: unknown;
+    };
+    const parts = [
+      typeof candidate.message === "string" ? candidate.message : null,
+      typeof candidate.details === "string" && candidate.details.length > 0 ? candidate.details : null,
+      typeof candidate.hint === "string" && candidate.hint.length > 0 ? candidate.hint : null,
+      typeof candidate.code === "string" && candidate.code.length > 0 ? `code ${candidate.code}` : null,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(" · ");
+    }
+  }
+
+  return "unexpected auth error";
+}
+
+function describeStepError(step: string, error: unknown) {
+  return `${step}: ${getErrorMessage(error)}`;
+}
+
 async function findUserByDisplayName(displayName: string) {
   const supabase = getSupabaseServerClient();
   if (!supabase) {
@@ -23,7 +54,7 @@ async function findUserByDisplayName(displayName: string) {
     .maybeSingle<UserRow>();
 
   if (existingUserQuery.error) {
-    throw existingUserQuery.error;
+    throw new Error(describeStepError("buscar usuario", existingUserQuery.error));
   }
 
   return existingUserQuery.data;
@@ -46,7 +77,7 @@ async function createSessionForUser(user: UserRow) {
   });
 
   if (sessionInsert.error) {
-    throw sessionInsert.error;
+    throw new Error(describeStepError("crear sesión", sessionInsert.error));
   }
 
   return {
@@ -73,7 +104,7 @@ export async function registerSession(displayName: string, pin: string) {
     .single<UserRow>();
 
   if (createdUserQuery.error) {
-    throw createdUserQuery.error;
+    throw new Error(describeStepError("crear usuario", createdUserQuery.error));
   }
 
   const user = createdUserQuery.data;
@@ -84,7 +115,7 @@ export async function registerSession(displayName: string, pin: string) {
   });
 
   if (credentialInsert.error) {
-    throw credentialInsert.error;
+    throw new Error(describeStepError("guardar PIN", credentialInsert.error));
   }
 
   const session = await createSessionForUser(user);
@@ -118,7 +149,7 @@ export async function loginSession(displayName: string, pin: string) {
     .single<CredentialRow>();
 
   if (credentialQuery.error) {
-    throw credentialQuery.error;
+    throw new Error(describeStepError("leer PIN", credentialQuery.error));
   }
 
   if (!verifyPin(pin, credentialQuery.data.pin_hash)) {
@@ -155,7 +186,7 @@ export async function changeUserPin(displayName: string, currentPin: string, nex
     .single<CredentialRow>();
 
   if (credentialQuery.error) {
-    throw credentialQuery.error;
+    throw new Error(describeStepError("leer PIN", credentialQuery.error));
   }
 
   if (!verifyPin(currentPin, credentialQuery.data.pin_hash)) {
@@ -169,7 +200,7 @@ export async function changeUserPin(displayName: string, currentPin: string, nex
     .eq("user_id", user.id);
 
   if (update.error) {
-    throw update.error;
+    throw new Error(describeStepError("actualizar PIN", update.error));
   }
 
   return { ok: true as const };
@@ -190,7 +221,7 @@ export async function getSessionUser(sessionToken: string) {
     .maybeSingle<{ user_id: string; expires_at: string }>();
 
   if (sessionQuery.error) {
-    throw sessionQuery.error;
+    throw new Error(describeStepError("leer sesión", sessionQuery.error));
   }
 
   if (!sessionQuery.data) {
@@ -209,7 +240,7 @@ export async function getSessionUser(sessionToken: string) {
     .single<{ display_name: string }>();
 
   if (userQuery.error) {
-    throw userQuery.error;
+    throw new Error(describeStepError("leer usuario de sesión", userQuery.error));
   }
 
   return {

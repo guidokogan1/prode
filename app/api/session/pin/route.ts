@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import { changeUserPin } from "@/lib/server-auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/env";
 
+function getRouteErrorDetail(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object") {
+    const candidate = error as {
+      message?: unknown;
+      detail?: unknown;
+      details?: unknown;
+      hint?: unknown;
+      code?: unknown;
+    };
+    const parts = [
+      typeof candidate.message === "string" ? candidate.message : null,
+      typeof candidate.detail === "string" && candidate.detail.length > 0 ? candidate.detail : null,
+      typeof candidate.details === "string" && candidate.details.length > 0 ? candidate.details : null,
+      typeof candidate.hint === "string" && candidate.hint.length > 0 ? candidate.hint : null,
+      typeof candidate.code === "string" && candidate.code.length > 0 ? `code ${candidate.code}` : null,
+    ].filter(Boolean);
+
+    if (parts.length > 0) {
+      return parts.join(" · ");
+    }
+  }
+
+  return "unexpected pin error";
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!hasSupabaseServerEnv()) {
@@ -40,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "unexpected pin error";
+    const message = getRouteErrorDetail(error);
     return NextResponse.json({ error: "pin_change_failed", detail: message }, { status: 500 });
   }
 }
