@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed, DM_Serif_Display } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
+import { DemoFloatingBar } from "@/components/demo-floating-bar";
 import { SessionProvider } from "@/components/session-provider";
+import { getActiveDemoPersonaSlug } from "@/lib/demo-state";
+import { getDemoPersonas } from "@/lib/mock-data";
 import "./globals.css";
 
 const barlow = Barlow({
@@ -34,11 +37,13 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [activePersona, personas] = await Promise.all([getActiveDemoPersonaSlug(), Promise.resolve(getDemoPersonas())]);
+
   return (
     <html lang="es">
       <body className={`${barlow.variable} ${barlowCondensed.variable} ${dmSerifDisplay.variable}`}>
@@ -47,6 +52,7 @@ export default function RootLayout({
             {children}
             <BottomNav />
           </div>
+          <DemoFloatingBar activePersona={activePersona} personas={personas} />
         </SessionProvider>
       </body>
     </html>

@@ -87,6 +87,21 @@ input,
   padding-right: max(0px, var(--safe-right));
 }
 
+.demo-floating-bar {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .demo-floating-bar {
+    display: block;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 50;
+    width: 280px;
+  }
+}
+
 .page-shell {
   min-height: calc(100dvh - var(--bottom-nav-height));
   padding: calc(18px + var(--safe-top)) 16px 24px;

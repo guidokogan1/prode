@@ -82,15 +82,22 @@ export function SessionPanel() {
   }
 
   const sessionName = session?.displayName ?? "Sin entrar";
-  const sessionBadge = session ? `${session.kind} · ${session.appMode}` : "sin sesión";
+  const sessionBadge =
+    session?.kind === "remote"
+      ? "Conectado"
+      : session?.kind === "local"
+        ? "Local"
+        : session?.kind === "demo"
+          ? "Demo"
+          : "Invitado";
   const modeCopy =
     session?.kind === "remote"
-      ? "Sesión remota"
+      ? "Tu cuenta real está conectada."
       : session?.kind === "local"
-        ? "Sesión local"
+        ? "Estás viendo un perfil local."
         : session?.kind === "demo"
-          ? "Modo demo"
-          : "Sin sesión";
+          ? "Estás usando un perfil demo."
+          : "Entrá para guardar tus jugadas.";
 
   return (
     <section className="surface-card-soft panel-stack">
@@ -106,7 +113,7 @@ export function SessionPanel() {
 
       <div className="actions-row">
         <Link className="button-primary" href="/login">
-          {session?.kind === "anonymous" || session?.kind === "demo" ? "Entrar" : "Cambiar acceso"}
+          {session?.kind === "anonymous" || session?.kind === "demo" ? "Iniciar sesión" : "Cambiar acceso"}
         </Link>
         {session && session.kind !== "anonymous" ? (
           <button className="button-secondary" onClick={() => void handleLogout()}>
