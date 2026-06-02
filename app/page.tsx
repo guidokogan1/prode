@@ -2,21 +2,17 @@ import { ChampionHomeCard } from "@/components/champion-home-card";
 import { QuickPlayDeck } from "@/components/quick-play-deck";
 import { isChampionPickLocked } from "@/lib/champion";
 import { formatNetAmount } from "@/lib/format";
-import { getProductProvider } from "@/lib/product";
 import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
 import { getProfile } from "@/lib/repositories/profile";
 
 export default async function HomePage() {
-  const provider = await getProductProvider();
-  const [summary, featuredMatches, session, profile] = await Promise.all([
+  const [summary, featuredMatches, profile] = await Promise.all([
     getHomeSummary(),
     getMatchesForHome(),
-    provider.getSessionState(),
     getProfile(),
   ]);
 
   const pendingLabel = summary.pendingPicks;
-  const initial = session.displayName?.slice(0, 1).toUpperCase() ?? "V";
   const headline = pendingLabel > 0 ? `${pendingLabel} por jugar` : "Todo al día";
   const needsChampionPick = !isChampionPickLocked() && (!profile.championPick || profile.championPick === "Sin elegir");
 
@@ -47,10 +43,6 @@ export default async function HomePage() {
           >
             Mundial 26
           </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {pendingLabel > 0 ? <span className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>{pendingLabel} sin jugar</span> : null}
-          <span className="mini-avatar">{initial}</span>
         </div>
       </section>
 

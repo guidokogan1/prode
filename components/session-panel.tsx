@@ -92,7 +92,7 @@ export function SessionPanel() {
           : "Invitado";
   const modeCopy =
     session?.kind === "remote"
-      ? "Tu cuenta real está conectada."
+      ? null
       : session?.kind === "local"
         ? "Estás viendo un perfil local."
         : session?.kind === "demo"
@@ -109,7 +109,7 @@ export function SessionPanel() {
         <span className="pill">{sessionBadge}</span>
       </div>
 
-      <p className="muted-copy">{modeCopy}</p>
+      {modeCopy ? <p className="muted-copy">{modeCopy}</p> : null}
 
       <div className="actions-row">
         <Link className="button-primary" href="/login">
