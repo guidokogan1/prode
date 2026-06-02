@@ -1,0 +1,136 @@
+{
+  "groups": [
+    {
+      "letter": "A",
+      "venues": ["Mexico City", "Guadalajara", "Monterrey"],
+      "matchDays": ["2026-06-11", "2026-06-17", "2026-06-24"],
+      "teams": [
+        { "code": "MEX", "name": "Mexico", "flag": "🇲🇽" },
+        { "code": "ZAF", "name": "Sudafrica", "flag": "🇿🇦" },
+        { "code": "KOR", "name": "Corea del Sur", "flag": "🇰🇷" },
+        { "code": "CZE", "name": "Chequia", "flag": "🇨🇿" }
+      ]
+    },
+    {
+      "letter": "B",
+      "venues": ["Toronto", "Seattle", "Vancouver"],
+      "matchDays": ["2026-06-12", "2026-06-18", "2026-06-24"],
+      "teams": [
+        { "code": "CAN", "name": "Canada", "flag": "🇨🇦" },
+        { "code": "BIH", "name": "Bosnia y Herzegovina", "flag": "🇧🇦" },
+        { "code": "QAT", "name": "Qatar", "flag": "🇶🇦" },
+        { "code": "SUI", "name": "Suiza", "flag": "🇨🇭" }
+      ]
+    },
+    {
+      "letter": "C",
+      "venues": ["New York", "Miami", "Philadelphia"],
+      "matchDays": ["2026-06-13", "2026-06-19", "2026-06-25"],
+      "teams": [
+        { "code": "BRA", "name": "Brasil", "flag": "🇧🇷" },
+        { "code": "MAR", "name": "Marruecos", "flag": "🇲🇦" },
+        { "code": "HTI", "name": "Haiti", "flag": "🇭🇹" },
+        { "code": "SCO", "name": "Escocia", "flag": "🏴" }
+      ]
+    },
+    {
+      "letter": "D",
+      "venues": ["Los Angeles", "Seattle", "Vancouver"],
+      "matchDays": ["2026-06-12", "2026-06-18", "2026-06-25"],
+      "teams": [
+        { "code": "USA", "name": "Estados Unidos", "flag": "🇺🇸" },
+        { "code": "PAR", "name": "Paraguay", "flag": "🇵🇾" },
+        { "code": "AUS", "name": "Australia", "flag": "🇦🇺" },
+        { "code": "TUR", "name": "Turquia", "flag": "🇹🇷" }
+      ]
+    },
+    {
+      "letter": "E",
+      "venues": ["Monterrey", "Houston", "New York"],
+      "matchDays": ["2026-06-14", "2026-06-20", "2026-06-26"],
+      "teams": [
+        { "code": "GER", "name": "Alemania", "flag": "🇩🇪" },
+        { "code": "CUW", "name": "Curazao", "flag": "🇨🇼" },
+        { "code": "CIV", "name": "Costa de Marfil", "flag": "🇨🇮" },
+        { "code": "ECU", "name": "Ecuador", "flag": "🇪🇨" }
+      ]
+    },
+    {
+      "letter": "F",
+      "venues": ["San Francisco", "Vancouver", "Dallas"],
+      "matchDays": ["2026-06-14", "2026-06-20", "2026-06-26"],
+      "teams": [
+        { "code": "NED", "name": "Paises Bajos", "flag": "🇳🇱" },
+        { "code": "JPN", "name": "Japon", "flag": "🇯🇵" },
+        { "code": "SWE", "name": "Suecia", "flag": "🇸🇪" },
+        { "code": "TUN", "name": "Tunez", "flag": "🇹🇳" }
+      ]
+    },
+    {
+      "letter": "G",
+      "venues": ["Seattle", "Los Angeles", "Vancouver"],
+      "matchDays": ["2026-06-15", "2026-06-21", "2026-06-27"],
+      "teams": [
+        { "code": "BEL", "name": "Belgica", "flag": "🇧🇪" },
+        { "code": "EGY", "name": "Egipto", "flag": "🇪🇬" },
+        { "code": "IRN", "name": "Iran", "flag": "🇮🇷" },
+        { "code": "NZL", "name": "Nueva Zelanda", "flag": "🇳🇿" }
+      ]
+    },
+    {
+      "letter": "H",
+      "venues": ["Atlanta", "Houston", "Miami"],
+      "matchDays": ["2026-06-15", "2026-06-21", "2026-06-27"],
+      "teams": [
+        { "code": "ESP", "name": "Espana", "flag": "🇪🇸" },
+        { "code": "CPV", "name": "Cabo Verde", "flag": "🇨🇻" },
+        { "code": "KSA", "name": "Arabia Saudita", "flag": "🇸🇦" },
+        { "code": "URU", "name": "Uruguay", "flag": "🇺🇾" }
+      ]
+    },
+    {
+      "letter": "I",
+      "venues": ["New York", "Boston", "Toronto"],
+      "matchDays": ["2026-06-16", "2026-06-22", "2026-06-28"],
+      "teams": [
+        { "code": "FRA", "name": "Francia", "flag": "🇫🇷" },
+        { "code": "SEN", "name": "Senegal", "flag": "🇸🇳" },
+        { "code": "IRQ", "name": "Irak", "flag": "🇮🇶" },
+        { "code": "NOR", "name": "Noruega", "flag": "🇳🇴" }
+      ]
+    },
+    {
+      "letter": "J",
+      "venues": ["Kansas City", "San Francisco", "Dallas"],
+      "matchDays": ["2026-06-15", "2026-06-22", "2026-06-28"],
+      "teams": [
+        { "code": "ARG", "name": "Argentina", "flag": "🇦🇷" },
+        { "code": "ALG", "name": "Argelia", "flag": "🇩🇿" },
+        { "code": "AUT", "name": "Austria", "flag": "🇦🇹" },
+        { "code": "JOR", "name": "Jordania", "flag": "🇯🇴" }
+      ]
+    },
+    {
+      "letter": "K",
+      "venues": ["Houston", "Mexico City", "Atlanta"],
+      "matchDays": ["2026-06-16", "2026-06-23", "2026-06-29"],
+      "teams": [
+        { "code": "POR", "name": "Portugal", "flag": "🇵🇹" },
+        { "code": "COD", "name": "RD Congo", "flag": "🇨🇩" },
+        { "code": "UZB", "name": "Uzbekistan", "flag": "🇺🇿" },
+        { "code": "COL", "name": "Colombia", "flag": "🇨🇴" }
+      ]
+    },
+    {
+      "letter": "L",
+      "venues": ["Dallas", "Toronto", "Philadelphia"],
+      "matchDays": ["2026-06-16", "2026-06-23", "2026-06-29"],
+      "teams": [
+        { "code": "ENG", "name": "Inglaterra", "flag": "🏴" },
+        { "code": "CRO", "name": "Croacia", "flag": "🇭🇷" },
+        { "code": "GHA", "name": "Ghana", "flag": "🇬🇭" },
+        { "code": "PAN", "name": "Panama", "flag": "🇵🇦" }
+      ]
+    }
+  ]
+}

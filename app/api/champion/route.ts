@@ -35,13 +35,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, reason: "No se encontró ese equipo." }, { status: 404 });
   }
 
+  const marketQuery = await supabase
+    .from("champion_market")
+    .select("id, status")
+    .order("lock_at", { ascending: true })
+    .limit(1)
+    .maybeSingle<{ id: string; status: string }>();
+
+  if (marketQuery.error || !marketQuery.data) {
+    return NextResponse.json({ ok: false, reason: "No se encontró el mercado de campeón." }, { status: 500 });
+  }
+
   const upsert = await supabase.from("champion_picks").upsert(
     {
+      champion_market_id: marketQuery.data.id,
       user_id: session.userId,
       team_id: teamQuery.data.id,
-      updated_at: new Date().toISOString(),
+      submitted_at: new Date().toISOString(),
     },
-    { onConflict: "user_id" },
+    { onConflict: "champion_market_id,user_id" },
   );
 
   if (upsert.error) {

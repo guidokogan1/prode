@@ -2,6 +2,7 @@ import type {
   HistoryEntry,
   HomeSummary,
   MatchStageGroup,
+  MatchOutcomeCode,
   MatchViewModel,
   ProductProvider,
   ProfileViewModel,
@@ -11,12 +12,59 @@ import type {
   SessionState,
 } from "@/lib/domain";
 import { formatNetAmount, MATCH_CREDIT, validateAllocations } from "@/lib/game";
-import { getFallbackHistory, getFallbackMatchById, getFallbackMatchesByStage, getFallbackRanking } from "@/lib/mock-data";
+import { getFallbackHistory, getFallbackRanking } from "@/lib/mock-data";
 import { getServerSessionState } from "@/lib/product/session-state";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getWorldCupGroupLabel, getWorldCupTeamMeta } from "@/lib/world-cup-2026";
 
 type MarketRow = { id: string; status: string; lock_at: string | null };
 type OutcomeRow = { id: string; label: string };
+type MarketQueryRow = {
+  id: string;
+  match_id: string;
+  market_type: string;
+  lock_at: string;
+  winning_outcome_code: string | null;
+  status: string;
+};
+type MatchQueryRow = {
+  id: string;
+  kickoff_at: string;
+  status: string;
+  venue_name: string | null;
+  venue_city: string | null;
+  home_score_90: number | null;
+  away_score_90: number | null;
+  home_score_ft: number | null;
+  away_score_ft: number | null;
+  stage: { code: string; name: string; sort_order: number } | { code: string; name: string; sort_order: number }[] | null;
+  home: { name: string; fifa_code: string } | { name: string; fifa_code: string }[] | null;
+  away: { name: string; fifa_code: string } | { name: string; fifa_code: string }[] | null;
+};
+type OutcomeQueryRow = {
+  match_market_id: string;
+  code: string;
+  label: string;
+  sort_order: number;
+};
+type TicketQueryRow = {
+  id: string;
+  user_id: string;
+  match_market_id: string;
+};
+type AllocationQueryRow = {
+  ticket_id: string;
+  amount: number;
+  outcome: { code: string; label: string } | { code: string; label: string }[] | null;
+};
+type SettlementQueryRow = {
+  ticket_id: string;
+  net_result_amount: number;
+};
+type UserQueryRow = {
+  id: string;
+  display_name: string;
+};
 
 export class SupabaseProductProvider implements ProductProvider {
   mode = "supabase" as const;
@@ -67,145 +115,51 @@ export class SupabaseProductProvider implements ProductProvider {
   }
 
   async listMatches(): Promise<MatchViewModel[]> {
-    const groups = await this.listMatchesByStage();
-    return groups.flatMap((group) => group.matches);
+    const matches = await this.loadMatchViewModels();
+    return matches.map((item) => item.match);
   }
 
   async listMatchesByStage(): Promise<MatchStageGroup[]> {
-    const session = await this.getSessionState();
-    return getFallbackMatchesByStage(session.demoPersonaSlug);
+    const matches = await this.loadMatchViewModels();
+    const groups = new Map<string, MatchStageGroup & { sortOrder: number; kickoffAt: string }>();
+
+    for (const item of matches) {
+      const key = item.match.groupLabel
+        ? `group:${item.match.groupLabel}`
+        : `stage:${item.match.stage}`;
+      const label = item.match.groupLabel ?? item.match.stage;
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          stage: item.match.stage,
+          label,
+          matches: [],
+          sortOrder: item.stageSortOrder,
+          kickoffAt: item.kickoffAt,
+        });
+      }
+
+      groups.get(key)!.matches.push(item.match);
+    }
+
+    return Array.from(groups.values())
+      .sort((left, right) => {
+        if (left.sortOrder !== right.sortOrder) {
+          return left.sortOrder - right.sortOrder;
+        }
+
+        if (left.label !== right.label) {
+          return left.label.localeCompare(right.label, "es");
+        }
+
+        return left.kickoffAt.localeCompare(right.kickoffAt);
+      })
+      .map(({ sortOrder: _sortOrder, kickoffAt: _kickoffAt, ...group }) => group);
   }
 
   async getMatchDetail(id: string): Promise<MatchViewModel | null> {
-    const supabase = getSupabaseOrThrow();
-    const session = await this.getSessionState();
-    const fallback = getFallbackMatchById(id, session.demoPersonaSlug) ?? null;
-
-    if (!fallback) {
-      return null;
-    }
-
-    if (!session.userId) {
-      return fallback;
-    }
-
-    const marketQuery = await supabase
-      .from("match_markets")
-      .select("id, status")
-      .eq("match_id", id)
-      .maybeSingle<{ id: string; status: string }>();
-
-    if (marketQuery.error || !marketQuery.data) {
-      return fallback;
-    }
-
-    const ticketQuery = await supabase
-      .from("tickets")
-      .select("id")
-      .eq("user_id", session.userId)
-      .eq("match_market_id", marketQuery.data.id)
-      .maybeSingle<{ id: string }>();
-
-    if (ticketQuery.error || !ticketQuery.data) {
-      return {
-        ...fallback,
-        marketStatus: normalizeMarketStatus(marketQuery.data.status),
-        isEditable: marketQuery.data.status === "open",
-        userStateLabel: fallback.status === "scheduled" ? "Te falta jugar" : fallback.userStateLabel,
-        draftState: "idle",
-      };
-    }
-
-    const [allocationsQuery, settlementQuery] = await Promise.all([
-      supabase
-        .from("ticket_allocations")
-        .select("amount, outcome:market_outcomes(label)")
-        .eq("ticket_id", ticketQuery.data.id)
-        .returns<{ amount: number; outcome: { label: string } | null }[]>(),
-      supabase
-        .from("settlements")
-        .select("net_result_amount")
-        .eq("ticket_id", ticketQuery.data.id)
-        .maybeSingle<{ net_result_amount: number }>(),
-    ]);
-
-    if (allocationsQuery.error) {
-      return fallback;
-    }
-
-    const allocationMap = new Map(
-      (allocationsQuery.data ?? []).map((item) => [normalizeLabel(item.outcome?.label ?? ""), item.amount]),
-    );
-
-    const updatedAllocation = fallback.allocation.map((item) => {
-      const amount = allocationMap.get(normalizeLabel(item.label)) ?? item.amount;
-      return {
-        ...item,
-        amount,
-        percentage: Math.round((amount / MATCH_CREDIT) * 100),
-      };
-    });
-
-    let userStateLabel = "Jugada remota guardada";
-    let draftState: MatchViewModel["draftState"] = "saved_remote";
-
-    if (settlementQuery.data) {
-      userStateLabel = `Resultado ${formatNetAmount(settlementQuery.data.net_result_amount)}`;
-    } else if (marketQuery.data.status === "revealed") {
-      userStateLabel = "Reveal activo";
-    }
-
-    let revealedTickets = fallback.revealedTickets;
-    const outcomeMeta = new Map(
-      fallback.allocation.map((item) => [
-        normalizeLabel(item.label),
-        { code: item.code, shortLabel: item.shortLabel },
-      ]),
-    );
-
-    if (marketQuery.data.status === "revealed" || marketQuery.data.status === "settled") {
-      const revealQuery = await supabase
-        .from("tickets")
-        .select(
-          "id, user:users(display_name), allocations:ticket_allocations(amount, outcome:market_outcomes(label)), settlement:settlements(net_result_amount)",
-        )
-        .eq("match_market_id", marketQuery.data.id);
-
-      if (!revealQuery.error && revealQuery.data?.length) {
-        revealedTickets = revealQuery.data.map((ticket) => {
-          const user = Array.isArray(ticket.user) ? ticket.user[0] : ticket.user;
-          const settlement = Array.isArray(ticket.settlement) ? ticket.settlement[0] : ticket.settlement;
-
-          return {
-            userName: user?.display_name ?? "Jugador",
-            allocations: (ticket.allocations ?? []).map(
-              (allocation: { amount: number; outcome: { label: string }[] | { label: string } | null }) => {
-                const outcome = Array.isArray(allocation.outcome) ? allocation.outcome[0] : allocation.outcome;
-                return {
-                  code: outcomeMeta.get(normalizeLabel(outcome?.label ?? ""))?.code ?? fallback.allocation[0]?.code ?? "home",
-                  label: outcome?.label ?? "Outcome",
-                  shortLabel:
-                    outcomeMeta.get(normalizeLabel(outcome?.label ?? ""))?.shortLabel ??
-                    (outcome?.label ?? "Outcome"),
-                  amount: allocation.amount,
-                };
-              },
-            ),
-            netAmount: settlement?.net_result_amount ?? undefined,
-          };
-        });
-      }
-    }
-
-    return {
-      ...fallback,
-      allocation: updatedAllocation,
-      userStateLabel,
-      marketStatus: normalizeMarketStatus(marketQuery.data.status),
-      draftState,
-      isEditable: marketQuery.data.status === "open",
-      revealedTickets,
-    };
+    const matches = await this.loadMatchViewModels({ matchId: id, includeReveals: true });
+    return matches[0]?.match ?? null;
   }
 
   async getRanking(): Promise<RankingEntry[]> {
@@ -464,6 +418,188 @@ export class SupabaseProductProvider implements ProductProvider {
       message: "Jugada guardada en backend.",
     };
   }
+  private async loadMatchViewModels(options: LoadMatchOptions = {}): Promise<LoadedMatch[]> {
+    const supabase = getSupabaseOrThrow();
+    const session = await this.getSessionState();
+    const matchesQuery = await supabase
+      .from("matches")
+      .select(
+        "id, kickoff_at, status, venue_name, venue_city, home_score_90, away_score_90, home_score_ft, away_score_ft, stage:tournament_stages(code, name, sort_order), home:teams!matches_home_team_id_fkey(name, fifa_code), away:teams!matches_away_team_id_fkey(name, fifa_code)",
+      )
+      .match(options.matchId ? { id: options.matchId } : {})
+      .returns<MatchQueryRow[]>();
+
+    const matchRows = matchesQuery.data ?? [];
+    if (!matchRows.length) {
+      return [];
+    }
+
+    const matchIds = matchRows.map((row) => row.id);
+    const marketsQuery = await supabase
+      .from("match_markets")
+      .select("id, match_id, market_type, lock_at, winning_outcome_code, status")
+      .in("match_id", matchIds)
+      .returns<MarketQueryRow[]>();
+
+    const marketRows = marketsQuery.data ?? [];
+    const marketIds = marketRows.map((row) => row.id);
+
+    const [outcomesQuery, currentUserData, allTicketData] = await Promise.all([
+      marketIds.length
+        ? supabase
+            .from("market_outcomes")
+            .select("match_market_id, code, label, sort_order")
+            .in("match_market_id", marketIds)
+            .order("sort_order", { ascending: true })
+            .returns<OutcomeQueryRow[]>()
+        : Promise.resolve({ data: [] as OutcomeQueryRow[] }),
+      loadCurrentUserMap(supabase, session.userId, marketIds),
+      loadAllTicketData(supabase, marketIds, Boolean(options.includeReveals)),
+    ]);
+
+    const marketsByMatchId = new Map(marketRows.map((row) => [row.match_id, row]));
+    const outcomesByMarketId = groupBy(outcomesQuery.data ?? [], (item) => item.match_market_id);
+
+    const mapped = matchRows
+      .map<LoadedMatch | null>((row) => {
+        const stage = firstRow(row.stage);
+        const home = firstRow(row.home);
+        const away = firstRow(row.away);
+        const market = marketsByMatchId.get(row.id);
+
+        if (!stage || !home || !away || !market) {
+          return null;
+        }
+
+        const outcomeRows = outcomesByMarketId.get(market.id) ?? [];
+        const currentTicket = currentUserData.ticketsByMarketId.get(market.id);
+        const currentAllocations = currentTicket
+          ? currentUserData.allocationsByTicketId.get(currentTicket.id) ?? []
+          : [];
+        const settlement = currentTicket
+          ? currentUserData.settlementsByTicketId.get(currentTicket.id)
+          : undefined;
+        const marketTickets = allTicketData.ticketsByMarketId.get(market.id) ?? [];
+        const totalByOutcomeCode = new Map<string, number>();
+
+        for (const ticket of marketTickets) {
+          const allocations = allTicketData.allocationsByTicketId.get(ticket.id) ?? [];
+          for (const allocation of allocations) {
+            const outcome = firstRow(allocation.outcome);
+            if (!outcome) {
+              continue;
+            }
+
+            totalByOutcomeCode.set(outcome.code, (totalByOutcomeCode.get(outcome.code) ?? 0) + allocation.amount);
+          }
+        }
+
+        const totalPool = Array.from(totalByOutcomeCode.values()).reduce((sum, value) => sum + value, 0);
+        const allocationByCode = new Map(
+          currentAllocations.map((item) => [firstRow(item.outcome)?.code, item.amount] as const).filter((item): item is [string, number] => Boolean(item[0])),
+        );
+
+        const allocation = outcomeRows.map((outcome) => {
+          const amount = allocationByCode.get(outcome.code) ?? 0;
+          return {
+            code: normalizeOutcomeCode(outcome.code, market.market_type),
+            label: getOutcomeDisplayLabel(outcome.code, home.name, away.name, market.market_type),
+            shortLabel: getOutcomeShortLabel(outcome.code, home.name, away.name, market.market_type),
+            amount,
+            percentage: Math.round((amount / MATCH_CREDIT) * 100),
+          };
+        });
+
+        const consensus = outcomeRows.map((outcome) => {
+          const amount = totalByOutcomeCode.get(outcome.code) ?? 0;
+          return {
+            code: normalizeOutcomeCode(outcome.code, market.market_type),
+            label: getOutcomeDisplayLabel(outcome.code, home.name, away.name, market.market_type),
+            shortLabel: getOutcomeShortLabel(outcome.code, home.name, away.name, market.market_type),
+            percentage: totalPool > 0 ? Math.round((amount / totalPool) * 100) : 0,
+          };
+        });
+
+        const revealedTickets =
+          options.includeReveals && (market.status === "revealed" || market.status === "settled")
+            ? marketTickets.map((ticket) => ({
+                userName: allTicketData.usersById.get(ticket.user_id) ?? "Jugador",
+                allocations: (allTicketData.allocationsByTicketId.get(ticket.id) ?? [])
+                  .map((item) => {
+                    const outcome = firstRow(item.outcome);
+                    if (!outcome) {
+                      return null;
+                    }
+
+                    return {
+                      code: normalizeOutcomeCode(outcome.code, market.market_type),
+                      label: getOutcomeDisplayLabel(outcome.code, home.name, away.name, market.market_type),
+                      shortLabel: getOutcomeShortLabel(outcome.code, home.name, away.name, market.market_type),
+                      amount: item.amount,
+                    };
+                  })
+                  .filter((item): item is NonNullable<typeof item> => item !== null),
+                netAmount: allTicketData.settlementsByTicketId.get(ticket.id)?.net_result_amount,
+              }))
+            : [];
+
+        const loadedMatch: LoadedMatch = {
+          match: {
+            id: row.id,
+            stage: stage.name,
+            groupLabel: getWorldCupGroupLabel(home.fifa_code, away.fifa_code, stage.code),
+            venue: row.venue_city ?? row.venue_name ?? "Sede",
+            kickoffLabel: formatKickoffLabel(row.kickoff_at),
+            status: normalizeMatchStatus(row.status),
+            marketStatus: normalizeMarketStatus(market.status),
+            statusVariant: deriveStatusVariant(row.status, market.status),
+            statusLabel: deriveStatusLabel(row.status, market.status),
+            marketType: market.market_type === "qualifies" ? "qualifies" : "1x2",
+            marketTypeLabel: market.market_type === "qualifies" ? "Clasifica" : "1X2",
+            userStateLabel: deriveUserStateLabel(normalizeMatchStatus(row.status), market.status, currentTicket, settlement),
+            draftState: settlement
+              ? "saved_remote"
+              : currentTicket
+                ? "saved_remote"
+                : "idle",
+            isEditable: market.status === "open",
+            home: {
+              name: home.name,
+              flag: getWorldCupTeamMeta(home.fifa_code)?.flag ?? "🏳️",
+              score: row.status === "finished" ? row.home_score_ft ?? 0 : row.home_score_90 ?? 0,
+            },
+            away: {
+              name: away.name,
+              flag: getWorldCupTeamMeta(away.fifa_code)?.flag ?? "🏳️",
+              score: row.status === "finished" ? row.away_score_ft ?? 0 : row.away_score_90 ?? 0,
+            },
+            allocation,
+            consensus,
+            form: {
+              home: "—",
+              away: "—",
+              homeGoals: 0,
+              awayGoals: 0,
+            },
+            revealedTickets,
+          },
+          stageSortOrder: stage.sort_order,
+          kickoffAt: row.kickoff_at,
+        };
+
+        return loadedMatch;
+      })
+      .filter((item): item is LoadedMatch => item !== null);
+
+    return mapped
+      .sort((left, right) => {
+        if (left.stageSortOrder !== right.stageSortOrder) {
+          return left.stageSortOrder - right.stageSortOrder;
+        }
+
+        return left.kickoffAt.localeCompare(right.kickoffAt);
+      });
+  }
 }
 
 function getSupabaseOrThrow() {
@@ -473,6 +609,112 @@ function getSupabaseOrThrow() {
   }
   return supabase;
 }
+
+type LoadMatchOptions = {
+  matchId?: string;
+  includeReveals?: boolean;
+};
+
+async function loadCurrentUserMap(supabase: ReturnType<typeof getSupabaseOrThrow>, userId: string | undefined, marketIds: string[]) {
+  if (!userId || marketIds.length === 0) {
+    return {
+      ticketsByMarketId: new Map<string, TicketQueryRow>(),
+      allocationsByTicketId: new Map<string, AllocationQueryRow[]>(),
+      settlementsByTicketId: new Map<string, SettlementQueryRow>(),
+    };
+  }
+
+  const ticketsQuery = await supabase
+    .from("tickets")
+    .select("id, user_id, match_market_id")
+    .eq("user_id", userId)
+    .in("match_market_id", marketIds)
+    .returns<TicketQueryRow[]>();
+
+  const tickets = ticketsQuery.data ?? [];
+  const ticketIds = tickets.map((ticket) => ticket.id);
+
+  const [allocationsQuery, settlementsQuery] = await Promise.all([
+    ticketIds.length
+      ? supabase
+          .from("ticket_allocations")
+          .select("ticket_id, amount, outcome:market_outcomes(code, label)")
+          .in("ticket_id", ticketIds)
+          .returns<AllocationQueryRow[]>()
+      : Promise.resolve({ data: [] as AllocationQueryRow[] }),
+    ticketIds.length
+      ? supabase
+          .from("settlements")
+          .select("ticket_id, net_result_amount")
+          .in("ticket_id", ticketIds)
+          .returns<SettlementQueryRow[]>()
+      : Promise.resolve({ data: [] as SettlementQueryRow[] }),
+  ]);
+
+  return {
+    ticketsByMarketId: new Map(tickets.map((ticket) => [ticket.match_market_id, ticket])),
+    allocationsByTicketId: groupBy(allocationsQuery.data ?? [], (item) => item.ticket_id),
+    settlementsByTicketId: new Map((settlementsQuery.data ?? []).map((item) => [item.ticket_id, item])),
+  };
+}
+
+async function loadAllTicketData(
+  supabase: ReturnType<typeof getSupabaseOrThrow>,
+  marketIds: string[],
+  includeReveals: boolean,
+) {
+  if (marketIds.length === 0) {
+    return {
+      ticketsByMarketId: new Map<string, TicketQueryRow[]>(),
+      allocationsByTicketId: new Map<string, AllocationQueryRow[]>(),
+      settlementsByTicketId: new Map<string, SettlementQueryRow>(),
+      usersById: new Map<string, string>(),
+    };
+  }
+
+  const ticketsQuery = await supabase
+    .from("tickets")
+    .select("id, user_id, match_market_id")
+    .in("match_market_id", marketIds)
+    .returns<TicketQueryRow[]>();
+
+  const tickets = ticketsQuery.data ?? [];
+  const ticketIds = tickets.map((ticket) => ticket.id);
+  const userIds = includeReveals ? Array.from(new Set(tickets.map((ticket) => ticket.user_id))) : [];
+
+  const [allocationsQuery, settlementsQuery, usersQuery] = await Promise.all([
+    ticketIds.length
+      ? supabase
+          .from("ticket_allocations")
+          .select("ticket_id, amount, outcome:market_outcomes(code, label)")
+          .in("ticket_id", ticketIds)
+          .returns<AllocationQueryRow[]>()
+      : Promise.resolve({ data: [] as AllocationQueryRow[] }),
+    ticketIds.length
+      ? supabase
+          .from("settlements")
+          .select("ticket_id, net_result_amount")
+          .in("ticket_id", ticketIds)
+          .returns<SettlementQueryRow[]>()
+      : Promise.resolve({ data: [] as SettlementQueryRow[] }),
+    includeReveals && userIds.length
+      ? supabase.from("users").select("id, display_name").in("id", userIds).returns<UserQueryRow[]>()
+      : Promise.resolve({ data: [] as UserQueryRow[] }),
+  ]);
+
+  return {
+    ticketsByMarketId: groupBy(tickets, (ticket) => ticket.match_market_id),
+    allocationsByTicketId: groupBy(allocationsQuery.data ?? [], (item) => item.ticket_id),
+    settlementsByTicketId: new Map((settlementsQuery.data ?? []).map((item) => [item.ticket_id, item])),
+    usersById: new Map((usersQuery.data ?? []).map((item) => [item.id, item.display_name])),
+  };
+}
+
+type LoadedMatch = {
+  match: MatchViewModel;
+  stageSortOrder: number;
+  kickoffAt: string;
+};
 
 function normalizeLabel(label: string) {
   return label.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();
@@ -501,4 +743,145 @@ function sortMatchesForHome(left: MatchViewModel, right: MatchViewModel) {
   };
 
   return score(left) - score(right);
+}
+
+function firstRow<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) {
+    return null;
+  }
+
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
+function groupBy<T>(items: T[], getKey: (item: T) => string) {
+  const groups = new Map<string, T[]>();
+
+  for (const item of items) {
+    const key = getKey(item);
+    const existing = groups.get(key);
+    if (existing) {
+      existing.push(item);
+    } else {
+      groups.set(key, [item]);
+    }
+  }
+
+  return groups;
+}
+
+function normalizeMatchStatus(status: string): MatchViewModel["status"] {
+  if (status === "live" || status === "finished") {
+    return status;
+  }
+
+  return "scheduled";
+}
+
+function deriveStatusVariant(matchStatus: string, marketStatus: string): MatchViewModel["statusVariant"] {
+  if (matchStatus === "finished" || marketStatus === "settled") {
+    return "settled";
+  }
+
+  if (matchStatus === "live") {
+    return "live";
+  }
+
+  if (marketStatus === "revealed") {
+    return "revealed";
+  }
+
+  if (marketStatus === "locked") {
+    return "locked";
+  }
+
+  return "upcoming";
+}
+
+function deriveStatusLabel(matchStatus: string, marketStatus: string) {
+  if (matchStatus === "finished" || marketStatus === "settled") {
+    return "Final";
+  }
+
+  if (matchStatus === "live") {
+    return "En vivo";
+  }
+
+  if (marketStatus === "locked" || marketStatus === "revealed") {
+    return "Cerrado";
+  }
+
+  return "Abierto";
+}
+
+function deriveUserStateLabel(
+  matchStatus: MatchViewModel["status"],
+  marketStatus: string,
+  ticket: TicketQueryRow | undefined,
+  settlement: SettlementQueryRow | undefined,
+) {
+  if (settlement) {
+    return `Resultado ${formatNetAmount(settlement.net_result_amount)}`;
+  }
+
+  if (!ticket) {
+    return matchStatus === "scheduled" && marketStatus === "open" ? "Te falta jugar" : "Sin jugar";
+  }
+
+  if (matchStatus === "live" || marketStatus === "revealed") {
+    return "Reveal activo";
+  }
+
+  return "Jugada guardada";
+}
+
+function normalizeOutcomeCode(code: string, marketType: string): MatchOutcomeCode {
+  if (code === "draw") {
+    return "draw";
+  }
+
+  if (marketType === "qualifies") {
+    return code === "away_qualifies" ? "away_qualifies" : "home_qualifies";
+  }
+
+  return code === "away" ? "away" : "home";
+}
+
+function getOutcomeDisplayLabel(code: string, homeName: string, awayName: string, marketType: string) {
+  if (code === "draw") {
+    return "Empate";
+  }
+
+  if (marketType === "qualifies") {
+    return code === "away_qualifies" ? `Clasifica ${awayName}` : `Clasifica ${homeName}`;
+  }
+
+  return code === "away" ? awayName : homeName;
+}
+
+function getOutcomeShortLabel(code: string, homeName: string, awayName: string, marketType: string) {
+  if (code === "draw") {
+    return "Empate";
+  }
+
+  if (marketType === "qualifies") {
+    return code === "away_qualifies" ? awayName : homeName;
+  }
+
+  return code === "away" ? awayName : homeName;
+}
+
+function formatKickoffLabel(kickoffAt: string) {
+  const date = new Date(kickoffAt);
+  const day = new Intl.DateTimeFormat("es-AR", { day: "numeric", timeZone: "UTC" }).format(date);
+  const month = new Intl.DateTimeFormat("es-AR", { month: "short", timeZone: "UTC" })
+    .format(date)
+    .replace(".", "");
+  const time = new Intl.DateTimeFormat("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "UTC",
+  }).format(date);
+
+  return `${day} ${month} · ${time}`;
 }
