@@ -212,23 +212,35 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
   return (
     <div style={{ display: "grid", gap: 10, minHeight: 0 }}>
-      {!done ? (
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, minHeight: 12 }}>
-          {deck.map((_, dotIndex) => (
-            <span
-              key={`deck-dot-${dotIndex}`}
-              style={{
-                width: dotIndex === currentIndex ? 20 : 6,
-                height: 6,
-                borderRadius: 999,
-                background:
-                  dotIndex < currentIndex ? "#3D9B5F" : dotIndex === currentIndex ? "#D4A64B" : "rgba(255,255,255,0.12)",
-                transition: "all 220ms ease",
-              }}
-            />
-          ))}
-        </div>
-      ) : null}
+      {!done ? (() => {
+        const MAX_DOTS = 8;
+        const totalDots = Math.min(MAX_DOTS, deck.length);
+        const startIndex = Math.max(
+          0,
+          Math.min(currentIndex - Math.floor((totalDots - 1) / 2), deck.length - totalDots),
+        );
+        return (
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, minHeight: 12 }}>
+            {Array.from({ length: totalDots }).map((_, slot) => {
+              const matchIndex = startIndex + slot;
+              const isCurrent = matchIndex === currentIndex;
+              const isDone = matchIndex < currentIndex;
+              return (
+                <span
+                  key={`deck-dot-${matchIndex}`}
+                  style={{
+                    width: isCurrent ? 20 : 6,
+                    height: 6,
+                    borderRadius: 999,
+                    background: isDone ? "#3D9B5F" : isCurrent ? "#D4A64B" : "rgba(255,255,255,0.12)",
+                    transition: "all 220ms ease",
+                  }}
+                />
+              );
+            })}
+          </div>
+        );
+      })() : null}
 
       <div style={{ minHeight: 0, display: "grid", gap: 10, alignContent: "start" }}>
         {done ? (
