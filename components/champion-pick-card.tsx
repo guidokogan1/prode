@@ -109,6 +109,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
 
         setSaveMessage("Guardado");
         setIsSaving(false);
+        router.push("/");
         router.refresh();
         return;
       } catch {
@@ -125,6 +126,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
       });
       setSaveMessage("Guardado local");
       setIsSaving(false);
+      router.push("/");
       return;
     }
 
@@ -226,30 +228,37 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
         </section>
       ))}
 
-      <section
-        className="surface-card-soft"
-        style={{
-          padding: 18,
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <div className="split-row" style={{ alignItems: "center" }}>
-          <div className="title-stack">
-            <span className="eyebrow">Listo para guardar</span>
-            <strong style={{ fontSize: "1rem", color: "#EDE8D9" }}>
-              {selectedOption ? `${selectedOption.flag} ${selectedOption.name}` : "Todavía sin elegir"}
-            </strong>
+      {!locked && selectedOption ? (
+        <section
+          className="surface-card-soft"
+          style={{
+            position: "sticky",
+            bottom: "calc(var(--safe-bottom) + 12px)",
+            padding: 18,
+            display: "grid",
+            gap: 12,
+            background: "linear-gradient(160deg, rgba(17,32,21,0.96) 0%, rgba(10,21,12,0.96) 100%)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 18px 40px rgba(0,0,0,0.34)",
+            backdropFilter: "blur(12px)",
+            zIndex: 6,
+          }}
+        >
+          <div className="split-row" style={{ alignItems: "center" }}>
+            <div className="title-stack">
+              <span className="eyebrow">Listo para guardar</span>
+              <strong style={{ fontSize: "1rem", color: "#EDE8D9" }}>
+                {selectedOption.flag} {selectedOption.name}
+              </strong>
+            </div>
+            {saveMessage ? <span className="micro-copy">{saveMessage}</span> : null}
           </div>
-          {saveMessage ? <span className="micro-copy">{saveMessage}</span> : null}
-        </div>
 
-        {!locked ? (
-          <button className="button-primary" disabled={!selectedTeam || isSaving} onClick={() => void handleSave()} type="button">
+          <button className="button-primary" disabled={isSaving} onClick={() => void handleSave()} type="button">
             {isSaving ? "Guardando..." : "Guardar campeón"}
           </button>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
     </section>
   );
 }

@@ -1,6 +1,53 @@
+"use client";
+
 import Link from "next/link";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { SessionContext } from "@/components/session-provider";
+import type { SessionState } from "@/lib/domain";
+import { CHAMPION_EVENT, getStoredChampionPick } from "@/lib/local-store";
+
+function buildChampionScope(session: SessionState | null) {
+  if (session?.kind === "demo") {
+    return `demo:${session.demoPersonaSlug ?? "default"}`;
+  }
+
+  if (session?.kind === "local") {
+    return `local:${session.displayName ?? "guest"}`;
+  }
+
+  return null;
+}
 
 export function ChampionHomeCard() {
+  const session = useContext(SessionContext);
+  const [isVisible, setIsVisible] = useState(true);
+  const localScope = useMemo(() => buildChampionScope(session), [session]);
+
+  useEffect(() => {
+    if (!localScope) {
+      setIsVisible(true);
+      return;
+    }
+
+    const sync = () => {
+      const stored = getStoredChampionPick(localScope);
+      setIsVisible(!stored?.teamName);
+    };
+
+    sync();
+    window.addEventListener(CHAMPION_EVENT, sync);
+    window.addEventListener("storage", sync);
+
+    return () => {
+      window.removeEventListener(CHAMPION_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [localScope]);
+
+  if (!isVisible) {
+    return null;
+  }
+
   return (
     <section
       className="surface-card"
