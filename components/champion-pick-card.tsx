@@ -130,9 +130,12 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
       return;
     }
 
-    setSaveMessage("Entrá para guardar.");
     setIsSaving(false);
+    router.push("/login?next=/champion");
   }
+
+  const isAuthLoading = session === null;
+  const isUnauthenticated = session !== null && session.kind !== "remote" && !localScope;
 
   if (mode === "summary") {
     return (
@@ -254,8 +257,19 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
             {saveMessage ? <span className="micro-copy">{saveMessage}</span> : null}
           </div>
 
-          <button className="button-primary" disabled={isSaving} onClick={() => void handleSave()} type="button">
-            {isSaving ? "Guardando..." : "Guardar campeón"}
+          <button
+            className="button-primary"
+            disabled={isSaving || isAuthLoading}
+            onClick={() => void handleSave()}
+            type="button"
+          >
+            {isSaving
+              ? "Guardando..."
+              : isAuthLoading
+                ? "Cargando..."
+                : isUnauthenticated
+                  ? "Iniciar sesión para guardar"
+                  : "Guardar campeón"}
           </button>
         </section>
       ) : null}
