@@ -60,13 +60,7 @@ export function LoginForm() {
   }
 
   return (
-    <form className="surface-card" style={{ padding: 20, display: "grid", gap: 16 }} onSubmit={handleSubmit}>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <span className="pill">Sin mail</span>
-        <span className="pill">PIN 4 dígitos</span>
-        <span className="pill">Entrás y jugás</span>
-      </div>
-
+    <form className="surface-card" style={{ padding: 20, display: "grid", gap: 18 }} onSubmit={handleSubmit}>
       <div className="field">
         <label htmlFor="displayName">Nombre</label>
         <input
@@ -97,12 +91,12 @@ export function LoginForm() {
         />
       </div>
 
-      <p className="muted-copy">Entrás rápido y la app se acuerda de vos en este dispositivo.</p>
+      <p className="micro-copy">La app recuerda este acceso en tu dispositivo.</p>
 
       {error ? <p className="error-copy">{error}</p> : null}
 
       <button className="button-primary" type="submit">
-        Entrar al juego
+        Iniciar sesión
       </button>
     </form>
   );

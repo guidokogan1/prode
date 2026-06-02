@@ -2,13 +2,12 @@ import { LoginForm } from "@/components/login-form";
 
 export default function LoginPage() {
   return (
-    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
-      <section className="surface-card-strong" style={{ padding: 20, display: "grid", gap: 8, marginTop: 8 }}>
-        <p className="eyebrow">Acceso rápido</p>
-        <h1 className="display-title">Nombre y PIN.</h1>
-        <p className="muted-copy">Nada más. Entrás, jugás y seguís con la ronda.</p>
+    <main className="page-shell page-scroll" style={{ display: "grid", alignContent: "start", gap: 18, paddingTop: 36 }}>
+      <section className="title-stack" style={{ gap: 6 }}>
+        <p className="eyebrow">Acceso</p>
+        <h1 className="display-title">Iniciar sesión</h1>
+        <p className="muted-copy">Entrá con tu nombre y PIN.</p>
       </section>
-
       <LoginForm />
     </main>
   );
