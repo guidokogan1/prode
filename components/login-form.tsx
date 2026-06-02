@@ -42,7 +42,7 @@ export function LoginForm() {
       });
 
       if (response.ok) {
-        router.push("/profile");
+        router.push("/");
         router.refresh();
         return;
       }

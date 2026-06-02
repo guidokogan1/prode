@@ -49,7 +49,7 @@ export function RegisterForm() {
       });
 
       if (response.ok) {
-        router.push("/profile");
+        router.push("/");
         router.refresh();
         return;
       }
