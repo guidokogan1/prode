@@ -46,8 +46,20 @@ export function LoginForm() {
         return;
       }
 
+      const payload = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+
       if (response.status === 401) {
         setError("Nombre o PIN incorrectos.");
+        return;
+      }
+
+      if (response.status === 503 || payload?.error === "remote auth unavailable") {
+        setError("El acceso real no está disponible en este entorno.");
+        return;
+      }
+
+      if (response.status === 500) {
+        setError(payload?.detail ? `Error del servidor: ${payload.detail}` : "Error del servidor al iniciar sesión.");
         return;
       }
 

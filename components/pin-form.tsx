@@ -57,8 +57,20 @@ export function PinForm() {
         return;
       }
 
+      const payload = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
+
       if (response.status === 401) {
         setError("Nombre o PIN actual incorrectos.");
+        return;
+      }
+
+      if (response.status === 503 || payload?.error === "remote auth unavailable") {
+        setError("El cambio de PIN no está disponible en este entorno.");
+        return;
+      }
+
+      if (response.status === 500) {
+        setError(payload?.detail ? `Error del servidor: ${payload.detail}` : "Error del servidor al cambiar el PIN.");
         return;
       }
 
