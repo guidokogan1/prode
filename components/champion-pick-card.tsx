@@ -36,8 +36,6 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
   const router = useRouter();
   const session = useContext(SessionContext);
   const [selectedTeam, setSelectedTeam] = useState(initialPick ?? "");
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const localScope = useMemo(() => buildChampionScope(session), [session]);
 
   useEffect(() => {
@@ -89,34 +87,14 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
       return;
     }
 
-    setIsSaving(true);
-    setSaveMessage("Guardando");
-
     if (session?.kind === "remote") {
-      try {
-        const response = await fetch("/api/champion", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ teamName: selectedTeam }),
-        });
-
-        const result = (await response.json()) as { ok?: boolean; reason?: string };
-        if (!response.ok || !result.ok) {
-          setSaveMessage(result.reason ?? "No se pudo guardar.");
-          setIsSaving(false);
-          return;
-        }
-
-        setSaveMessage("Guardado");
-        setIsSaving(false);
-        router.push("/");
-        router.refresh();
-        return;
-      } catch {
-        setSaveMessage("No se pudo guardar.");
-        setIsSaving(false);
-        return;
-      }
+      router.push("/");
+      void fetch("/api/champion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamName: selectedTeam }),
+      }).then(() => router.refresh());
+      return;
     }
 
     if (localScope) {
@@ -124,13 +102,10 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
         teamName: selectedTeam,
         savedAt: new Date().toISOString(),
       });
-      setSaveMessage("Guardado local");
-      setIsSaving(false);
       router.push("/");
       return;
     }
 
-    setIsSaving(false);
     router.push("/login?next=/champion");
   }
 
@@ -254,22 +229,15 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
                 {selectedOption.flag} {selectedOption.name}
               </strong>
             </div>
-            {saveMessage ? <span className="micro-copy">{saveMessage}</span> : null}
           </div>
 
           <button
             className="button-primary"
-            disabled={isSaving || isAuthLoading}
+            disabled={isAuthLoading}
             onClick={() => void handleSave()}
             type="button"
           >
-            {isSaving
-              ? "Guardando..."
-              : isAuthLoading
-                ? "Cargando..."
-                : isUnauthenticated
-                  ? "Iniciar sesión para guardar"
-                  : "Guardar campeón"}
+            {isAuthLoading ? "Cargando..." : isUnauthenticated ? "Iniciar sesión para guardar" : "Guardar campeón"}
           </button>
         </section>
       ) : null}
