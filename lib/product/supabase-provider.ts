@@ -12,7 +12,6 @@ import type {
   SessionState,
 } from "@/lib/domain";
 import { formatNetAmount, MATCH_CREDIT, validateAllocations } from "@/lib/game";
-import { getFallbackHistory, getFallbackRanking } from "@/lib/mock-data";
 import { logPickEvent } from "@/lib/pick-events";
 import { getServerSessionState } from "@/lib/product/session-state";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -181,7 +180,7 @@ export class SupabaseProductProvider implements ProductProvider {
       >();
 
     if (query.error || !query.data?.length) {
-      return getFallbackRanking();
+      return [];
     }
 
     return query.data.map((item) => ({
@@ -252,7 +251,7 @@ export class SupabaseProductProvider implements ProductProvider {
       .limit(10);
 
     if (query.error || !query.data?.length) {
-      return getFallbackHistory(session.demoPersonaSlug);
+      return [];
     }
 
     return query.data.map((row, index) => {

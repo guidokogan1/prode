@@ -11,6 +11,12 @@ export default async function HistoryPage() {
         <h1 className="display-title">Últimas jugadas</h1>
       </section>
 
+      {!history.length ? (
+        <section className="surface-card-soft soft-panel section-stack" style={{ textAlign: "center", padding: 32 }}>
+          <p className="muted-copy">Todavía no tenés jugadas liquidadas. Acá van a aparecer cuando se cierren los partidos que jugaste.</p>
+        </section>
+      ) : null}
+
       <div style={{ display: "grid", gap: 10 }}>
         {history.map((item) => (
           <article

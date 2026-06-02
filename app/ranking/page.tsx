@@ -8,6 +8,20 @@ export default async function RankingPage() {
   const currentUser = ranking.find((item) => item.isCurrentUser) ?? null;
   const leader = ranking[0] ?? null;
 
+  if (!ranking.length) {
+    return (
+      <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
+        <section className="title-stack" style={{ paddingTop: 8 }}>
+          <p className="eyebrow">Tabla</p>
+          <h1 className="display-title">Ranking</h1>
+        </section>
+        <section className="surface-card-soft soft-panel section-stack" style={{ textAlign: "center", padding: 32 }}>
+          <p className="muted-copy">Todavía no hay resultados. La tabla se arma cuando empiecen a liquidarse los partidos.</p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
       <section className="title-stack" style={{ paddingTop: 8 }}>
