@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { loginSession } from "@/lib/server-auth";
+import { registerSession } from "@/lib/server-auth";
 import { hasSupabaseServerEnv } from "@/lib/supabase/env";
 
 export async function POST(request: NextRequest) {
@@ -8,9 +8,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "remote auth unavailable" }, { status: 503 });
   }
 
-  const body = (await request.json()) as { displayName?: string; pin?: string };
+  const body = (await request.json()) as { displayName?: string; pin?: string; confirmPin?: string };
   const displayName = body.displayName?.trim() ?? "";
   const pin = body.pin?.trim() ?? "";
+  const confirmPin = body.confirmPin?.trim() ?? "";
 
   if (displayName.length < 2) {
     return NextResponse.json({ error: "invalid display name" }, { status: 400 });
@@ -20,10 +21,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid pin" }, { status: 400 });
   }
 
-  const result = await loginSession(displayName, pin);
+  if (pin !== confirmPin) {
+    return NextResponse.json({ error: "pin mismatch" }, { status: 400 });
+  }
+
+  const result = await registerSession(displayName, pin);
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.reason }, { status: result.reason === "unavailable" ? 503 : 401 });
+    const status = result.reason === "name_taken" ? 409 : 503;
+    return NextResponse.json({ error: result.reason }, { status });
   }
 
   const cookieStore = await cookies();

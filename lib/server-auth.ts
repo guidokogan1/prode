@@ -10,7 +10,7 @@ type CredentialRow = {
   pin_hash: string;
 };
 
-export async function createOrVerifySession(displayName: string, pin: string) {
+async function findUserByDisplayName(displayName: string) {
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return null;
@@ -26,44 +26,13 @@ export async function createOrVerifySession(displayName: string, pin: string) {
     throw existingUserQuery.error;
   }
 
-  let user = existingUserQuery.data;
+  return existingUserQuery.data;
+}
 
-  if (!user) {
-    const createdUserQuery = await supabase
-      .from("users")
-      .insert({ display_name: displayName })
-      .select("id, display_name")
-      .single<UserRow>();
-
-    if (createdUserQuery.error) {
-      throw createdUserQuery.error;
-    }
-
-    user = createdUserQuery.data;
-
-    const credentialInsert = await supabase.schema("app_private").from("user_credentials").insert({
-      user_id: user.id,
-      pin_hash: hashPin(pin),
-    });
-
-    if (credentialInsert.error) {
-      throw credentialInsert.error;
-    }
-  } else {
-    const credentialQuery = await supabase
-      .schema("app_private")
-      .from("user_credentials")
-      .select("pin_hash")
-      .eq("user_id", user.id)
-      .single<CredentialRow>();
-
-    if (credentialQuery.error) {
-      throw credentialQuery.error;
-    }
-
-    if (!verifyPin(pin, credentialQuery.data.pin_hash)) {
-      return null;
-    }
+async function createSessionForUser(user: UserRow) {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    return null;
   }
 
   const sessionToken = createSessionToken();
@@ -84,6 +53,126 @@ export async function createOrVerifySession(displayName: string, pin: string) {
     displayName: user.display_name,
     sessionToken,
   };
+}
+
+export async function registerSession(displayName: string, pin: string) {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    return { ok: false as const, reason: "unavailable" as const };
+  }
+
+  const existingUser = await findUserByDisplayName(displayName);
+  if (existingUser) {
+    return { ok: false as const, reason: "name_taken" as const };
+  }
+
+  const createdUserQuery = await supabase
+    .from("users")
+    .insert({ display_name: displayName })
+    .select("id, display_name")
+    .single<UserRow>();
+
+  if (createdUserQuery.error) {
+    throw createdUserQuery.error;
+  }
+
+  const user = createdUserQuery.data;
+
+  const credentialInsert = await supabase.schema("app_private").from("user_credentials").insert({
+    user_id: user.id,
+    pin_hash: hashPin(pin),
+  });
+
+  if (credentialInsert.error) {
+    throw credentialInsert.error;
+  }
+
+  const session = await createSessionForUser(user);
+  if (!session) {
+    return { ok: false as const, reason: "unavailable" as const };
+  }
+
+  return {
+    ok: true as const,
+    ...session,
+  };
+}
+
+export async function loginSession(displayName: string, pin: string) {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    return { ok: false as const, reason: "unavailable" as const };
+  }
+
+  const user = await findUserByDisplayName(displayName);
+
+  if (!user) {
+    return { ok: false as const, reason: "invalid_credentials" as const };
+  }
+
+  const credentialQuery = await supabase
+    .schema("app_private")
+    .from("user_credentials")
+    .select("pin_hash")
+    .eq("user_id", user.id)
+    .single<CredentialRow>();
+
+  if (credentialQuery.error) {
+    throw credentialQuery.error;
+  }
+
+  if (!verifyPin(pin, credentialQuery.data.pin_hash)) {
+    return { ok: false as const, reason: "invalid_credentials" as const };
+  }
+
+  const session = await createSessionForUser(user);
+  if (!session) {
+    return { ok: false as const, reason: "unavailable" as const };
+  }
+
+  return {
+    ok: true as const,
+    ...session,
+  };
+}
+
+export async function changeUserPin(displayName: string, currentPin: string, nextPin: string) {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) {
+    return { ok: false as const, reason: "unavailable" as const };
+  }
+
+  const user = await findUserByDisplayName(displayName);
+  if (!user) {
+    return { ok: false as const, reason: "invalid_credentials" as const };
+  }
+
+  const credentialQuery = await supabase
+    .schema("app_private")
+    .from("user_credentials")
+    .select("pin_hash")
+    .eq("user_id", user.id)
+    .single<CredentialRow>();
+
+  if (credentialQuery.error) {
+    throw credentialQuery.error;
+  }
+
+  if (!verifyPin(currentPin, credentialQuery.data.pin_hash)) {
+    return { ok: false as const, reason: "invalid_credentials" as const };
+  }
+
+  const update = await supabase
+    .schema("app_private")
+    .from("user_credentials")
+    .update({ pin_hash: hashPin(nextPin) })
+    .eq("user_id", user.id);
+
+  if (update.error) {
+    throw update.error;
+  }
+
+  return { ok: true as const };
 }
 
 export async function getSessionUser(sessionToken: string) {

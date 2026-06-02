@@ -115,6 +115,9 @@ export function SessionPanel() {
         <Link className="button-primary" href="/login">
           {session?.kind === "anonymous" || session?.kind === "demo" ? "Iniciar sesión" : "Cambiar acceso"}
         </Link>
+        <Link className="button-secondary" href="/pin">
+          Cambiar PIN
+        </Link>
         {session && session.kind !== "anonymous" ? (
           <button className="button-secondary" onClick={() => void handleLogout()}>
             Salir

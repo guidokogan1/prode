@@ -14,6 +14,10 @@ const navItems = [
 export function BottomNav() {
   const pathname = usePathname();
 
+  if (pathname === "/login" || pathname === "/register" || pathname === "/pin") {
+    return null;
+  }
+
   return (
     <nav className="bottom-nav" aria-label="Navegacion principal">
       {navItems.map((item) => {

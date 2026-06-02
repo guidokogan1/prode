@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function LoginForm() {
+export function RegisterForm() {
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
   const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,11 +26,16 @@ export function LoginForm() {
       return;
     }
 
+    if (pin !== confirmPin) {
+      setError("Los dos PIN tienen que coincidir.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/session/login", {
+      const response = await fetch("/api/session/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,6 +43,7 @@ export function LoginForm() {
         body: JSON.stringify({
           displayName: trimmedName,
           pin,
+          confirmPin,
         }),
       });
 
@@ -46,14 +53,14 @@ export function LoginForm() {
         return;
       }
 
-      if (response.status === 401) {
-        setError("Nombre o PIN incorrectos.");
+      if (response.status === 409) {
+        setError("Ese nombre ya existe. Probá otro o iniciá sesión.");
         return;
       }
 
-      setError("No pudimos validar tu cuenta ahora. Probá de nuevo.");
+      setError("No pudimos crear la cuenta ahora. Probá de nuevo.");
     } catch {
-      setError("No pudimos validar tu cuenta ahora. Probá de nuevo.");
+      setError("No pudimos crear la cuenta ahora. Probá de nuevo.");
     } finally {
       setIsSubmitting(false);
     }
@@ -62,9 +69,9 @@ export function LoginForm() {
   return (
     <form className="surface-card" style={{ padding: 20, display: "grid", gap: 18 }} onSubmit={handleSubmit}>
       <div className="field">
-        <label htmlFor="displayName">Nombre</label>
+        <label htmlFor="registerName">Nombre</label>
         <input
-          id="displayName"
+          id="registerName"
           className="text-input"
           placeholder="Guido"
           value={displayName}
@@ -76,9 +83,9 @@ export function LoginForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="pin">PIN</label>
+        <label htmlFor="registerPin">PIN</label>
         <input
-          id="pin"
+          id="registerPin"
           className="text-input"
           type="password"
           inputMode="numeric"
@@ -91,20 +98,31 @@ export function LoginForm() {
         />
       </div>
 
+      <div className="field">
+        <label htmlFor="registerPinConfirm">Confirmar PIN</label>
+        <input
+          id="registerPinConfirm"
+          className="text-input"
+          type="password"
+          inputMode="numeric"
+          placeholder="1234"
+          value={confirmPin}
+          onChange={(event) => {
+            setConfirmPin(event.target.value.replace(/\D/g, "").slice(0, 4));
+            setError(null);
+          }}
+        />
+      </div>
+
       {error ? <p className="error-copy">{error}</p> : null}
 
       <button className="button-primary" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
+        {isSubmitting ? "Creando..." : "Crear cuenta"}
       </button>
 
-      <div style={{ display: "grid", gap: 10 }}>
-        <Link className="button-secondary" href="/register">
-          Crear cuenta
-        </Link>
-        <Link className="button-ghost" href="/pin" style={{ justifyContent: "center", minHeight: 40 }}>
-          Cambiar PIN
-        </Link>
-      </div>
+      <Link className="button-secondary" href="/login">
+        Ya tengo cuenta
+      </Link>
     </form>
   );
 }
