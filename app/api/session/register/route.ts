@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const message = getRouteErrorDetail(error);
+    console.error("[auth/register]", message);
     return NextResponse.json({ error: "register_failed", detail: message }, { status: 500 });
   }
 }

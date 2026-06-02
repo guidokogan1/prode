@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getAuthErrorMessage } from "@/lib/auth-feedback";
 
 export function LoginForm() {
   const router = useRouter();
@@ -48,22 +49,7 @@ export function LoginForm() {
 
       const payload = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
 
-      if (response.status === 401) {
-        setError("Nombre o PIN incorrectos.");
-        return;
-      }
-
-      if (response.status === 503 || payload?.error === "remote auth unavailable") {
-        setError("El acceso real no está disponible en este entorno.");
-        return;
-      }
-
-      if (response.status === 500) {
-        setError(payload?.detail ? `Error del servidor: ${payload.detail}` : "Error del servidor al iniciar sesión.");
-        return;
-      }
-
-      setError("No pudimos validar tu cuenta ahora. Probá de nuevo.");
+      setError(getAuthErrorMessage("login", response.status, payload));
     } catch {
       setError("No pudimos validar tu cuenta ahora. Probá de nuevo.");
     } finally {

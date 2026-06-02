@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getAuthErrorMessage } from "@/lib/auth-feedback";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -55,22 +56,7 @@ export function RegisterForm() {
 
       const payload = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
 
-      if (response.status === 409) {
-        setError("Ese nombre ya existe. Probá otro o iniciá sesión.");
-        return;
-      }
-
-      if (response.status === 503 || payload?.error === "remote auth unavailable") {
-        setError("El registro real no está disponible en este entorno.");
-        return;
-      }
-
-      if (response.status === 500) {
-        setError(payload?.detail ? `Error del servidor: ${payload.detail}` : "Error del servidor al crear la cuenta.");
-        return;
-      }
-
-      setError("No pudimos crear la cuenta ahora. Probá de nuevo.");
+      setError(getAuthErrorMessage("register", response.status, payload));
     } catch {
       setError("No pudimos crear la cuenta ahora. Probá de nuevo.");
     } finally {

@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = getRouteErrorDetail(error);
+    console.error("[auth/pin]", message);
     return NextResponse.json({ error: "pin_change_failed", detail: message }, { status: 500 });
   }
 }

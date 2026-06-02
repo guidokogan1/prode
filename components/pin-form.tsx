@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getAuthErrorMessage } from "@/lib/auth-feedback";
 
 export function PinForm() {
   const router = useRouter();
@@ -59,22 +60,7 @@ export function PinForm() {
 
       const payload = (await response.json().catch(() => null)) as { error?: string; detail?: string } | null;
 
-      if (response.status === 401) {
-        setError("Nombre o PIN actual incorrectos.");
-        return;
-      }
-
-      if (response.status === 503 || payload?.error === "remote auth unavailable") {
-        setError("El cambio de PIN no está disponible en este entorno.");
-        return;
-      }
-
-      if (response.status === 500) {
-        setError(payload?.detail ? `Error del servidor: ${payload.detail}` : "Error del servidor al cambiar el PIN.");
-        return;
-      }
-
-      setError("No pudimos cambiar el PIN ahora. Probá de nuevo.");
+      setError(getAuthErrorMessage("pin", response.status, payload));
     } catch {
       setError("No pudimos cambiar el PIN ahora. Probá de nuevo.");
     } finally {

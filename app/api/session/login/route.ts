@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const message = getRouteErrorDetail(error);
+    console.error("[auth/login]", message);
     return NextResponse.json({ error: "login_failed", detail: message }, { status: 500 });
   }
 }
