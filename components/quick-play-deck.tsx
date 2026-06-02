@@ -60,10 +60,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const cardOpacity = useMotionValue(1);
-  const rotate = useTransform(x, [-200, 200], [-18, 18]);
-  const homeOpacity = useTransform(x, [-100, -20], [1, 0]);
-  const awayOpacity = useTransform(x, [20, 100], [0, 1]);
-  const drawOpacity = useTransform(y, [-100, -20], [1, 0]);
+  const rotate = useTransform(x, [-220, 220], [-12, 12]);
+  const homeOpacity = useTransform(x, [-140, -36], [1, 0]);
+  const awayOpacity = useTransform(x, [36, 140], [0, 1]);
+  const drawOpacity = useTransform(y, [-136, -36], [1, 0]);
 
   useEffect(() => {
     return () => {
@@ -342,7 +342,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={idleExit}
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                    whileDrag={{ scale: 1.012 }}
+                    whileDrag={{ scale: 1.008 }}
                   >
                     <motion.div
                       style={{

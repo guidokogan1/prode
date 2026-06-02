@@ -105,16 +105,18 @@ export function getQuickPlayOutcomeTargets(match: MatchViewModel) {
 
 export function getQuickPlaySwipeOutcome(match: MatchViewModel, offsetX: number, offsetY: number) {
   const { left, right, draw } = getQuickPlayOutcomeTargets(match);
+  const horizontalThreshold = 84;
+  const verticalThreshold = 76;
 
-  if (offsetX <= -68) {
+  if (offsetX <= -horizontalThreshold) {
     return left;
   }
 
-  if (offsetX >= 68) {
+  if (offsetX >= horizontalThreshold) {
     return right;
   }
 
-  if (offsetY <= -68 && draw) {
+  if (offsetY <= -verticalThreshold && draw) {
     return draw;
   }
 
