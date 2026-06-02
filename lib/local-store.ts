@@ -2,8 +2,10 @@ import type { DraftSyncState, SessionKind } from "@/lib/domain";
 
 const SESSION_KEY = "mundial-pool.session";
 const ALLOCATION_PREFIX = "mundial-pool.allocation.";
+const CHAMPION_PREFIX = "mundial-pool.champion.";
 export const SESSION_EVENT = "mundial-pool:session-changed";
 export const ALLOCATION_EVENT = "mundial-pool:allocation-changed";
+export const CHAMPION_EVENT = "mundial-pool:champion-changed";
 
 export type StoredSession = {
   displayName: string;
@@ -20,6 +22,11 @@ export type StoredAllocationDraft = {
   status: DraftSyncState;
   savedAt: string;
   allocations: StoredAllocation[];
+};
+
+export type StoredChampionPick = {
+  teamName: string;
+  savedAt: string;
 };
 
 function canUseStorage() {
@@ -85,4 +92,30 @@ export function saveStoredAllocation(matchId: string, draft: StoredAllocationDra
 
   window.localStorage.setItem(`${ALLOCATION_PREFIX}${matchId}`, JSON.stringify(draft));
   window.dispatchEvent(new CustomEvent(ALLOCATION_EVENT, { detail: { matchId, draft } }));
+}
+
+export function getStoredChampionPick(scopeKey: string): StoredChampionPick | null {
+  if (!canUseStorage()) {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(`${CHAMPION_PREFIX}${scopeKey}`);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as StoredChampionPick;
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredChampionPick(scopeKey: string, pick: StoredChampionPick) {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.setItem(`${CHAMPION_PREFIX}${scopeKey}`, JSON.stringify(pick));
+  window.dispatchEvent(new CustomEvent(CHAMPION_EVENT, { detail: { scopeKey, pick } }));
 }
