@@ -74,8 +74,7 @@ export default async function HomePage() {
       </section>
 
       <div style={{ display: "grid", gap: 12, minHeight: 0 }}>
-        {needsChampionPick ? <ChampionHomeCard /> : null}
-        <QuickPlayDeck matches={featuredMatches} />
+        {needsChampionPick ? <ChampionHomeCard /> : <QuickPlayDeck matches={featuredMatches} />}
       </div>
     </main>
   );

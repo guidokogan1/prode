@@ -42,7 +42,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [activePersona, personas] = await Promise.all([getActiveDemoPersonaSlug(), Promise.resolve(getDemoPersonas())]);
+  const showDemoBar = process.env.NEXT_PUBLIC_ENABLE_DEMO === "1";
+  const [activePersona, personas] = showDemoBar
+    ? await Promise.all([getActiveDemoPersonaSlug(), Promise.resolve(getDemoPersonas())])
+    : [null, []];
 
   return (
     <html lang="es">
@@ -52,7 +55,7 @@ export default async function RootLayout({
             {children}
             <BottomNav />
           </div>
-          <DemoFloatingBar activePersona={activePersona} personas={personas} />
+          {showDemoBar ? <DemoFloatingBar activePersona={activePersona} personas={personas} /> : null}
         </SessionProvider>
       </body>
     </html>

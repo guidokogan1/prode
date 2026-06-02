@@ -30,7 +30,7 @@
         { "code": "BRA", "name": "Brasil", "flag": "🇧🇷" },
         { "code": "MAR", "name": "Marruecos", "flag": "🇲🇦" },
         { "code": "HTI", "name": "Haiti", "flag": "🇭🇹" },
-        { "code": "SCO", "name": "Escocia", "flag": "🏴" }
+        { "code": "SCO", "name": "Escocia", "flag": "🏴󠁧󠁢󠁳󠁣󠁴󠁿" }
       ]
     },
     {
@@ -126,7 +126,7 @@
       "venues": ["Dallas", "Toronto", "Philadelphia"],
       "matchDays": ["2026-06-16", "2026-06-23", "2026-06-29"],
       "teams": [
-        { "code": "ENG", "name": "Inglaterra", "flag": "🏴" },
+        { "code": "ENG", "name": "Inglaterra", "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
         { "code": "CRO", "name": "Croacia", "flag": "🇭🇷" },
         { "code": "GHA", "name": "Ghana", "flag": "🇬🇭" },
         { "code": "PAN", "name": "Panama", "flag": "🇵🇦" }
