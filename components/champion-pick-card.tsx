@@ -196,21 +196,24 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
                   style={{
                     minHeight: 72,
                     borderRadius: 16,
-                    border: selected ? "1px solid rgba(212,166,75,0.25)" : "1px solid rgba(255,255,255,0.08)",
-                    background: selected ? "rgba(212,166,75,0.08)" : "rgba(255,255,255,0.03)",
+                    border: selected ? "1px solid rgba(212,166,75,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                    background: selected ? "linear-gradient(160deg, rgba(212,166,75,0.16) 0%, rgba(212,166,75,0.08) 100%)" : "rgba(255,255,255,0.03)",
                     justifyContent: "space-between",
                     paddingInline: 14,
                     gap: 10,
+                    boxShadow: selected ? "0 0 0 1px rgba(212,166,75,0.08), 0 14px 28px rgba(0,0,0,0.22)" : "none",
+                    transform: selected ? "translateY(-1px)" : "none",
+                    transition: "background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
                   }}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: "1.3rem" }}>{team.flag}</span>
-                    <span>{team.name}</span>
+                    <span style={{ color: selected ? "#F4E3B2" : "#EDE8D9", fontWeight: selected ? 700 : 600 }}>{team.name}</span>
                   </span>
                   <span
                     className="micro-copy"
                     style={{
-                      color: selected ? "#D8B56A" : "#667D69",
+                      color: selected ? "#F0C96B" : "#667D69",
                       fontWeight: 700,
                     }}
                   >
