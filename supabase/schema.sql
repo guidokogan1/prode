@@ -146,6 +146,12 @@ create table if not exists leaderboard_snapshots (
   best_single_net_amount numeric(12,2)
 );
 
+grant usage on schema app_private to service_role;
+grant all privileges on all tables in schema app_private to service_role;
+grant all privileges on all sequences in schema app_private to service_role;
+alter default privileges in schema app_private grant all privileges on tables to service_role;
+alter default privileges in schema app_private grant all privileges on sequences to service_role;
+
 alter table users enable row level security;
 alter table teams enable row level security;
 alter table tournament_stages enable row level security;
