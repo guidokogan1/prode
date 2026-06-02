@@ -55,20 +55,20 @@ const demoPersonas: DemoPersona[] = [
 ];
 
 const ranking: RankingEntry[] = [
-  { position: 1, name: "Guido", netAmount: 12222, positiveTickets: 19, bestHitAmount: 18000 },
-  { position: 2, name: "Mari", netAmount: 5523, positiveTickets: 17, bestHitAmount: 9800 },
-  { position: 3, name: "Bato", netAmount: -2017, positiveTickets: 15, bestHitAmount: 6154 },
-  { position: 4, name: "Pepo", netAmount: -3151, positiveTickets: 14, bestHitAmount: 7020 },
-  { position: 5, name: "Juli", netAmount: -5280, positiveTickets: 12, bestHitAmount: 11300 },
-  { position: 6, name: "Cami", netAmount: -7299, positiveTickets: 10, bestHitAmount: 5440 },
+  { position: 1, name: "Mari", netAmount: 5523, positiveTickets: 17, bestHitAmount: 9800 },
+  { position: 2, name: "Bato", netAmount: -2017, positiveTickets: 15, bestHitAmount: 6154 },
+  { position: 3, name: "Pepo", netAmount: -3151, positiveTickets: 14, bestHitAmount: 7020 },
+  { position: 4, name: "Juli", netAmount: -5280, positiveTickets: 12, bestHitAmount: 11300 },
+  { position: 5, name: "Cami", netAmount: -7299, positiveTickets: 10, bestHitAmount: 5440 },
+  { position: 6, name: "Guido", netAmount: 0, positiveTickets: 0, bestHitAmount: 0 },
 ];
 
 const personaProfiles: Record<DemoPersonaSlug, ProfileViewModel> = {
   guido: {
     name: "Guido",
-    netAmount: 12222,
-    positiveTickets: 19,
-    bestHitAmount: 18000,
+    netAmount: 0,
+    positiveTickets: 0,
+    bestHitAmount: 0,
     championPick: null,
   },
   mari: {
@@ -102,43 +102,7 @@ const personaProfiles: Record<DemoPersonaSlug, ProfileViewModel> = {
 };
 
 const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
-  guido: [
-    {
-      id: "h1",
-      title: "Argentina vs Japon",
-      stage: "Fase de grupos",
-      description: "Fuiste fuerte con Argentina y terminaste arriba del pozo del partido.",
-      netAmount: 6154,
-      allocations: [
-        { label: "Argentina", amount: 7000 },
-        { label: "Empate", amount: 2000 },
-        { label: "Japon", amount: 1000 },
-      ],
-    },
-    {
-      id: "h2",
-      title: "Brasil vs Mexico",
-      stage: "Fase de grupos",
-      description: "Te cubriste con el empate y saliste apenas arriba de la base.",
-      netAmount: 714,
-      allocations: [
-        { label: "Brasil", amount: 3000 },
-        { label: "Empate", amount: 5000 },
-        { label: "Mexico", amount: 2000 },
-      ],
-    },
-    {
-      id: "h3",
-      title: "Jordania vs Alemania",
-      stage: "Octavos de final",
-      description: "Leiste el batacazo, casi nadie fue para ese lado y te disparaste en la tabla.",
-      netAmount: 11000,
-      allocations: [
-        { label: "Clasifica Jordania", amount: 7000 },
-        { label: "Clasifica Alemania", amount: 3000 },
-      ],
-    },
-  ],
+  guido: [],
   mari: [
     {
       id: "m1",
@@ -589,39 +553,39 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
   const profiles = {
     guido: {
       argJpn: [
-        { label: "Argentina", amount: "7.000", percentage: 70 },
-        { label: "Empate", amount: "2.000", percentage: 20 },
-        { label: "Japon", amount: "1.000", percentage: 10 },
+        { label: "Argentina", amount: "0", percentage: 0 },
+        { label: "Empate", amount: "0", percentage: 0 },
+        { label: "Japon", amount: "0", percentage: 0 },
       ],
       braMex: [
-        { label: "Brasil", amount: "3.000", percentage: 30 },
-        { label: "Empate", amount: "5.000", percentage: 50 },
-        { label: "Mexico", amount: "2.000", percentage: 20 },
+        { label: "Brasil", amount: "0", percentage: 0 },
+        { label: "Empate", amount: "0", percentage: 0 },
+        { label: "Mexico", amount: "0", percentage: 0 },
       ],
       jorGer: [
-        { label: "Clasifica Jordania", amount: "7.000", percentage: 70 },
-        { label: "Clasifica Alemania", amount: "3.000", percentage: 30 },
+        { label: "Clasifica Jordania", amount: "0", percentage: 0 },
+        { label: "Clasifica Alemania", amount: "0", percentage: 0 },
       ],
       espUru: [
-        { label: "Clasifica Espana", amount: "5.500", percentage: 55 },
-        { label: "Clasifica Uruguay", amount: "4.500", percentage: 45 },
+        { label: "Clasifica Espana", amount: "0", percentage: 0 },
+        { label: "Clasifica Uruguay", amount: "0", percentage: 0 },
       ],
       marSen: [
-        { label: "Marruecos", amount: "4.000", percentage: 40 },
-        { label: "Empate", amount: "3.000", percentage: 30 },
-        { label: "Senegal", amount: "3.000", percentage: 30 },
+        { label: "Marruecos", amount: "0", percentage: 0 },
+        { label: "Empate", amount: "0", percentage: 0 },
+        { label: "Senegal", amount: "0", percentage: 0 },
       ],
       usaNed: [
-        { label: "Clasifica Estados Unidos", amount: "3.000", percentage: 30 },
-        { label: "Clasifica Paises Bajos", amount: "7.000", percentage: 70 },
+        { label: "Clasifica Estados Unidos", amount: "0", percentage: 0 },
+        { label: "Clasifica Paises Bajos", amount: "0", percentage: 0 },
       ],
       states: {
-        argJpn: "Tu jugada guardada",
-        braMex: "Reveal activo",
-        jorGer: "Ganaste +11.000",
+        argJpn: "Te falta jugar",
+        braMex: "Sin jugar",
+        jorGer: "Sin jugar",
         espUru: "Te falta jugar",
-        marSen: "Tu jugada guardada",
-        usaNed: "Perdiste -3.800",
+        marSen: "Te falta jugar",
+        usaNed: "Sin jugar",
       },
     },
     mari: {
@@ -821,14 +785,6 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
       form: { home: "V V E V V", away: "V D V E V", homeGoals: "9", awayGoals: "8" },
       revealedTickets: [
         {
-          userName: "Guido",
-          allocations: [
-            { label: "Brasil", amount: "3.000" },
-            { label: "Empate", amount: "5.000" },
-            { label: "Mexico", amount: "2.000" },
-          ],
-        },
-        {
           userName: "Mari",
           allocations: [
             { label: "Brasil", amount: "2.000" },
@@ -874,14 +830,6 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
       ],
       form: { home: "V E V D V", away: "V V V E V", homeGoals: "8", awayGoals: "12" },
       revealedTickets: [
-        {
-          userName: "Guido",
-          allocations: [
-            { label: "Clasifica Jordania", amount: "7.000" },
-            { label: "Clasifica Alemania", amount: "3.000" },
-          ],
-          netAmount: 11000,
-        },
         {
           userName: "Mari",
           allocations: [
@@ -964,14 +912,6 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
       ],
       form: { home: "V E V V D", away: "V V E V V", homeGoals: "9", awayGoals: "11" },
       revealedTickets: [
-        {
-          userName: "Guido",
-          allocations: [
-            { label: "Clasifica Estados Unidos", amount: "3.000" },
-            { label: "Clasifica Paises Bajos", amount: "7.000" },
-          ],
-          netAmount: -3800,
-        },
         {
           userName: "Mari",
           allocations: [
