@@ -206,12 +206,16 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
         </section>
       ))}
 
+      {!locked && selectedOption ? <div aria-hidden="true" style={{ height: 140 }} /> : null}
+
       {!locked && selectedOption ? (
         <section
           className="surface-card-soft"
           style={{
-            position: "sticky",
-            bottom: "calc(var(--safe-bottom) + 12px)",
+            position: "fixed",
+            left: 16,
+            right: 16,
+            bottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px)",
             padding: 18,
             display: "grid",
             gap: 12,
@@ -219,7 +223,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
             border: "1px solid rgba(255,255,255,0.08)",
             boxShadow: "0 18px 40px rgba(0,0,0,0.34)",
             backdropFilter: "blur(12px)",
-            zIndex: 6,
+            zIndex: 50,
           }}
         >
           <div className="split-row" style={{ alignItems: "center" }}>
