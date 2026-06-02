@@ -106,13 +106,20 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
 
     isChoosingRef.current = true;
     setExitDir(code);
-    const targetX = code === "home" || code === "home_qualifies" ? -168 : code === "away" || code === "away_qualifies" ? 168 : 0;
-    const targetY = code === "draw" ? -148 : 0;
+    const currentX = x.get();
+    const currentY = y.get();
+    const targetX =
+      code === "home" || code === "home_qualifies"
+        ? -Math.max(320, Math.abs(currentX) + 180)
+        : code === "away" || code === "away_qualifies"
+          ? Math.max(320, Math.abs(currentX) + 180)
+          : 0;
+    const targetY = code === "draw" ? -Math.max(260, Math.abs(currentY) + 160) : currentY * 0.2;
 
     await Promise.all([
-      animate(x, targetX, { type: "spring", stiffness: 235, damping: 24 }).finished,
-      animate(y, targetY, { type: "spring", stiffness: 235, damping: 24 }).finished,
-      animate(cardOpacity, 0.16, { duration: 0.18, ease: "easeOut" }).finished,
+      animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
+      animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
+      animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
     ]);
 
     setChosenOutcome(code);
