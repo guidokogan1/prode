@@ -56,7 +56,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
   const [isSaving, setIsSaving] = useState(false);
-  const [exitDir, setExitDir] = useState<MatchOutcomeCode>("home");
   const isChoosingRef = useRef(false);
   const saveResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -148,7 +147,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     }
 
     isChoosingRef.current = true;
-    setExitDir(code);
     setIsEditingSaved(true);
     const currentX = x.get();
     const currentY = y.get();
@@ -254,13 +252,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const compactHeroMinHeight = 176;
   const chosenColor = chosenOutcome ? getOutcomeColor(chosenOutcome) : null;
 
-  const idleExit =
-    exitDir === "home" || exitDir === "home_qualifies"
-      ? { x: -380, opacity: 0, rotate: -14, transition: { duration: 0.28 } }
-      : exitDir === "away" || exitDir === "away_qualifies"
-        ? { x: 380, opacity: 0, rotate: 14, transition: { duration: 0.28 } }
-        : { y: -380, opacity: 0, transition: { duration: 0.24 } };
-
   const heroToneColor =
     cardState.heroTone === "positive"
       ? "#7EDC96"
@@ -349,7 +340,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   }}
                   initial={{ opacity: 0, y: 24, scale: 0.96 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={idleExit}
                   transition={{ type: "spring", stiffness: 250, damping: 24 }}
                   whileDrag={isInteractiveEditor ? { scale: 1.008 } : undefined}
                 >

@@ -52,7 +52,6 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const [chosenIntensity, setChosenIntensity] = useState<IntensityOption | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
-  const [exitDir, setExitDir] = useState<MatchOutcomeCode>("home");
   const [isSaving, setIsSaving] = useState(false);
   const nextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isChoosingRef = useRef(false);
@@ -105,7 +104,6 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
     }
 
     isChoosingRef.current = true;
-    setExitDir(code);
     const currentX = x.get();
     const currentY = y.get();
     const targetX =
@@ -201,13 +199,6 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       moveNext();
     }, 760);
   }
-
-  const idleExit =
-    exitDir === "home" || exitDir === "home_qualifies"
-      ? { x: -380, opacity: 0, rotate: -14, transition: { duration: 0.28 } }
-      : exitDir === "away" || exitDir === "away_qualifies"
-        ? { x: 380, opacity: 0, rotate: 14, transition: { duration: 0.28 } }
-        : { y: -380, opacity: 0, transition: { duration: 0.24 } };
 
   const showDrawGesture = match?.allocation.some((item) => item.code === "draw");
 
@@ -340,7 +331,6 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                     className="surface-card"
                     initial={{ scale: 0.92, opacity: 0, y: 40 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={idleExit}
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     whileDrag={{ scale: 1.008 }}
                   >
