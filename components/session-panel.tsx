@@ -96,7 +96,7 @@ export function SessionPanel() {
       : session?.kind === "local"
         ? "Estás viendo un perfil local."
         : session?.kind === "demo"
-          ? "Estás usando un perfil demo."
+          ? "Estás usando un perfil demo. Para probar acceso real, iniciá sesión."
           : "Entrá para guardar tus jugadas.";
 
   return (
@@ -118,7 +118,7 @@ export function SessionPanel() {
         <Link className="button-secondary" href="/pin">
           Cambiar PIN
         </Link>
-        {session && session.kind !== "anonymous" ? (
+        {session && (session.kind === "remote" || session.kind === "local") ? (
           <button className="button-secondary" onClick={() => void handleLogout()}>
             Salir
           </button>
