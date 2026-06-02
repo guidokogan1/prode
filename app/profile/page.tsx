@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DemoSwitcher } from "@/components/demo-switcher";
 import { ProfileHero } from "@/components/profile-hero";
 import { SessionPanel } from "@/components/session-panel";
+import { isChampionPickLocked } from "@/lib/champion";
 import { getActiveDemoPersonaSlug } from "@/lib/demo-state";
 import { getDemoPersonas } from "@/lib/mock-data";
 import { listMatches } from "@/lib/repositories/matches";
@@ -27,7 +28,12 @@ export default async function ProfilePage() {
 
       <SessionPanel />
 
-      <ChampionPickCard initialPick={profile.championPick === "Sin elegir" ? null : profile.championPick} teams={teams} />
+      <ChampionPickCard
+        initialPick={profile.championPick === "Sin elegir" ? null : profile.championPick}
+        teams={teams}
+        locked={isChampionPickLocked()}
+        mode="summary"
+      />
 
       <DemoSwitcher activePersona={activePersona} personas={getDemoPersonas()} />
 

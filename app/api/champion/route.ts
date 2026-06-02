@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isChampionPickLocked } from "@/lib/champion";
 import { getCurrentSession } from "@/lib/server-session";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -8,6 +9,10 @@ export async function POST(request: NextRequest) {
 
   if (!teamName) {
     return NextResponse.json({ ok: false, reason: "Falta el equipo." }, { status: 400 });
+  }
+
+  if (isChampionPickLocked()) {
+    return NextResponse.json({ ok: false, reason: "El campeón ya quedó cerrado." }, { status: 400 });
   }
 
   const session = await getCurrentSession();
