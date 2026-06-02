@@ -13,6 +13,7 @@ import type {
 } from "@/lib/domain";
 import { formatNetAmount, MATCH_CREDIT, validateAllocations } from "@/lib/game";
 import { getFallbackHistory, getFallbackRanking } from "@/lib/mock-data";
+import { logPickEvent } from "@/lib/pick-events";
 import { getServerSessionState } from "@/lib/product/session-state";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getWorldCupGroupLabel, getWorldCupTeamMeta } from "@/lib/world-cup-2026";
@@ -410,6 +411,13 @@ export class SupabaseProductProvider implements ProductProvider {
         reason: "No se pudieron guardar los montos de la jugada.",
       };
     }
+
+    await logPickEvent({
+      kind: "match_pick",
+      userDisplayName: session.displayName ?? "unknown",
+      matchId: payload.matchId,
+      allocations: payload.allocations,
+    });
 
     return {
       ok: true,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isChampionPickLocked } from "@/lib/champion";
+import { logPickEvent } from "@/lib/pick-events";
 import { getCurrentSession } from "@/lib/server-session";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -59,6 +60,12 @@ export async function POST(request: NextRequest) {
   if (upsert.error) {
     return NextResponse.json({ ok: false, reason: "No se pudo guardar el campeón." }, { status: 500 });
   }
+
+  await logPickEvent({
+    kind: "champion_pick",
+    userDisplayName: session.displayName ?? "unknown",
+    teamName: teamQuery.data.name,
+  });
 
   return NextResponse.json({ ok: true, teamName: teamQuery.data.name });
 }
