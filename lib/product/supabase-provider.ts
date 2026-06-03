@@ -179,17 +179,35 @@ export class SupabaseProductProvider implements ProductProvider {
         }[]
       >();
 
-    if (query.error || !query.data?.length) {
+    if (!query.error && query.data?.length) {
+      return query.data.map((item) => ({
+        position: item.rank_position,
+        name: item.user?.display_name ?? "Jugador",
+        netAmount: item.total_net_amount,
+        positiveTickets: item.positive_tickets_count,
+        bestHitAmount: item.best_single_net_amount ?? 0,
+        isCurrentUser: session.displayName === item.user?.display_name,
+      }));
+    }
+
+    const usersQuery = await supabase
+      .from("users")
+      .select("display_name")
+      .eq("is_active", true)
+      .order("created_at", { ascending: true })
+      .returns<{ display_name: string }[]>();
+
+    if (usersQuery.error || !usersQuery.data?.length) {
       return [];
     }
 
-    return query.data.map((item) => ({
-      position: item.rank_position,
-      name: item.user?.display_name ?? "Jugador",
-      netAmount: item.total_net_amount,
-      positiveTickets: item.positive_tickets_count,
-      bestHitAmount: item.best_single_net_amount ?? 0,
-      isCurrentUser: session.displayName === item.user?.display_name,
+    return usersQuery.data.map((row, idx) => ({
+      position: idx + 1,
+      name: row.display_name,
+      netAmount: 0,
+      positiveTickets: 0,
+      bestHitAmount: 0,
+      isCurrentUser: session.displayName === row.display_name,
     }));
   }
 

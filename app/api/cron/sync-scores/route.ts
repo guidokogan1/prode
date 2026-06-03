@@ -9,6 +9,16 @@ const FD_TO_DB: Record<string, string> = {
   URY: "URU",
 };
 
+const FD_STAGE_TO_DB: Record<string, string> = {
+  GROUP_STAGE: "group",
+  LAST_32: "round_of_32",
+  LAST_16: "round_of_16",
+  QUARTER_FINALS: "quarter_final",
+  SEMI_FINALS: "semi_final",
+  THIRD_PLACE: "third_place",
+  FINAL: "final",
+};
+
 const FD_COMPETITION = "WC";
 const FD_BASE = "https://api.football-data.org/v4";
 
@@ -16,6 +26,7 @@ type FdMatch = {
   id: number;
   utcDate: string;
   status: string;
+  stage: string;
   homeTeam: { tla: string | null };
   awayTeam: { tla: string | null };
   score: {
@@ -85,6 +96,12 @@ export async function GET(request: NextRequest) {
   }
   const teamByCode = new Map(teamsQuery.data.map((t) => [t.fifa_code, t.id]));
 
+  const stagesQuery = await supabase.from("tournament_stages").select("id, code");
+  if (stagesQuery.error || !stagesQuery.data) {
+    return NextResponse.json({ ok: false, reason: "No se pudieron cargar stages." }, { status: 500 });
+  }
+  const stageIdByCode = new Map(stagesQuery.data.map((s) => [s.code, s.id]));
+
   const dbMatchesQuery = await supabase
     .from("matches")
     .select("id, kickoff_at, home_team_id, away_team_id, status, home_score_ft, away_score_ft");
@@ -101,6 +118,7 @@ export async function GET(request: NextRequest) {
   }
 
   const updates: { id: string; status: string | null; home_score_ft: number | null; away_score_ft: number | null; winner_team_id: string | null }[] = [];
+  const inserts: { fd: FdMatch; homeId: string; awayId: string; stageCode: string }[] = [];
   let skipped = 0;
   let alreadySettled = 0;
 
@@ -119,7 +137,12 @@ export async function GET(request: NextRequest) {
     }
     const candidates = dbByPair.get(`${homeId}|${awayId}`);
     if (!candidates || !candidates.length) {
-      skipped += 1;
+      const stageCode = FD_STAGE_TO_DB[fd.stage as keyof typeof FD_STAGE_TO_DB];
+      if (stageCode && stageCode !== "group") {
+        inserts.push({ fd, homeId, awayId, stageCode });
+      } else {
+        skipped += 1;
+      }
       continue;
     }
     const fdTime = new Date(fd.utcDate).getTime();
@@ -151,6 +174,47 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  let insertedMatches = 0;
+  for (const ins of inserts) {
+    const stageId = stageIdByCode.get(ins.stageCode);
+    if (!stageId) continue;
+    const homeCode = normalizeTla(ins.fd.homeTeam.tla);
+    const awayCode = normalizeTla(ins.fd.awayTeam.tla);
+    const matchId = `${ins.stageCode}-${(homeCode ?? "").toLowerCase()}-${(awayCode ?? "").toLowerCase()}-${ins.fd.id}`;
+    const matchInsert = await supabase.from("matches").insert({
+      id: matchId,
+      external_id: String(ins.fd.id),
+      stage_id: stageId,
+      home_team_id: ins.homeId,
+      away_team_id: ins.awayId,
+      kickoff_at: ins.fd.utcDate,
+      status: "scheduled",
+    });
+    if (matchInsert.error) continue;
+
+    const marketInsert = await supabase
+      .from("match_markets")
+      .insert({
+        match_id: matchId,
+        market_type: "qualifies",
+        lock_at: ins.fd.utcDate,
+        status: "open",
+      })
+      .select("id")
+      .single<{ id: string }>();
+    if (marketInsert.error || !marketInsert.data) continue;
+
+    await supabase.from("market_outcomes").upsert(
+      [
+        { match_market_id: marketInsert.data.id, code: "home_qualifies", label: "Clasifica local", sort_order: 10 },
+        { match_market_id: marketInsert.data.id, code: "away_qualifies", label: "Clasifica visitante", sort_order: 20 },
+      ],
+      { onConflict: "match_market_id,code" },
+    );
+
+    insertedMatches += 1;
+  }
+
   let actuallyUpdated = 0;
   for (const u of updates) {
     const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -170,6 +234,7 @@ export async function GET(request: NextRequest) {
     skipped,
     alreadySettled,
     actuallyUpdated,
+    insertedMatches,
     updated: updates
       .filter((u) => u.status || u.home_score_ft != null)
       .map((u) => ({ id: u.id, status: u.status, score: `${u.home_score_ft ?? "-"}:${u.away_score_ft ?? "-"}` })),
