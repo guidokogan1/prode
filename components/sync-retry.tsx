@@ -21,9 +21,7 @@ export function SyncRetry() {
     const allocationScope = buildAllocationScope(session);
     const sync = async () => {
       const errored = listSyncErrorAllocations(allocationScope);
-      const allWithPicks = listAllStoredAllocations(allocationScope);
-      const all = new Map<string, (typeof allWithPicks)[number]>();
-      for (const item of allWithPicks) all.set(item.matchId, item);
+      const all = new Map<string, (typeof errored)[number]>();
       for (const item of errored) all.set(item.matchId, item);
 
       if (!all.size) return;

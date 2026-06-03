@@ -803,7 +803,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
             }}
           >
             <button className="button-primary" onClick={() => router.push("/matches")} style={{ width: "100%" }}>
-              ¿Querés editarlo? Estás a tiempo
+              Edita tus partidos
             </button>
           </motion.div>
         ) : null}
