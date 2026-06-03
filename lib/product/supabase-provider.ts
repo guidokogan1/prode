@@ -121,7 +121,7 @@ export class SupabaseProductProvider implements ProductProvider {
 
   async listMatchesByStage(): Promise<MatchStageGroup[]> {
     const matches = await this.loadMatchViewModels();
-    const groups = new Map<string, MatchStageGroup & { sortOrder: number; kickoffAt: string }>();
+    const groups = new Map<string, MatchStageGroup & { sortOrder: number; kickoffAt: string; kickoffByMatchId: Map<string, string> }>();
 
     for (const item of matches) {
       const key = item.match.groupLabel
@@ -136,10 +136,13 @@ export class SupabaseProductProvider implements ProductProvider {
           matches: [],
           sortOrder: item.stageSortOrder,
           kickoffAt: item.kickoffAt,
+          kickoffByMatchId: new Map(),
         });
       }
 
-      groups.get(key)!.matches.push(item.match);
+      const group = groups.get(key)!;
+      group.matches.push(item.match);
+      group.kickoffByMatchId.set(item.match.id, item.kickoffAt);
     }
 
     return Array.from(groups.values())
@@ -154,7 +157,14 @@ export class SupabaseProductProvider implements ProductProvider {
 
         return left.kickoffAt.localeCompare(right.kickoffAt);
       })
-      .map(({ sortOrder: _sortOrder, kickoffAt: _kickoffAt, ...group }) => group);
+      .map(({ sortOrder: _sortOrder, kickoffAt: _kickoffAt, kickoffByMatchId, ...group }) => ({
+        ...group,
+        matches: group.matches.slice().sort((a, b) => {
+          const ka = kickoffByMatchId.get(a.id) ?? "";
+          const kb = kickoffByMatchId.get(b.id) ?? "";
+          return ka.localeCompare(kb);
+        }),
+      }));
   }
 
   async getMatchDetail(id: string): Promise<MatchViewModel | null> {
