@@ -43,8 +43,10 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
   const deck = useMemo(() => {
-    const playable = matches.filter((match) => match.isEditable);
-    return playable.length ? playable : matches;
+    const pending = matches.filter(
+      (match) => match.isEditable && match.draftState !== "saved_remote" && match.draftState !== "saved_local",
+    );
+    return pending;
   }, [matches]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<CardPhase>("idle");
