@@ -18,8 +18,23 @@ import { getServerSessionState } from "@/lib/product/session-state";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getWorldCupGroupLabel, getWorldCupTeamMeta } from "@/lib/world-cup-2026";
 
-type MarketRow = { id: string; status: string; lock_at: string | null };
-type OutcomeRow = { id: string; label: string };
+type MarketRow = {
+  id: string;
+  status: string;
+  lock_at: string | null;
+  market_type: string;
+  match:
+    | {
+        home: { name: string } | { name: string }[] | null;
+        away: { name: string } | { name: string }[] | null;
+      }
+    | {
+        home: { name: string } | { name: string }[] | null;
+        away: { name: string } | { name: string }[] | null;
+      }[]
+    | null;
+};
+type OutcomeRow = { id: string; code: string; label: string };
 type MarketQueryRow = {
   id: string;
   match_id: string;
@@ -343,7 +358,7 @@ export class SupabaseProductProvider implements ProductProvider {
 
     const marketQuery = await supabase
       .from("match_markets")
-      .select("id, status, lock_at")
+      .select("id, status, lock_at, market_type, match:matches(home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name))")
       .eq("match_id", payload.matchId)
       .maybeSingle<MarketRow>();
 
@@ -355,8 +370,9 @@ export class SupabaseProductProvider implements ProductProvider {
       };
     }
 
-    const marketId = marketQuery.data.id;
-    if (marketQuery.data.status !== "open") {
+    const market = marketQuery.data;
+    const marketId = market.id;
+    if (market.status !== "open") {
       return {
         ok: false,
         state: "sync_error",
@@ -364,9 +380,13 @@ export class SupabaseProductProvider implements ProductProvider {
       };
     }
 
+    const matchRow = firstRow(market.match);
+    const home = firstRow(matchRow?.home);
+    const away = firstRow(matchRow?.away);
+
     const outcomesQuery = await supabase
       .from("market_outcomes")
-      .select("id, label")
+      .select("id, code, label")
       .eq("match_market_id", marketId)
       .returns<OutcomeRow[]>();
 
@@ -375,6 +395,37 @@ export class SupabaseProductProvider implements ProductProvider {
         ok: false,
         state: "sync_error",
         reason: "No se pudieron cargar los outcomes del partido.",
+      };
+    }
+
+    const matchedOutcomes = payload.allocations
+      .map((allocation) => {
+        const outcome = outcomesQuery.data.find(
+          (candidate) =>
+            (allocation.code && candidate.code === allocation.code) ||
+            normalizeLabel(candidate.label) === normalizeLabel(allocation.label) ||
+            (home?.name &&
+              away?.name &&
+              normalizeLabel(getOutcomeDisplayLabel(candidate.code, home.name, away.name, market.market_type)) ===
+                normalizeLabel(allocation.label)),
+        );
+
+        if (!outcome) {
+          return null;
+        }
+
+        return {
+          marketOutcomeId: outcome.id,
+          amount: allocation.amount,
+        };
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+
+    if (matchedOutcomes.length !== payload.allocations.length) {
+      return {
+        ok: false,
+        state: "sync_error",
+        reason: "No coinciden las opciones de la jugada con las del mercado.",
       };
     }
 
@@ -400,33 +451,22 @@ export class SupabaseProductProvider implements ProductProvider {
       };
     }
 
-    const allocationRows = payload.allocations
-      .map((allocation) => {
-        const outcome = outcomesQuery.data.find(
-          (candidate) => normalizeLabel(candidate.label) === normalizeLabel(allocation.label),
-        );
-
-        if (!outcome) {
-          return null;
-        }
-
-        return {
-          ticket_id: ticketUpsert.data.id,
-          market_outcome_id: outcome.id,
-          amount: allocation.amount,
-        };
-      })
-      .filter((row): row is NonNullable<typeof row> => row !== null);
-
-    if (allocationRows.length !== payload.allocations.length) {
+    const ticketId = ticketUpsert.data?.id;
+    if (!ticketId) {
       return {
         ok: false,
         state: "sync_error",
-        reason: "No coinciden las opciones de la jugada con las del mercado.",
+        reason: "No se pudo resolver el ticket guardado.",
       };
     }
 
-    const deleteExisting = await supabase.from("ticket_allocations").delete().eq("ticket_id", ticketUpsert.data.id);
+    const allocationRows = matchedOutcomes.map((row) => ({
+      ticket_id: ticketId,
+      market_outcome_id: row.marketOutcomeId,
+      amount: row.amount,
+    }));
+
+    const deleteExisting = await supabase.from("ticket_allocations").delete().eq("ticket_id", ticketId);
     if (deleteExisting.error) {
       return {
         ok: false,

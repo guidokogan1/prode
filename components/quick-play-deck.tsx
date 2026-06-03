@@ -170,6 +170,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
       chosenOutcome,
       option.id,
     ).map((item) => ({
+      code: item.outcomeCode as MatchOutcomeCode,
       label: match.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
       amount: item.amount,
     }));

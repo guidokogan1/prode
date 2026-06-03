@@ -117,6 +117,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
       chosenOutcome,
       option.id,
     ).map((item) => ({
+      code: item.outcomeCode as MatchViewModel["allocation"][number]["code"],
       label: match.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
       amount: item.amount,
     }));

@@ -179,6 +179,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       chosenOutcome,
       option.id,
     ).map((item) => ({
+      code: item.outcomeCode as MatchViewModel["allocation"][number]["code"],
       label: effectiveMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
       amount: item.amount,
     }));

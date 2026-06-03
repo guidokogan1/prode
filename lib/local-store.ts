@@ -1,4 +1,4 @@
-import type { DraftSyncState, SessionKind, SessionState } from "@/lib/domain";
+import type { DraftSyncState, MatchOutcomeCode, SessionKind, SessionState } from "@/lib/domain";
 
 const SESSION_KEY = "mundial-pool.session";
 const ALLOCATION_PREFIX = "mundial-pool.allocation.";
@@ -14,6 +14,7 @@ export type StoredSession = {
 };
 
 export type StoredAllocation = {
+  code?: MatchOutcomeCode;
   label: string;
   amount: number;
 };
