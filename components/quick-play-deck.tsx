@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles, Zap } from "lucide-react";
@@ -786,28 +787,36 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
         ) : null}
       </AnimatePresence>
 
-      <AnimatePresence initial={false}>
-        {done ? (
-          <motion.div
-            key="done-edit-cta"
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 14 }}
-            style={{
-              position: "fixed",
-              left: "50%",
-              transform: "translateX(-50%)",
-              bottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px)",
-              width: "min(calc(100vw - 32px), calc(var(--shell-width) - 32px))",
-              zIndex: 40,
-            }}
-          >
-            <button className="button-primary" onClick={() => router.push("/matches")} style={{ width: "100%" }}>
-              Edita tus partidos
-            </button>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {done && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              style={{
+                position: "fixed",
+                left: 0,
+                right: 0,
+                bottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px)",
+                display: "flex",
+                justifyContent: "center",
+                pointerEvents: "none",
+                zIndex: 40,
+                paddingInline: 16,
+              }}
+            >
+              <button
+                className="button-primary"
+                onClick={() => router.push("/matches")}
+                style={{
+                  width: "100%",
+                  maxWidth: "calc(var(--shell-width) - 32px)",
+                  pointerEvents: "auto",
+                }}
+              >
+                Edita tus partidos
+              </button>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
