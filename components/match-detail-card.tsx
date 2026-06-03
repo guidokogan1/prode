@@ -635,6 +635,8 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
             )}
             {groupBuckets.map((bucket) => {
               const isWinning = resolvedOutcome === bucket.outcome.code;
+              const pickCount = effectiveMatch.pickCountByCode[bucket.outcome.code] ?? bucket.tickets.length;
+              const isRevealed = effectiveMatch.marketStatus === "revealed" || effectiveMatch.marketStatus === "settled";
 
               return (
                 <article key={bucket.outcome.code} style={{ display: "grid", gap: 10, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
@@ -642,9 +644,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     <strong style={{ color: isWinning ? getOutcomeColor(bucket.outcome.code) : "#EDE8D9", fontSize: "1rem" }}>
                       {getOutcomeFlag(bucket.outcome.code, effectiveMatch)} {bucket.outcome.label}
                     </strong>
-                    <span className="micro-copy">{bucket.tickets.length} picks</span>
+                    <span className="micro-copy">{pickCount} picks</span>
                   </div>
-                  {bucket.tickets.length ? (
+                  {isRevealed && bucket.tickets.length ? (
                     <div style={{ display: "grid", gap: 8 }}>
                       {bucket.tickets.map((ticket) => (
                         <div key={`${bucket.outcome.code}-${ticket.userName}`} className="split-row">
@@ -658,9 +660,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                         </div>
                       ))}
                     </div>
-                  ) : (
+                  ) : pickCount === 0 ? (
                     <span className="micro-copy">Sin jugadas</span>
-                  )}
+                  ) : null}
                 </article>
               );
             })}

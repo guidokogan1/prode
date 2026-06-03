@@ -31,6 +31,7 @@ function createMatch(overrides: Partial<MatchViewModel> = {}): MatchViewModel {
       { code: "away", label: "Japon", shortLabel: "JPN", percentage: 17 },
     ],
     form: { home: "V V V E V", away: "E D V V D", homeGoals: 11, awayGoals: 7 },
+    pickCountByCode: {},
     revealedTickets: [],
     ...overrides,
   };

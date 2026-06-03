@@ -599,6 +599,22 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
           }
         }
 
+        const pickCountByCode: Partial<Record<MatchOutcomeCode, number>> = {};
+        for (const ticket of marketTickets) {
+          const allocations = allTicketData.allocationsByTicketId.get(ticket.id) ?? [];
+          let dominantAllocation: (typeof allocations)[number] | null = null;
+          for (const allocation of allocations) {
+            if (!dominantAllocation || allocation.amount > dominantAllocation.amount) {
+              dominantAllocation = allocation;
+            }
+          }
+          if (!dominantAllocation) continue;
+          const dominantOutcome = outcomeById.get(dominantAllocation.market_outcome_id);
+          if (!dominantOutcome) continue;
+          const normalizedCode = normalizeOutcomeCode(dominantOutcome.code, market.market_type);
+          pickCountByCode[normalizedCode] = (pickCountByCode[normalizedCode] ?? 0) + 1;
+        }
+
         const totalPool = Array.from(totalByOutcomeCode.values()).reduce((sum, value) => sum + value, 0);
         const allocationByCode = new Map(
           currentAllocations
@@ -691,6 +707,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
               homeGoals: 0,
               awayGoals: 0,
             },
+            pickCountByCode,
             revealedTickets,
           },
           stageSortOrder: stage.sort_order,

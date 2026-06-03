@@ -312,7 +312,7 @@ type RawRevealedTicket = {
   netAmount?: number;
 };
 
-type RawMatchViewModel = Omit<MatchViewModel, "statusVariant" | "marketStatus" | "draftState" | "allocation" | "consensus" | "revealedTickets" | "form"> & {
+type RawMatchViewModel = Omit<MatchViewModel, "statusVariant" | "marketStatus" | "draftState" | "allocation" | "consensus" | "revealedTickets" | "pickCountByCode" | "form"> & {
   allocation: RawOutcome[];
   consensus: RawConsensus[];
   revealedTickets: RawRevealedTicket[];
@@ -348,10 +348,18 @@ function decorateMatch(match: RawMatchViewModel): MatchViewModel {
       })),
   }));
 
+  const pickCountByCode: Partial<Record<MatchOutcomeCode, number>> = {};
+  for (const ticket of revealedTickets) {
+    const dominant = [...ticket.allocations].sort((left, right) => right.amount - left.amount)[0];
+    if (!dominant) continue;
+    pickCountByCode[dominant.code] = (pickCountByCode[dominant.code] ?? 0) + 1;
+  }
+
   return {
     ...match,
     allocation,
     consensus,
+    pickCountByCode,
     revealedTickets,
     marketStatus: deriveMarketStatus({
       status: match.status,

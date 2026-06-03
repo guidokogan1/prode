@@ -62,6 +62,7 @@ export type MatchViewModel = {
     homeGoals: number;
     awayGoals: number;
   };
+  pickCountByCode: Partial<Record<MatchOutcomeCode, number>>;
   revealedTickets: RevealedTicketViewModel[];
 };
 
