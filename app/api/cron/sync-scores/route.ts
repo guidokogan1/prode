@@ -215,6 +215,20 @@ export async function GET(request: NextRequest) {
     insertedMatches += 1;
   }
 
+  const kickoffByMatchId = new Map<string, string>();
+  for (const fd of fdMatches) {
+    const homeCode = normalizeTla(fd.homeTeam.tla);
+    const awayCode = normalizeTla(fd.awayTeam.tla);
+    if (!homeCode || !awayCode) continue;
+    const homeId = teamByCode.get(homeCode);
+    const awayId = teamByCode.get(awayCode);
+    if (!homeId || !awayId) continue;
+    const candidates = dbByPair.get(`${homeId}|${awayId}`);
+    if (candidates && candidates.length === 1) {
+      kickoffByMatchId.set(candidates[0].id, fd.utcDate);
+    }
+  }
+
   let actuallyUpdated = 0;
   for (const u of updates) {
     const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -227,6 +241,23 @@ export async function GET(request: NextRequest) {
     if (!res.error) actuallyUpdated += 1;
   }
 
+  let kickoffSynced = 0;
+  for (const m of dbMatchesQuery.data) {
+    const fdKickoff = kickoffByMatchId.get(m.id);
+    if (!fdKickoff) continue;
+    const current = new Date(m.kickoff_at).getTime();
+    const incoming = new Date(fdKickoff).getTime();
+    if (Math.abs(current - incoming) < 60_000) continue;
+    const res = await supabase
+      .from("matches")
+      .update({ kickoff_at: fdKickoff, updated_at: new Date().toISOString() })
+      .eq("id", m.id);
+    if (!res.error) {
+      await supabase.from("match_markets").update({ lock_at: fdKickoff }).eq("match_id", m.id);
+      kickoffSynced += 1;
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     fdMatchesTotal: fdMatches.length,
@@ -235,6 +266,7 @@ export async function GET(request: NextRequest) {
     alreadySettled,
     actuallyUpdated,
     insertedMatches,
+    kickoffSynced,
     updated: updates
       .filter((u) => u.status || u.home_score_ft != null)
       .map((u) => ({ id: u.id, status: u.status, score: `${u.home_score_ft ?? "-"}:${u.away_score_ft ?? "-"}` })),
