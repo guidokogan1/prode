@@ -191,7 +191,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         savedAt: new Date().toISOString(),
         status: "sync_error",
       });
-      setSaveMessage(session?.kind === "remote" ? "Guardado local" : "Guardado local");
+      setSaveMessage(session?.kind === "remote" ? "Sin conexión, guardado local" : "Guardado local");
       setSaveTone("warning");
     } finally {
       setIsSaving(false);
