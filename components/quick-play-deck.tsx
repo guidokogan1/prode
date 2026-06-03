@@ -14,6 +14,7 @@ import { getOutcomeColor, getOutcomeFlag, getOutcomeHint, getQuickPlayOutcomeTar
 type QuickPlayDeckProps = {
   matches: MatchViewModel[];
   onMatchSaved?: (matchId: string) => void;
+  onPendingCountChange?: (count: number) => void;
 };
 
 type CardPhase = "idle" | "chosen" | "saved";
@@ -35,7 +36,7 @@ function getIntensityCopy(intensity: IntensityPreset) {
   return "A fondo";
 }
 
-export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
+export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: QuickPlayDeckProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
   const [justSavedIds, setJustSavedIds] = useState<Set<string>>(new Set());
@@ -87,6 +88,10 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    onPendingCountChange?.(deck.length);
+  }, [deck.length, onPendingCountChange]);
 
   useEffect(() => {
     if (!deck.length) {

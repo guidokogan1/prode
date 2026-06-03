@@ -88,7 +88,12 @@ export function getUserNetLabel(label: string) {
 }
 
 export function getLeadingOutcome(match: MatchViewModel) {
-  return [...match.allocation].sort((left, right) => right.percentage - left.percentage)[0] ?? null;
+  const leading = [...match.allocation].sort((left, right) => right.amount - left.amount)[0] ?? null;
+  if (!leading || leading.amount <= 0) {
+    return null;
+  }
+
+  return leading;
 }
 
 export function getQuickPlayOutcomeTargets(match: MatchViewModel) {
@@ -216,7 +221,7 @@ export function getMatchPickSummary(match: MatchViewModel) {
     return "Sin jugar";
   }
 
-  const leading = [...match.allocation].sort((left, right) => right.amount - left.amount)[0];
+  const leading = getLeadingOutcome(match);
   return leading ? `Más a ${leading.label}` : pickState;
 }
 

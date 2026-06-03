@@ -55,7 +55,14 @@ export function MatchOverview({ match }: MatchOverviewProps) {
     [effectiveMatch.consensus],
   );
   const leadingAllocation = useMemo(
-    () => [...effectiveMatch.allocation].sort((left, right) => right.amount - left.amount)[0] ?? null,
+    () => {
+      const leading = [...effectiveMatch.allocation].sort((left, right) => right.amount - left.amount)[0] ?? null;
+      if (!leading || leading.amount <= 0) {
+        return null;
+      }
+
+      return leading;
+    },
     [effectiveMatch.allocation],
   );
   const isReveal = effectiveMatch.revealedTickets.length > 0;

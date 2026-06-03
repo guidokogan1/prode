@@ -59,6 +59,9 @@ export function HomePageClient({
             onMatchSaved={() => {
               setPendingPicks((current) => Math.max(0, current - 1));
             }}
+            onPendingCountChange={(count) => {
+              setPendingPicks(count);
+            }}
           />
         )}
       </div>
