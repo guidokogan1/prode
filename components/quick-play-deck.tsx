@@ -42,16 +42,22 @@ function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCod
 export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
+  const [justSavedIds, setJustSavedIds] = useState<Set<string>>(new Set());
   const deck = useMemo(() => {
     const pending = matches.filter(
-      (match) => match.isEditable && match.draftState !== "saved_remote" && match.draftState !== "saved_local",
+      (match) =>
+        match.isEditable &&
+        match.draftState !== "saved_remote" &&
+        match.draftState !== "saved_local" &&
+        !justSavedIds.has(match.id),
     );
     return pending;
-  }, [matches]);
+  }, [matches, justSavedIds]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<CardPhase>("idle");
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
   const [chosenIntensity, setChosenIntensity] = useState<IntensityOption | null>(null);
+  const [savedMatchSnapshot, setSavedMatchSnapshot] = useState<MatchViewModel | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
   const [isSaving, setIsSaving] = useState(false);
@@ -87,6 +93,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
     setPhase("idle");
     setChosenOutcome(null);
     setChosenIntensity(null);
+    setSavedMatchSnapshot(null);
     setSaveMessage(null);
     setSaveTone("default");
     setIsSaving(false);
@@ -151,6 +158,12 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       allocations: payload,
       savedAt: new Date().toISOString(),
       status: "draft",
+    });
+    setSavedMatchSnapshot(match);
+    setJustSavedIds((prev) => {
+      const next = new Set(prev);
+      next.add(match.id);
+      return next;
     });
     setChosenIntensity(option.id);
     setPhase("saved");
@@ -495,9 +508,9 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                   </motion.div>
                 ) : null}
 
-                {phase === "saved" && chosenOutcome && chosenIntensity ? (
+                {phase === "saved" && chosenOutcome && chosenIntensity && savedMatchSnapshot ? (
                   <motion.div
-                    key={`saved-${match.id}-${chosenOutcome}-${chosenIntensity}`}
+                    key={`saved-${savedMatchSnapshot.id}-${chosenOutcome}-${chosenIntensity}`}
                     initial={{ scale: 0.96, opacity: 0, y: 16 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.94, opacity: 0, y: -24 }}
@@ -544,9 +557,9 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} style={{ display: "grid", gap: 6 }}>
                         <p className="section-title">Guardado</p>
                         <p className="muted-copy">
-                          {getOutcomeFlag(chosenOutcome, match)} {match.allocation.find((item) => item.code === chosenOutcome)?.label}
+                          {getOutcomeFlag(chosenOutcome, savedMatchSnapshot)} {savedMatchSnapshot.allocation.find((item) => item.code === chosenOutcome)?.label}
                           {" · "}
-                          <span style={{ color: "#D4A64B" }}>{buildPresetHint(match, chosenOutcome, chosenIntensity)}</span>
+                          <span style={{ color: "#D4A64B" }}>{buildPresetHint(savedMatchSnapshot, chosenOutcome, chosenIntensity)}</span>
                         </p>
                         {saveMessage ? (
                           <span
