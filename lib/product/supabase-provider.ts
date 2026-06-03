@@ -43,6 +43,7 @@ type MatchQueryRow = {
   away: { name: string; fifa_code: string } | { name: string; fifa_code: string }[] | null;
 };
 type OutcomeQueryRow = {
+  id: string;
   match_market_id: string;
   code: string;
   label: string;
@@ -56,7 +57,7 @@ type TicketQueryRow = {
 type AllocationQueryRow = {
   ticket_id: string;
   amount: number;
-  outcome: { code: string; label: string } | { code: string; label: string }[] | null;
+  market_outcome_id: string;
 };
 type SettlementQueryRow = {
   ticket_id: string;
@@ -494,7 +495,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
       marketIds.length
         ? supabase
             .from("market_outcomes")
-            .select("match_market_id, code, label, sort_order")
+            .select("id, match_market_id, code, label, sort_order")
             .in("match_market_id", marketIds)
             .order("sort_order", { ascending: true })
             .returns<OutcomeQueryRow[]>()
@@ -518,6 +519,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
         }
 
         const outcomeRows = outcomesByMarketId.get(market.id) ?? [];
+        const outcomeById = new Map(outcomeRows.map((outcome) => [outcome.id, outcome] as const));
         const currentTicket = currentUserData.ticketsByMarketId.get(market.id);
         const currentAllocations = currentTicket
           ? currentUserData.allocationsByTicketId.get(currentTicket.id) ?? []
@@ -531,7 +533,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
         for (const ticket of marketTickets) {
           const allocations = allTicketData.allocationsByTicketId.get(ticket.id) ?? [];
           for (const allocation of allocations) {
-            const outcome = firstRow(allocation.outcome);
+            const outcome = outcomeById.get(allocation.market_outcome_id);
             if (!outcome) {
               continue;
             }
@@ -542,7 +544,12 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
 
         const totalPool = Array.from(totalByOutcomeCode.values()).reduce((sum, value) => sum + value, 0);
         const allocationByCode = new Map(
-          currentAllocations.map((item) => [firstRow(item.outcome)?.code, item.amount] as const).filter((item): item is [string, number] => Boolean(item[0])),
+          currentAllocations
+            .map((item) => {
+              const outcome = outcomeById.get(item.market_outcome_id);
+              return outcome ? ([outcome.code, item.amount] as const) : null;
+            })
+            .filter((item): item is readonly [string, number] => Boolean(item)),
         );
 
         const allocation = outcomeRows.map((outcome) => {
@@ -572,7 +579,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
                 userName: allTicketData.usersById.get(ticket.user_id) ?? "Jugador",
                 allocations: (allTicketData.allocationsByTicketId.get(ticket.id) ?? [])
                   .map((item) => {
-                    const outcome = firstRow(item.outcome);
+                    const outcome = outcomeById.get(item.market_outcome_id);
                     if (!outcome) {
                       return null;
                     }
@@ -683,7 +690,7 @@ async function loadCurrentUserMap(supabase: ReturnType<typeof getSupabaseOrThrow
     ticketIds.length
       ? supabase
           .from("ticket_allocations")
-          .select("ticket_id, amount, outcome:market_outcomes(code, label)")
+          .select("ticket_id, amount, market_outcome_id")
           .in("ticket_id", ticketIds)
           .returns<AllocationQueryRow[]>()
       : Promise.resolve({ data: [] as AllocationQueryRow[] }),
@@ -731,7 +738,7 @@ async function loadAllTicketData(
     ticketIds.length
       ? supabase
           .from("ticket_allocations")
-          .select("ticket_id, amount, outcome:market_outcomes(code, label)")
+          .select("ticket_id, amount, market_outcome_id")
           .in("ticket_id", ticketIds)
           .returns<AllocationQueryRow[]>()
       : Promise.resolve({ data: [] as AllocationQueryRow[] }),
