@@ -798,7 +798,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
               left: "50%",
               transform: "translateX(-50%)",
               bottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px)",
-              width: "min(calc(100vw - 32px), 560px)",
+              width: "min(calc(100vw - 32px), calc(var(--shell-width) - 32px))",
               zIndex: 40,
             }}
           >
