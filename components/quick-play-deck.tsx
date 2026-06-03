@@ -14,6 +14,7 @@ import { buildAllocationScope, saveStoredAllocation } from "@/lib/local-store";
 
 type QuickPlayDeckProps = {
   matches: MatchViewModel[];
+  onMatchSaved?: (matchId: string) => void;
 };
 
 type CardPhase = "idle" | "chosen" | "saved";
@@ -39,7 +40,7 @@ function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCod
   return preset.map((item) => formatCredits(item.amount)).join(" · ");
 }
 
-export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
+export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
   const [justSavedIds, setJustSavedIds] = useState<Set<string>>(new Set());
@@ -166,6 +167,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       next.add(match.id);
       return next;
     });
+    onMatchSaved?.(match.id);
     setChosenIntensity(option.id);
     setPhase("saved");
     setIsSaving(true);

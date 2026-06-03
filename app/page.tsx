@@ -1,7 +1,5 @@
-import { ChampionHomeCard } from "@/components/champion-home-card";
-import { QuickPlayDeck } from "@/components/quick-play-deck";
+import { HomePageClient } from "@/components/home-page-client";
 import { isChampionPickLocked } from "@/lib/champion";
-import { formatNetAmount } from "@/lib/format";
 import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
 import { getProfile } from "@/lib/repositories/profile";
 
@@ -12,8 +10,6 @@ export default async function HomePage() {
     getProfile(),
   ]);
 
-  const pendingLabel = summary.pendingPicks;
-  const headline = pendingLabel > 0 ? `${pendingLabel} por jugar` : "Todo al día";
   const needsChampionPick = !isChampionPickLocked() && (!profile.championPick || profile.championPick === "Sin elegir");
 
   return (
@@ -46,28 +42,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section-stack">
-        <div className="section-stack">
-          <div className="title-stack">
-            <p className="eyebrow">Inicio</p>
-            <h1 className="display-title">{headline}</h1>
-          </div>
-          <div className="metric-chip-row">
-            <div className="surface-card-soft metric-chip">
-              <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", letterSpacing: "-0.04em" }}>{summary.liveMatches}</strong>
-              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>En vivo</span>
-            </div>
-            <div className="surface-card-soft metric-chip">
-              <strong style={{ display: "block", fontFamily: "var(--font-accent)", fontSize: "1rem", color: "#D8B56A", letterSpacing: "-0.04em" }}>{formatNetAmount(summary.yourNetAmount)}</strong>
-              <span className="micro-copy" style={{ letterSpacing: ".08em", textTransform: "uppercase" }}>Tabla</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div style={{ display: "grid", gap: 12, minHeight: 0 }}>
-        {needsChampionPick ? <ChampionHomeCard /> : <QuickPlayDeck matches={featuredMatches} />}
-      </div>
+      <HomePageClient
+        initialSummary={summary}
+        featuredMatches={featuredMatches}
+        needsChampionPick={needsChampionPick}
+      />
     </main>
   );
 }
