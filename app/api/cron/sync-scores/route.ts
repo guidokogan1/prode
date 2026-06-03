@@ -30,7 +30,7 @@ function normalizeTla(tla: string | null | undefined): string | null {
   return FD_TO_DB[tla] ?? tla;
 }
 
-function mapStatus(fdStatus: string): { dbStatus: string; isFinal: boolean } {
+function mapStatus(fdStatus: string): { dbStatus: string | null; isFinal: boolean } {
   switch (fdStatus) {
     case "FINISHED":
     case "AWARDED":
@@ -41,15 +41,12 @@ function mapStatus(fdStatus: string): { dbStatus: string; isFinal: boolean } {
     case "PENALTY_SHOOTOUT":
     case "LIVE":
       return { dbStatus: "live", isFinal: false };
-    case "TIMED":
-    case "SCHEDULED":
-      return { dbStatus: "scheduled", isFinal: false };
     case "POSTPONED":
     case "SUSPENDED":
     case "CANCELLED":
       return { dbStatus: "postponed", isFinal: false };
     default:
-      return { dbStatus: "scheduled", isFinal: false };
+      return { dbStatus: null, isFinal: false };
   }
 }
 
@@ -95,13 +92,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, reason: "No se pudieron cargar matches." }, { status: 500 });
   }
 
-  const dbByPair = new Map<string, (typeof dbMatchesQuery.data)[number]>();
+  const dbByPair = new Map<string, (typeof dbMatchesQuery.data)[number][]>();
   for (const m of dbMatchesQuery.data) {
-    const key = `${m.home_team_id}|${m.away_team_id}|${new Date(m.kickoff_at).toISOString().slice(0, 10)}`;
-    dbByPair.set(key, m);
+    const key = `${m.home_team_id}|${m.away_team_id}`;
+    const list = dbByPair.get(key) ?? [];
+    list.push(m);
+    dbByPair.set(key, list);
   }
 
-  const updates: { id: string; status: string; home_score_ft: number | null; away_score_ft: number | null; winner_team_id: string | null }[] = [];
+  const updates: { id: string; status: string | null; home_score_ft: number | null; away_score_ft: number | null; winner_team_id: string | null }[] = [];
   let skipped = 0;
   let alreadySettled = 0;
 
@@ -118,13 +117,20 @@ export async function GET(request: NextRequest) {
       skipped += 1;
       continue;
     }
-    const dateKey = new Date(fd.utcDate).toISOString().slice(0, 10);
-    const dbMatch = dbByPair.get(`${homeId}|${awayId}|${dateKey}`);
-    if (!dbMatch) {
+    const candidates = dbByPair.get(`${homeId}|${awayId}`);
+    if (!candidates || !candidates.length) {
       skipped += 1;
       continue;
     }
-    if (dbMatch.status === "final" && dbMatch.home_score_ft != null) {
+    const fdTime = new Date(fd.utcDate).getTime();
+    const dbMatch = candidates.length === 1
+      ? candidates[0]
+      : candidates.reduce((best, cur) => {
+          const dBest = Math.abs(new Date(best.kickoff_at).getTime() - fdTime);
+          const dCur = Math.abs(new Date(cur.kickoff_at).getTime() - fdTime);
+          return dCur < dBest ? cur : best;
+        });
+    if (dbMatch.status === "settled" || (dbMatch.status === "final" && dbMatch.home_score_ft != null)) {
       alreadySettled += 1;
       continue;
     }
@@ -145,12 +151,16 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  let actuallyUpdated = 0;
   for (const u of updates) {
-    const updateData: Record<string, unknown> = { status: u.status, updated_at: new Date().toISOString() };
+    const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (u.status) updateData.status = u.status;
     if (u.home_score_ft != null) updateData.home_score_ft = u.home_score_ft;
     if (u.away_score_ft != null) updateData.away_score_ft = u.away_score_ft;
     if (u.winner_team_id) updateData.winner_team_id = u.winner_team_id;
-    await supabase.from("matches").update(updateData).eq("id", u.id);
+    if (Object.keys(updateData).length === 1) continue;
+    const res = await supabase.from("matches").update(updateData).eq("id", u.id);
+    if (!res.error) actuallyUpdated += 1;
   }
 
   return NextResponse.json({
@@ -159,6 +169,9 @@ export async function GET(request: NextRequest) {
     matched: updates.length,
     skipped,
     alreadySettled,
-    updated: updates.map((u) => ({ id: u.id, status: u.status, score: `${u.home_score_ft ?? "-"}:${u.away_score_ft ?? "-"}` })),
+    actuallyUpdated,
+    updated: updates
+      .filter((u) => u.status || u.home_score_ft != null)
+      .map((u) => ({ id: u.id, status: u.status, score: `${u.home_score_ft ?? "-"}:${u.away_score_ft ?? "-"}` })),
   });
 }
