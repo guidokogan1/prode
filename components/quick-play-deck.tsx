@@ -58,13 +58,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
   }, [allocationScope, matches]);
 
   const deck = useMemo(() => {
-    const pending = effectiveMatches.filter(
-      (match) =>
-        match.isEditable &&
-        match.draftState !== "saved_remote" &&
-        match.draftState !== "saved_local" &&
-        !justSavedIds.has(match.id),
-    );
+    const pending = effectiveMatches.filter((match) => isPendingQuickPlayMatch(match) && !justSavedIds.has(match.id));
     return pending;
   }, [effectiveMatches, justSavedIds]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -803,6 +797,10 @@ function applyStoredDrafts(matches: MatchViewModel[], allocationScope: string) {
   }
 
   return matches.map((match) => {
+    if (match.draftState === "saved_remote") {
+      return match;
+    }
+
     const storedDraft = getStoredAllocation(allocationScope, match.id);
     if (!storedDraft?.allocations?.length) {
       return match;
@@ -822,6 +820,18 @@ function applyStoredDrafts(matches: MatchViewModel[], allocationScope: string) {
       }),
     };
   });
+}
+
+function isPendingQuickPlayMatch(match: MatchViewModel) {
+  if (!match.isEditable) {
+    return false;
+  }
+
+  if (match.draftState === "draft" || match.draftState === "sync_error") {
+    return true;
+  }
+
+  return match.userStateLabel === "Te falta jugar";
 }
 
 function getLeadingPickedOutcome(match: MatchViewModel) {
