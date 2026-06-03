@@ -8,8 +8,8 @@ import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
+import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 import { getOutcomeColor, getOutcomeFlag, getOutcomeHint, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
-import { buildAllocationScope, saveStoredAllocation } from "@/lib/local-store";
 
 type QuickPlayDeckProps = {
   matches: MatchViewModel[];
@@ -39,8 +39,26 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
   const [justSavedIds, setJustSavedIds] = useState<Set<string>>(new Set());
+  const allocationScope = buildAllocationScope(session);
+  const [effectiveMatches, setEffectiveMatches] = useState(() => matches);
+
+  useEffect(() => {
+    const syncMatches = () => {
+      setEffectiveMatches(applyStoredDrafts(matches, allocationScope));
+    };
+
+    syncMatches();
+    window.addEventListener(ALLOCATION_EVENT, syncMatches);
+    window.addEventListener("storage", syncMatches);
+
+    return () => {
+      window.removeEventListener(ALLOCATION_EVENT, syncMatches);
+      window.removeEventListener("storage", syncMatches);
+    };
+  }, [allocationScope, matches]);
+
   const deck = useMemo(() => {
-    const pending = matches.filter(
+    const pending = effectiveMatches.filter(
       (match) =>
         match.isEditable &&
         match.draftState !== "saved_remote" &&
@@ -48,7 +66,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
         !justSavedIds.has(match.id),
     );
     return pending;
-  }, [matches, justSavedIds]);
+  }, [effectiveMatches, justSavedIds]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<CardPhase>("idle");
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
@@ -59,7 +77,6 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
   const [isSaving, setIsSaving] = useState(false);
   const nextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isChoosingRef = useRef(false);
-  const allocationScope = buildAllocationScope(session);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -77,14 +94,23 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
     };
   }, []);
 
-  if (!deck.length) {
-    return null;
-  }
+  useEffect(() => {
+    if (!deck.length) {
+      setCurrentIndex(0);
+      return;
+    }
 
-  const match = deck[Math.min(currentIndex, deck.length - 1)];
-  const done = currentIndex >= deck.length;
-  const liveMatch = matches.find((item) => item.status === "live") ?? null;
-  const quickPlayTargets = getQuickPlayOutcomeTargets(match);
+    if (currentIndex > deck.length) {
+      setCurrentIndex(deck.length);
+    }
+  }, [currentIndex, deck.length]);
+
+  const done = deck.length === 0 || currentIndex >= deck.length;
+  const match = done ? null : deck[Math.min(currentIndex, deck.length - 1)];
+  const liveMatch = effectiveMatches.find((item) => item.status === "live") ?? null;
+  const quickPlayTargets = match ? getQuickPlayOutcomeTargets(match) : null;
+  const projectedGroups = useMemo(() => buildProjectedGroups(effectiveMatches), [effectiveMatches]);
+  const projectedKnockout = useMemo(() => buildProjectedKnockout(effectiveMatches), [effectiveMatches]);
 
   const resetPhase = () => {
     setPhase("idle");
@@ -101,6 +127,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
 
   function moveNext() {
     resetPhase();
+    setCurrentIndex((value) => value + 1);
   }
 
   async function chooseOutcome(code: MatchOutcomeCode) {
@@ -262,24 +289,81 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
             animate={{ opacity: 1, scale: 1 }}
             style={{
               minHeight: 360,
-              padding: 28,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center",
+              padding: 22,
+              display: "grid",
               gap: 18,
             }}
           >
-            <span style={{ fontSize: "4rem" }}>🎯</span>
-            <div style={{ display: "grid", gap: 4 }}>
-              <h2 className="section-title">Todo jugado</h2>
+            <div style={{ display: "grid", gap: 8, textAlign: "center" }}>
+              <span style={{ fontSize: "3.5rem", lineHeight: 1 }}>🎯</span>
+              <div style={{ display: "grid", gap: 4 }}>
+                <h2 className="section-title">Ya jugaste todo por ahora</h2>
+                <p className="muted-copy">Así se vería el Mundial según tus picks hasta acá.</p>
+              </div>
             </div>
-            <button className="button-primary" onClick={() => router.push("/matches")}>
-              Ver fixture
-            </button>
+
+            {projectedGroups.length ? (
+              <section style={{ display: "grid", gap: 10 }}>
+                <div className="split-row" style={{ alignItems: "center" }}>
+                  <p className="eyebrow">Tus grupos</p>
+                  <span className="micro-copy">Según tus decisiones</span>
+                </div>
+                <div style={{ display: "grid", gap: 10 }}>
+                  {projectedGroups.map((group) => (
+                    <article key={group.label} className="surface-card-soft" style={{ padding: 14, borderRadius: 18, display: "grid", gap: 10 }}>
+                      <div className="split-row">
+                        <strong>{group.label}</strong>
+                        <span className="micro-copy">{group.teams.length} equipos</span>
+                      </div>
+                      <div style={{ display: "grid", gap: 8 }}>
+                        {group.teams.map((team, index) => (
+                          <div key={`${group.label}-${team.name}`} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 10, alignItems: "center" }}>
+                            <span className="micro-copy">#{index + 1}</span>
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {team.flag} {team.name}
+                            </span>
+                            <strong>{team.points} pts</strong>
+                          </div>
+                        ))}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {projectedKnockout ? (
+              <section style={{ display: "grid", gap: 10 }}>
+                <div className="split-row" style={{ alignItems: "center" }}>
+                  <p className="eyebrow">{projectedKnockout.title}</p>
+                  <span className="micro-copy">{projectedKnockout.subtitle}</span>
+                </div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {projectedKnockout.rows.map((row) => (
+                    <article key={row.id} className="surface-card-soft" style={{ padding: 14, borderRadius: 18, display: "grid", gap: 4 }}>
+                      <strong>{row.label}</strong>
+                      {row.hint ? <span className="micro-copy">{row.hint}</span> : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            <div style={{ display: "grid", gap: 10 }}>
+              <button className="button-primary" onClick={() => router.push("/matches")}>
+                ¿Querés editarlo? Estás a tiempo
+              </button>
+              <button className="button-secondary" onClick={() => router.push("/matches")} style={{ justifyContent: "space-between", width: "100%" }}>
+                <span>Ver partidos</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </div>
           </motion.div>
-        ) : (
+        ) : (() => {
+          const activeMatch = match!;
+          const activeQuickPlayTargets = quickPlayTargets!;
+
+          return (
           <>
             <div style={{ position: "relative" }}>
               {phase === "idle" && currentIndex < deck.length - 1 ? (
@@ -320,7 +404,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
               <AnimatePresence mode="wait">
                 {phase === "idle" ? (
                   <motion.div
-                    key={`idle-${match.id}`}
+                    key={`idle-${activeMatch.id}`}
                     drag
                     dragMomentum={false}
                     dragDirectionLock
@@ -328,14 +412,18 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                     dragElastic={0.14}
                     onDragEnd={async (_, info) => {
                       const { x: offsetX, y: offsetY } = info.offset;
-                      const outcome = getQuickPlaySwipeOutcome(match, offsetX, offsetY);
+                      if (!match || !quickPlayTargets) {
+                        return;
+                      }
+
+                      const outcome = getQuickPlaySwipeOutcome(activeMatch, offsetX, offsetY);
                       if (outcome) {
                         await chooseOutcome(outcome);
                         return;
                       }
                       if (offsetY < -68 && showDrawGesture) {
-                        if (quickPlayTargets.draw) {
-                          await chooseOutcome(quickPlayTargets.draw);
+                        if (activeQuickPlayTargets.draw) {
+                          await chooseOutcome(activeQuickPlayTargets.draw);
                           return;
                         }
                       }
@@ -368,9 +456,9 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                       }}
                     >
                       <div style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
-                        <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.home.flag}</span>
+                        <span style={{ fontSize: "3rem", lineHeight: 1 }}>{activeMatch.home.flag}</span>
                         <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
-                          {match.marketType === "qualifies" ? "clasifica" : "gana"}
+                          {activeMatch.marketType === "qualifies" ? "clasifica" : "gana"}
                         </span>
                       </div>
                     </motion.div>
@@ -385,9 +473,9 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                       }}
                     >
                       <div style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
-                        <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.away.flag}</span>
+                        <span style={{ fontSize: "3rem", lineHeight: 1 }}>{activeMatch.away.flag}</span>
                         <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
-                          {match.marketType === "qualifies" ? "clasifica" : "gana"}
+                          {activeMatch.marketType === "qualifies" ? "clasifica" : "gana"}
                         </span>
                       </div>
                     </motion.div>
@@ -412,9 +500,9 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                     ) : null}
 
                     <VoteFace
-                      match={match}
+                      match={activeMatch}
                       showDrawGesture={Boolean(showDrawGesture)}
-                      outcomeTargets={quickPlayTargets}
+                      outcomeTargets={activeQuickPlayTargets}
                       onSelectOutcome={(code) => {
                         void chooseOutcome(code);
                       }}
@@ -424,7 +512,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
 
                 {phase === "chosen" && chosenOutcome ? (
                   <motion.div
-                    key={`chosen-${match.id}-${chosenOutcome}`}
+                    key={`chosen-${activeMatch.id}-${chosenOutcome}`}
                     initial={{ scale: 0.94, opacity: 0, y: 14 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.94, opacity: 0, y: -14 }}
@@ -453,8 +541,8 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                       }}
                     />
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, position: "relative", zIndex: 1 }}>
-                      <span className="eyebrow">{match.stage}</span>
-                      <span className="micro-copy">{match.kickoffLabel}</span>
+                      <span className="eyebrow">{activeMatch.stage}</span>
+                      <span className="micro-copy">{activeMatch.kickoffLabel}</span>
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, position: "relative", zIndex: 1 }}>
@@ -463,11 +551,11 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.06)", position: "relative", zIndex: 1 }}>
-                      <span style={{ fontSize: "2.8rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, match)}</span>
+                      <span style={{ fontSize: "2.8rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, activeMatch)}</span>
                       <div style={{ display: "grid", gap: 4 }}>
-                        <p className="section-title">{match.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</p>
+                        <p className="section-title">{activeMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</p>
                         <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>
-                          {getOutcomeHint(chosenOutcome, match.marketType)}
+                          {getOutcomeHint(chosenOutcome, activeMatch.marketType)}
                         </p>
                       </div>
                     </div>
@@ -593,7 +681,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                   <motion.button
                     whileTap={{ scale: 0.88 }}
                     whileHover={{ scale: 1.03 }}
-                    onClick={() => void chooseOutcome(quickPlayTargets.left)}
+                    onClick={() => void chooseOutcome(activeQuickPlayTargets.left)}
                     style={{
                       width: 58,
                       height: 58,
@@ -607,8 +695,8 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.home.flag}</span>
-                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.home.name.slice(0, 3)}</span>
+                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{activeMatch.home.flag}</span>
+                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{activeMatch.home.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>
                   {showDrawGesture ? (
@@ -616,8 +704,8 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                       whileTap={{ scale: 0.88 }}
                       whileHover={{ scale: 1.03 }}
                       onClick={() => {
-                        if (quickPlayTargets.draw) {
-                          void chooseOutcome(quickPlayTargets.draw);
+                        if (activeQuickPlayTargets.draw) {
+                          void chooseOutcome(activeQuickPlayTargets.draw);
                         }
                       }}
                       style={{
@@ -637,7 +725,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                   <motion.button
                     whileTap={{ scale: 0.88 }}
                     whileHover={{ scale: 1.03 }}
-                    onClick={() => void chooseOutcome(quickPlayTargets.right)}
+                    onClick={() => void chooseOutcome(activeQuickPlayTargets.right)}
                     style={{
                       width: 58,
                       height: 58,
@@ -651,15 +739,16 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{match.away.flag}</span>
-                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{match.away.name.slice(0, 3)}</span>
+                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{activeMatch.away.flag}</span>
+                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{activeMatch.away.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>
                 </motion.div>
               ) : null}
             </AnimatePresence>
           </>
-        )}
+          );
+        })()}
       </div>
 
       <AnimatePresence initial={false}>
@@ -706,4 +795,151 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
       </AnimatePresence>
     </div>
   );
+}
+
+function applyStoredDrafts(matches: MatchViewModel[], allocationScope: string) {
+  if (typeof window === "undefined") {
+    return matches;
+  }
+
+  return matches.map((match) => {
+    const storedDraft = getStoredAllocation(allocationScope, match.id);
+    if (!storedDraft?.allocations?.length) {
+      return match;
+    }
+
+    const amountByLabel = new Map(storedDraft.allocations.map((item) => [item.label, item.amount]));
+    return {
+      ...match,
+      draftState: storedDraft.status,
+      allocation: match.allocation.map((item) => {
+        const amount = amountByLabel.get(item.label) ?? item.amount;
+        return {
+          ...item,
+          amount,
+          percentage: Math.round((amount / 10000) * 100),
+        };
+      }),
+    };
+  });
+}
+
+function getLeadingPickedOutcome(match: MatchViewModel) {
+  return [...match.allocation].sort((left, right) => right.amount - left.amount)[0] ?? null;
+}
+
+function buildProjectedGroups(matches: MatchViewModel[]) {
+  const groupMatches = matches.filter((match) => match.stage === "Fase de grupos" && match.groupLabel);
+  const groups = new Map<string, Map<string, { name: string; flag: string; points: number; wins: number }>>();
+
+  for (const match of groupMatches) {
+    const groupLabel = match.groupLabel!;
+    if (!groups.has(groupLabel)) {
+      groups.set(groupLabel, new Map());
+    }
+
+    const table = groups.get(groupLabel)!;
+    for (const team of [match.home, match.away]) {
+      if (!table.has(team.name)) {
+        table.set(team.name, { ...team, points: 0, wins: 0 });
+      }
+    }
+
+    const leading = getLeadingPickedOutcome(match);
+    if (!leading || leading.amount <= 0) {
+      continue;
+    }
+
+    if (leading.code === "draw") {
+      table.get(match.home.name)!.points += 1;
+      table.get(match.away.name)!.points += 1;
+      continue;
+    }
+
+    const winner = leading.code === "home" ? match.home.name : match.away.name;
+    table.get(winner)!.points += 3;
+    table.get(winner)!.wins += 1;
+  }
+
+  return Array.from(groups.entries())
+    .sort((a, b) => a[0].localeCompare(b[0], "es"))
+    .map(([label, teams]) => ({
+      label,
+      teams: Array.from(teams.values()).sort((a, b) => {
+        if (a.points !== b.points) return b.points - a.points;
+        if (a.wins !== b.wins) return b.wins - a.wins;
+        return a.name.localeCompare(b.name, "es");
+      }),
+    }));
+}
+
+function buildProjectedKnockout(matches: MatchViewModel[]) {
+  const stageOrder = [
+    { stage: "Dieciseisavos", next: "Octavos de final" },
+    { stage: "Octavos de final", next: "Cuartos de final" },
+    { stage: "Cuartos de final", next: "Semifinales" },
+    { stage: "Semifinales", next: "Final" },
+    { stage: "Final", next: "Campeón" },
+  ];
+
+  const completeStage = [...stageOrder]
+    .reverse()
+    .find(({ stage }) => {
+      const stageMatches = matches.filter((match) => match.stage === stage);
+      return stageMatches.length > 0 && stageMatches.every((match) => {
+        const leading = getLeadingPickedOutcome(match);
+        return Boolean(leading && leading.amount > 0);
+      });
+    });
+
+  if (!completeStage) {
+    return null;
+  }
+
+  const winners = matches
+    .filter((match) => match.stage === completeStage.stage)
+    .map((match) => {
+      const leading = getLeadingPickedOutcome(match);
+      if (!leading) return null;
+      if (leading.code === "home" || leading.code === "home_qualifies") return match.home;
+      if (leading.code === "away" || leading.code === "away_qualifies") return match.away;
+      return null;
+    })
+    .filter((team): team is MatchViewModel["home"] => Boolean(team));
+
+  if (!winners.length) {
+    return null;
+  }
+
+  if (completeStage.next === "Campeón") {
+    const champion = winners[0];
+    return {
+      title: "Tu campeón",
+      subtitle: "Si se da tu final",
+      rows: [
+        {
+          id: "champion",
+          label: `${champion.flag} ${champion.name}`,
+          hint: "Así terminaría tu Mundial ideal.",
+        },
+      ],
+    };
+  }
+
+  const rows = [];
+  for (let index = 0; index < winners.length; index += 2) {
+    const left = winners[index];
+    const right = winners[index + 1];
+    rows.push({
+      id: `${completeStage.stage}-${index}`,
+      label: right ? `${left.flag} ${left.name} vs ${right.flag} ${right.name}` : `${left.flag} ${left.name}`,
+      hint: right ? `Así quedaría ${completeStage.next.toLowerCase()} según tus picks.` : "Avanza según tu cuadro.",
+    });
+  }
+
+  return {
+    title: completeStage.next,
+    subtitle: `Si se da ${completeStage.stage.toLowerCase()}`,
+    rows,
+  };
 }
