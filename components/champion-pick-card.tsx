@@ -82,12 +82,33 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
     [selectedTeam, teams],
   );
 
+  const [isSaving, setIsSaving] = useState(false);
+
   async function handleSave() {
-    if (!selectedTeam || locked) {
+    if (!selectedTeam || locked || isSaving) {
       return;
     }
 
-    if (session?.kind === "remote") {
+    setIsSaving(true);
+
+    // Wait up to 5s for the session to populate. SessionProvider can be slow on cellular.
+    let currentSession = session;
+    if (!currentSession) {
+      for (let i = 0; i < 25; i += 1) {
+        await new Promise((r) => setTimeout(r, 200));
+        try {
+          const r = await fetch("/api/session", { credentials: "include", cache: "no-store" });
+          const body = (await r.json()) as { session?: SessionState };
+          if (body.session) {
+            currentSession = body.session;
+            break;
+          }
+        } catch {
+        }
+      }
+    }
+
+    if (currentSession?.kind === "remote") {
       router.push("/");
       void fetch("/api/champion", {
         method: "POST",
@@ -109,7 +130,6 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
     router.push("/login?next=/champion");
   }
 
-  const isAuthLoading = session === null;
   const isUnauthenticated = session !== null && session.kind !== "remote" && !localScope;
 
   if (mode === "summary") {
@@ -237,11 +257,11 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
 
           <button
             className="button-primary"
-            disabled={isAuthLoading}
+            disabled={isSaving}
             onClick={() => void handleSave()}
             type="button"
           >
-            {isAuthLoading ? "Cargando..." : isUnauthenticated ? "Iniciar sesión para guardar" : "Guardar campeón"}
+            {isSaving ? "Guardando..." : isUnauthenticated ? "Iniciar sesión para guardar" : "Guardar campeón"}
           </button>
         </section>
       ) : null}
