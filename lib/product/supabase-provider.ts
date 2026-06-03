@@ -429,6 +429,23 @@ export class SupabaseProductProvider implements ProductProvider {
       };
     }
 
+    if (matchedOutcomes.length === 0) {
+      return {
+        ok: false,
+        state: "sync_error",
+        reason: "La jugada está vacía.",
+      };
+    }
+
+    const totalAllocated = matchedOutcomes.reduce((sum, row) => sum + (row.amount ?? 0), 0);
+    if (totalAllocated <= 0) {
+      return {
+        ok: false,
+        state: "sync_error",
+        reason: "La jugada no tiene créditos asignados.",
+      };
+    }
+
     const ticketUpsert = await supabase
       .from("tickets")
       .upsert(
