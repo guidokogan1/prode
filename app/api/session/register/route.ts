@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const pin = body.pin?.trim() ?? "";
     const confirmPin = body.confirmPin?.trim() ?? "";
 
-    if (displayName.length < 2) {
+    if (displayName.length < 2 || displayName.length > 30 || !/^[\p{L}\p{N} _.-]+$/u.test(displayName)) {
       return NextResponse.json({ error: "invalid display name" }, { status: 400 });
     }
 
