@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     .from("matches")
     .select("id, status, winner_team_id, home_score_ft, away_score_ft")
     .eq("stage_id", stagesQuery.data.id)
-    .eq("status", "final")
+    .eq("status", "finished")
     .not("winner_team_id", "is", null)
     .maybeSingle<{ id: string; status: string; winner_team_id: string; home_score_ft: number | null; away_score_ft: number | null }>();
 

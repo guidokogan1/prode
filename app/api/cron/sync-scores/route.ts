@@ -45,7 +45,7 @@ function mapStatus(fdStatus: string): { dbStatus: string | null; isFinal: boolea
   switch (fdStatus) {
     case "FINISHED":
     case "AWARDED":
-      return { dbStatus: "final", isFinal: true };
+      return { dbStatus: "finished", isFinal: true };
     case "IN_PLAY":
     case "PAUSED":
     case "EXTRA_TIME":
@@ -53,9 +53,10 @@ function mapStatus(fdStatus: string): { dbStatus: string | null; isFinal: boolea
     case "LIVE":
       return { dbStatus: "live", isFinal: false };
     case "POSTPONED":
+      return { dbStatus: "postponed", isFinal: false };
     case "SUSPENDED":
     case "CANCELLED":
-      return { dbStatus: "postponed", isFinal: false };
+      return { dbStatus: "cancelled", isFinal: false };
     default:
       return { dbStatus: null, isFinal: false };
   }
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
           const dCur = Math.abs(new Date(cur.kickoff_at).getTime() - fdTime);
           return dCur < dBest ? cur : best;
         });
-    if (dbMatch.status === "settled" || (dbMatch.status === "final" && dbMatch.home_score_ft != null)) {
+    if (dbMatch.status === "settled" || (dbMatch.status === "finished" && dbMatch.home_score_ft != null)) {
       alreadySettled += 1;
       continue;
     }
