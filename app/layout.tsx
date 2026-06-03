@@ -3,6 +3,7 @@ import { Barlow, Barlow_Condensed, DM_Serif_Display } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
 import { DemoFloatingBar } from "@/components/demo-floating-bar";
 import { SessionProvider } from "@/components/session-provider";
+import { SyncRetry } from "@/components/sync-retry";
 import { getActiveDemoPersonaSlug } from "@/lib/demo-state";
 import { getDemoPersonas } from "@/lib/mock-data";
 import "./globals.css";
@@ -48,6 +49,7 @@ export default async function RootLayout({
     <html lang="es">
       <body className={`${barlow.variable} ${barlowCondensed.variable} ${dmSerifDisplay.variable}`}>
         <SessionProvider>
+          <SyncRetry />
           <div className="app-shell">
             {children}
             <BottomNav />

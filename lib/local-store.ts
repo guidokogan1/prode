@@ -94,6 +94,28 @@ export function saveStoredAllocation(matchId: string, draft: StoredAllocationDra
   window.dispatchEvent(new CustomEvent(ALLOCATION_EVENT, { detail: { matchId, draft } }));
 }
 
+export function listSyncErrorAllocations(): { matchId: string; draft: StoredAllocationDraft }[] {
+  if (!canUseStorage()) {
+    return [];
+  }
+  const out: { matchId: string; draft: StoredAllocationDraft }[] = [];
+  for (let i = 0; i < window.localStorage.length; i += 1) {
+    const key = window.localStorage.key(i);
+    if (!key?.startsWith(ALLOCATION_PREFIX)) continue;
+    const raw = window.localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const draft = JSON.parse(raw) as StoredAllocationDraft;
+      if (draft.status === "sync_error") {
+        out.push({ matchId: key.slice(ALLOCATION_PREFIX.length), draft });
+      }
+    } catch {
+      continue;
+    }
+  }
+  return out;
+}
+
 export function getStoredChampionPick(scopeKey: string): StoredChampionPick | null {
   if (!canUseStorage()) {
     return null;
