@@ -116,7 +116,10 @@ export class SupabaseProductProvider implements ProductProvider {
 
   async listMatches(): Promise<MatchViewModel[]> {
     const matches = await this.loadMatchViewModels();
-    return matches.map((item) => item.match);
+    return matches
+      .slice()
+      .sort((a, b) => a.kickoffAt.localeCompare(b.kickoffAt))
+      .map((item) => item.match);
   }
 
   async listMatchesByStage(): Promise<MatchStageGroup[]> {

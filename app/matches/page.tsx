@@ -52,15 +52,15 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
     .map((groupLabel) => ({
       id: String(groupLabel),
       title: String(groupLabel),
-      matches: groupStageMatches
-        .filter((match) => match.groupLabel === groupLabel)
-        .sort((left, right) => getMatchActionPriority(left) - getMatchActionPriority(right)),
+      matches: groupStageMatches.filter((match) => match.groupLabel === groupLabel),
     }));
 
   const knockoutOrder = [
+    "Dieciseisavos",
     "Octavos de final",
     "Cuartos de final",
     "Semifinales",
+    "Tercer puesto",
     "Final",
   ];
 
@@ -68,9 +68,7 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
     .map((stage) => ({
       id: stage,
       title: stage,
-      matches: knockoutMatches
-        .filter((match) => match.stage === stage)
-        .sort((left, right) => getMatchActionPriority(left) - getMatchActionPriority(right)),
+      matches: knockoutMatches.filter((match) => match.stage === stage),
     }))
     .filter((group) => group.matches.length > 0);
 

@@ -195,6 +195,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       setSaveTone("warning");
     } finally {
       setIsSaving(false);
+      router.refresh();
     }
 
     nextTimerRef.current = setTimeout(() => {
