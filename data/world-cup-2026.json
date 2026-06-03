@@ -82,7 +82,7 @@
       "venues": ["Atlanta", "Houston", "Miami"],
       "matchDays": ["2026-06-15", "2026-06-21", "2026-06-27"],
       "teams": [
-        { "code": "ESP", "name": "Espana", "flag": "🇪🇸" },
+        { "code": "ESP", "name": "España", "flag": "🇪🇸" },
         { "code": "CPV", "name": "Cabo Verde", "flag": "🇨🇻" },
         { "code": "KSA", "name": "Arabia Saudita", "flag": "🇸🇦" },
         { "code": "URU", "name": "Uruguay", "flag": "🇺🇾" }

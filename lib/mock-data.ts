@@ -166,12 +166,12 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
     },
     {
       id: "b3",
-      title: "Espana vs Uruguay",
+      title: "España vs Uruguay",
       stage: "Cuartos de final",
       description: "Todavia estas esperando el cruce ideal para pegar el salto.",
       netAmount: 0,
       allocations: [
-        { label: "Clasifica Espana", amount: 3500 },
+        { label: "Clasifica España", amount: 3500 },
         { label: "Clasifica Uruguay", amount: 6500 },
       ],
     },
@@ -191,12 +191,12 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
     },
     {
       id: "p2",
-      title: "Espana vs Uruguay",
+      title: "España vs Uruguay",
       stage: "Cuartos de final",
       description: "Todavia no cerraste esta jugada, asi que el perfil sirve para revisar pendientes.",
       netAmount: 0,
       allocations: [
-        { label: "Clasifica Espana", amount: 5000 },
+        { label: "Clasifica España", amount: 5000 },
         { label: "Clasifica Uruguay", amount: 5000 },
       ],
     },
@@ -216,12 +216,12 @@ const personaHistories: Record<DemoPersonaSlug, HistoryEntry[]> = {
     },
     {
       id: "c2",
-      title: "Uruguay vs Espana",
+      title: "Uruguay vs España",
       stage: "Cuartos de final",
       description: "Todavia venis buscando una jugada grande que te vuelva a meter.",
       netAmount: 0,
       allocations: [
-        { label: "Clasifica Espana", amount: 4000 },
+        { label: "Clasifica España", amount: 4000 },
         { label: "Clasifica Uruguay", amount: 6000 },
       ],
     },
@@ -567,7 +567,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
         { label: "Clasifica Alemania", amount: "0", percentage: 0 },
       ],
       espUru: [
-        { label: "Clasifica Espana", amount: "0", percentage: 0 },
+        { label: "Clasifica España", amount: "0", percentage: 0 },
         { label: "Clasifica Uruguay", amount: "0", percentage: 0 },
       ],
       marSen: [
@@ -604,7 +604,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
         { label: "Clasifica Alemania", amount: "8.000", percentage: 80 },
       ],
       espUru: [
-        { label: "Clasifica Espana", amount: "6.000", percentage: 60 },
+        { label: "Clasifica España", amount: "6.000", percentage: 60 },
         { label: "Clasifica Uruguay", amount: "4.000", percentage: 40 },
       ],
       marSen: [
@@ -641,7 +641,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
         { label: "Clasifica Alemania", amount: "9.000", percentage: 90 },
       ],
       espUru: [
-        { label: "Clasifica Espana", amount: "3.500", percentage: 35 },
+        { label: "Clasifica España", amount: "3.500", percentage: 35 },
         { label: "Clasifica Uruguay", amount: "6.500", percentage: 65 },
       ],
       marSen: [
@@ -678,7 +678,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
         { label: "Clasifica Alemania", amount: "7.000", percentage: 70 },
       ],
       espUru: [
-        { label: "Clasifica Espana", amount: "5.000", percentage: 50 },
+        { label: "Clasifica España", amount: "5.000", percentage: 50 },
         { label: "Clasifica Uruguay", amount: "5.000", percentage: 50 },
       ],
       marSen: [
@@ -715,7 +715,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
         { label: "Clasifica Alemania", amount: "7.500", percentage: 75 },
       ],
       espUru: [
-        { label: "Clasifica Espana", amount: "4.000", percentage: 40 },
+        { label: "Clasifica España", amount: "4.000", percentage: 40 },
         { label: "Clasifica Uruguay", amount: "6.000", percentage: 60 },
       ],
       marSen: [
@@ -859,11 +859,11 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
       marketTypeLabel: "Clasifica",
       userStateLabel: profiles.states.espUru,
       isEditable: true,
-      home: { name: "Espana", flag: "🇪🇸", score: 0 },
+      home: { name: "España", flag: "🇪🇸", score: 0 },
       away: { name: "Uruguay", flag: "🇺🇾", score: 0 },
       allocation: profiles.espUru,
       consensus: [
-        { label: "Clasifica Espana", percentage: 53 },
+        { label: "Clasifica España", percentage: 53 },
         { label: "Clasifica Uruguay", percentage: 47 },
       ],
       form: { home: "V V D V V", away: "V E V V D", homeGoals: "10", awayGoals: "9" },

@@ -8,7 +8,6 @@ import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
-import { formatCredits } from "@/lib/format";
 import { getOutcomeColor, getOutcomeFlag, getOutcomeHint, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
 import { buildAllocationScope, saveStoredAllocation } from "@/lib/local-store";
 
@@ -30,14 +29,10 @@ function isDrawCode(code: MatchOutcomeCode) {
   return code === "draw";
 }
 
-function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCode, intensity: IntensityPreset) {
-  const preset = buildPresetAllocation(
-    match.allocation.map((item) => item.code),
-    selectedOutcome,
-    intensity,
-  );
-
-  return preset.map((item) => formatCredits(item.amount)).join(" · ");
+function getIntensityCopy(intensity: IntensityPreset) {
+  if (intensity === "soft") return "Más cubierto";
+  if (intensity === "medium") return "Más decidido";
+  return "A fondo";
 }
 
 export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
@@ -375,7 +370,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                       <div style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
                         <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.home.flag}</span>
                         <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
-                          {match.marketType === "qualifies" ? "clasifica local" : "gana local"}
+                          {match.marketType === "qualifies" ? "clasifica" : "gana"}
                         </span>
                       </div>
                     </motion.div>
@@ -392,7 +387,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                       <div style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
                         <span style={{ fontSize: "3rem", lineHeight: 1 }}>{match.away.flag}</span>
                         <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
-                          {match.marketType === "qualifies" ? "clasifica visita" : "gana visita"}
+                          {match.marketType === "qualifies" ? "clasifica" : "gana"}
                         </span>
                       </div>
                     </motion.div>
@@ -464,7 +459,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
 
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, position: "relative", zIndex: 1 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 999, background: getOutcomeColor(chosenOutcome) }} />
-                      <span className="eyebrow">Elegiste</span>
+                      <span className="eyebrow">Vas con</span>
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.06)", position: "relative", zIndex: 1 }}>
@@ -478,7 +473,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                     </div>
 
                     <div style={{ display: "grid", gap: 12, marginTop: "auto", marginBottom: "auto", position: "relative", zIndex: 1 }}>
-                      <p className="eyebrow">Fuerza</p>
+                      <p className="eyebrow">¿Cómo la querés jugar?</p>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
                         {INTENSITIES.map((option) => {
                           const Icon = option.icon;
@@ -504,7 +499,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                             >
                               <Icon size={26} style={{ color: iconColor }} />
                               <span style={{ fontFamily: "var(--font-display)", fontSize: ".98rem", fontWeight: 700 }}>{option.label}</span>
-                              <span className="micro-copy" style={{ color: "#7A9A81" }}>{buildPresetHint(match, chosenOutcome, option.id)}</span>
+                              <span className="micro-copy" style={{ color: "#7A9A81" }}>{getIntensityCopy(option.id)}</span>
                             </motion.button>
                           );
                         })}
@@ -568,7 +563,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
                         <p className="muted-copy">
                           {getOutcomeFlag(chosenOutcome, savedMatchSnapshot)} {savedMatchSnapshot.allocation.find((item) => item.code === chosenOutcome)?.label}
                           {" · "}
-                          <span style={{ color: "#D4A64B" }}>{buildPresetHint(savedMatchSnapshot, chosenOutcome, chosenIntensity)}</span>
+                          <span style={{ color: "#D4A64B" }}>{getIntensityCopy(chosenIntensity)}</span>
                         </p>
                         {saveMessage ? (
                           <span

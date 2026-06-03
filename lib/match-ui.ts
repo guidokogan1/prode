@@ -39,15 +39,15 @@ export function getOutcomeFlag(code: MatchOutcomeCode, match: MatchViewModel) {
 
 export function getOutcomeHint(code: MatchOutcomeCode, marketType: MatchViewModel["marketType"]) {
   if (marketType === "qualifies") {
-    return code === "home_qualifies" ? "Clasifica local" : "Clasifica visitante";
+    return "Clasifica";
   }
 
   if (code === "home") {
-    return "Gana local";
+    return "Gana";
   }
 
   if (code === "away") {
-    return "Gana visitante";
+    return "Gana";
   }
 
   return "Empate";

@@ -7,7 +7,6 @@ import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
-import { formatCredits } from "@/lib/format";
 import {
   getOutcomeColor,
   getOutcomeFlag,
@@ -30,14 +29,10 @@ const INTENSITIES: { id: IntensityOption; label: string; icon: typeof Droplets }
   { id: "hard", label: "Fuerte", icon: Flame },
 ];
 
-function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCode, intensity: IntensityPreset) {
-  const preset = buildPresetAllocation(
-    match.allocation.map((item) => item.code),
-    selectedOutcome,
-    intensity,
-  );
-
-  return preset.map((item) => formatCredits(item.amount)).join(" · ");
+function getIntensityCopy(intensity: IntensityPreset) {
+  if (intensity === "soft") return "Más cubierto";
+  if (intensity === "medium") return "Más decidido";
+  return "A fondo";
 }
 
 export function MatchVoteCard({ match }: MatchVoteCardProps) {
@@ -286,7 +281,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: "2.4rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, match)}</span>
                 <div className="title-stack">
-                  <p className="eyebrow">Elegiste</p>
+                  <p className="eyebrow">Vas con</p>
                   <strong style={{ fontSize: "1.15rem" }}>
                     {match.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}
                   </strong>
@@ -296,6 +291,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                 </div>
               </div>
 
+              <p className="eyebrow">¿Cómo la querés jugar?</p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, marginTop: "auto" }}>
                 {INTENSITIES.map((option) => {
                   const Icon = option.icon;
@@ -319,7 +315,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                     >
                       <Icon size={26} />
                       <span style={{ fontFamily: "var(--font-display)", fontSize: ".98rem", fontWeight: 700 }}>{option.label}</span>
-                      <span className="micro-copy" style={{ color: "#7A9A81" }}>{buildPresetHint(match, chosenOutcome, option.id)}</span>
+                      <span className="micro-copy" style={{ color: "#7A9A81" }}>{getIntensityCopy(option.id)}</span>
                     </motion.button>
                   );
                 })}

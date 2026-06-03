@@ -34,14 +34,10 @@ const INTENSITIES: { id: IntensityOption; label: string; icon: typeof Droplets }
   { id: "hard", label: "Fuerte", icon: Flame },
 ];
 
-function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCode, intensity: IntensityPreset) {
-  const preset = buildPresetAllocation(
-    match.allocation.map((item) => item.code),
-    selectedOutcome,
-    intensity,
-  );
-
-  return preset.map((item) => formatCredits(item.amount)).join(" · ");
+function getIntensityCopy(intensity: IntensityPreset) {
+  if (intensity === "soft") return "Más cubierto";
+  if (intensity === "medium") return "Más decidido";
+  return "A fondo";
 }
 
 export function MatchDetailCard({ match }: MatchDetailCardProps) {
@@ -456,7 +452,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: 999, background: chosenColor ?? "#EDE8D9" }} />
-                    <p className="eyebrow">Elegiste</p>
+                    <p className="eyebrow">Vas con</p>
                   </div>
 
                   <div className="title-stack">
@@ -464,6 +460,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>{getOutcomeHint(chosenOutcome, effectiveMatch.marketType)}</p>
                   </div>
 
+                  <p className="eyebrow">¿Cómo la querés jugar?</p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
                     {INTENSITIES.map((option) => {
                       const Icon = option.icon;
@@ -487,7 +484,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                         >
                           <Icon size={24} />
                           <span style={{ fontFamily: "var(--font-display)", fontSize: ".94rem", fontWeight: 700 }}>{option.label}</span>
-                          <span className="micro-copy">{buildPresetHint(effectiveMatch, chosenOutcome, option.id)}</span>
+                          <span className="micro-copy">{getIntensityCopy(option.id)}</span>
                         </motion.button>
                       );
                     })}
@@ -516,7 +513,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     <p className="muted-copy">
                       {getOutcomeFlag(chosenOutcome, effectiveMatch)} {effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label}
                       {" · "}
-                      {buildPresetHint(effectiveMatch, chosenOutcome, chosenIntensity)}
+                      {getIntensityCopy(chosenIntensity)}
                     </p>
                     {saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : saveTone === "loading" ? "#EDE8D9" : "#7A9A81" }}>{saveMessage}</span> : null}
                   </div>
