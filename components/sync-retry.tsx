@@ -2,7 +2,12 @@
 
 import { useContext, useEffect, useRef } from "react";
 import { SessionContext } from "@/components/session-provider";
-import { buildAllocationScope, listSyncErrorAllocations, saveStoredAllocation } from "@/lib/local-store";
+import {
+  buildAllocationScope,
+  listAllStoredAllocations,
+  listSyncErrorAllocations,
+  saveStoredAllocation,
+} from "@/lib/local-store";
 
 export function SyncRetry() {
   const session = useContext(SessionContext);
@@ -14,29 +19,38 @@ export function SyncRetry() {
     ranRef.current = true;
 
     const allocationScope = buildAllocationScope(session);
-    const pending = listSyncErrorAllocations(allocationScope);
-    if (!pending.length) return;
+    const sync = async () => {
+      const errored = listSyncErrorAllocations(allocationScope);
+      const allWithPicks = listAllStoredAllocations(allocationScope);
+      const all = new Map<string, (typeof allWithPicks)[number]>();
+      for (const item of allWithPicks) all.set(item.matchId, item);
+      for (const item of errored) all.set(item.matchId, item);
 
-    void Promise.all(
-      pending.map(async ({ matchId, draft }) => {
-        try {
-          const response = await fetch("/api/tickets", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ matchId, allocations: draft.allocations }),
-            credentials: "include",
-          });
-          if (response.ok) {
-            saveStoredAllocation(allocationScope, matchId, {
-              ...draft,
-              status: "saved_remote",
-              savedAt: new Date().toISOString(),
+      if (!all.size) return;
+
+      await Promise.all(
+        Array.from(all.values()).map(async ({ matchId, draft }) => {
+          try {
+            const response = await fetch("/api/tickets", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ matchId, allocations: draft.allocations }),
+              credentials: "include",
             });
+            if (response.ok) {
+              saveStoredAllocation(allocationScope, matchId, {
+                ...draft,
+                status: "saved_remote",
+                savedAt: new Date().toISOString(),
+              });
+            }
+          } catch {
           }
-        } catch {
-        }
-      }),
-    );
+        }),
+      );
+    };
+
+    void sync();
   }, [session]);
 
   return null;

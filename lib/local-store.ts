@@ -132,6 +132,20 @@ export function saveStoredAllocation(scopeKey: string, matchId: string, draft: S
 }
 
 export function listSyncErrorAllocations(scopeKey: string): { matchId: string; draft: StoredAllocationDraft }[] {
+  return listAllocationsForScope(scopeKey, (draft) => draft.status === "sync_error");
+}
+
+export function listAllStoredAllocations(scopeKey: string): { matchId: string; draft: StoredAllocationDraft }[] {
+  return listAllocationsForScope(scopeKey, (draft) => {
+    const sum = (draft.allocations ?? []).reduce((a, b) => a + (b.amount ?? 0), 0);
+    return sum > 0;
+  });
+}
+
+function listAllocationsForScope(
+  scopeKey: string,
+  predicate: (draft: StoredAllocationDraft) => boolean,
+): { matchId: string; draft: StoredAllocationDraft }[] {
   if (!canUseStorage()) {
     return [];
   }
@@ -149,7 +163,7 @@ export function listSyncErrorAllocations(scopeKey: string): { matchId: string; d
     if (!raw) continue;
     try {
       const draft = JSON.parse(raw) as StoredAllocationDraft;
-      if (draft.status === "sync_error") {
+      if (predicate(draft)) {
         const matchId = isScopedKey
           ? key.slice(scopedPrefix.length)
           : isGuestKey
