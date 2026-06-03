@@ -877,17 +877,19 @@ function getOutcomeShortLabel(code: string, homeName: string, awayName: string, 
   return code === "away" ? awayName : homeName;
 }
 
+const AR_TZ = "America/Argentina/Buenos_Aires";
+
 function formatKickoffLabel(kickoffAt: string) {
   const date = new Date(kickoffAt);
-  const day = new Intl.DateTimeFormat("es-AR", { day: "numeric", timeZone: "UTC" }).format(date);
-  const month = new Intl.DateTimeFormat("es-AR", { month: "short", timeZone: "UTC" })
+  const day = new Intl.DateTimeFormat("es-AR", { day: "numeric", timeZone: AR_TZ }).format(date);
+  const month = new Intl.DateTimeFormat("es-AR", { month: "short", timeZone: AR_TZ })
     .format(date)
     .replace(".", "");
   const time = new Intl.DateTimeFormat("es-AR", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-    timeZone: "UTC",
+    timeZone: AR_TZ,
   }).format(date);
 
   return `${day} ${month} · ${time}`;
