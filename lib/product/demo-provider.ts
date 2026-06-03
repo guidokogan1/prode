@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type {
   HistoryEntry,
   HomeSummary,
@@ -22,11 +23,13 @@ import {
 } from "@/lib/mock-data";
 import { getServerSessionState } from "@/lib/product/session-state";
 
+const getCachedDemoSessionState = cache(async () => getServerSessionState("demo"));
+
 export class DemoProductProvider implements ProductProvider {
   mode = "demo" as const;
 
   async getSessionState(): Promise<SessionState> {
-    return getServerSessionState(this.mode);
+    return getCachedDemoSessionState();
   }
 
   async getHomeSummary(): Promise<HomeSummary> {

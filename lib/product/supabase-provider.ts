@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type {
   HistoryEntry,
   HomeSummary,
@@ -70,7 +71,7 @@ export class SupabaseProductProvider implements ProductProvider {
   mode = "supabase" as const;
 
   async getSessionState(): Promise<SessionState> {
-    return getServerSessionState(this.mode);
+    return getCachedSupabaseSessionState();
   }
 
   async getHomeSummary(): Promise<HomeSummary> {
@@ -457,14 +458,21 @@ export class SupabaseProductProvider implements ProductProvider {
     };
   }
   private async loadMatchViewModels(options: LoadMatchOptions = {}): Promise<LoadedMatch[]> {
+    return loadCachedMatchViewModels(options.matchId ?? null, Boolean(options.includeReveals));
+  }
+}
+
+const getCachedSupabaseSessionState = cache(async () => getServerSessionState("supabase"));
+
+const loadCachedMatchViewModels = cache(async (matchId: string | null, includeReveals: boolean): Promise<LoadedMatch[]> => {
     const supabase = getSupabaseOrThrow();
-    const session = await this.getSessionState();
+    const session = await getCachedSupabaseSessionState();
     const matchesQuery = await supabase
       .from("matches")
       .select(
         "id, kickoff_at, status, venue_name, venue_city, home_score_90, away_score_90, home_score_ft, away_score_ft, stage:tournament_stages(code, name, sort_order), home:teams!matches_home_team_id_fkey(name, fifa_code), away:teams!matches_away_team_id_fkey(name, fifa_code)",
       )
-      .match(options.matchId ? { id: options.matchId } : {})
+      .match(matchId ? { id: matchId } : {})
       .returns<MatchQueryRow[]>();
 
     const matchRows = matchesQuery.data ?? [];
@@ -492,7 +500,7 @@ export class SupabaseProductProvider implements ProductProvider {
             .returns<OutcomeQueryRow[]>()
         : Promise.resolve({ data: [] as OutcomeQueryRow[] }),
       loadCurrentUserMap(supabase, session.userId, marketIds),
-      loadAllTicketData(supabase, marketIds, Boolean(options.includeReveals)),
+      loadAllTicketData(supabase, marketIds, includeReveals),
     ]);
 
     const marketsByMatchId = new Map(marketRows.map((row) => [row.match_id, row]));
@@ -559,7 +567,7 @@ export class SupabaseProductProvider implements ProductProvider {
         });
 
         const revealedTickets =
-          options.includeReveals && (market.status === "revealed" || market.status === "settled")
+          includeReveals && (market.status === "revealed" || market.status === "settled")
             ? marketTickets.map((ticket) => ({
                 userName: allTicketData.usersById.get(ticket.user_id) ?? "Jugador",
                 allocations: (allTicketData.allocationsByTicketId.get(ticket.id) ?? [])
@@ -637,8 +645,7 @@ export class SupabaseProductProvider implements ProductProvider {
 
         return left.kickoffAt.localeCompare(right.kickoffAt);
       });
-  }
-}
+  });
 
 function getSupabaseOrThrow() {
   const supabase = getSupabaseServerClient();

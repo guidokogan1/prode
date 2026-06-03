@@ -1,13 +1,11 @@
 "use client";
 
 import { useContext, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { SessionContext } from "@/components/session-provider";
-import { listSyncErrorAllocations, saveStoredAllocation } from "@/lib/local-store";
+import { buildAllocationScope, listSyncErrorAllocations, saveStoredAllocation } from "@/lib/local-store";
 
 export function SyncRetry() {
   const session = useContext(SessionContext);
-  const router = useRouter();
   const ranRef = useRef(false);
 
   useEffect(() => {
@@ -15,7 +13,8 @@ export function SyncRetry() {
     if (session?.kind !== "remote") return;
     ranRef.current = true;
 
-    const pending = listSyncErrorAllocations();
+    const allocationScope = buildAllocationScope(session);
+    const pending = listSyncErrorAllocations(allocationScope);
     if (!pending.length) return;
 
     void Promise.all(
@@ -28,13 +27,17 @@ export function SyncRetry() {
             credentials: "include",
           });
           if (response.ok) {
-            saveStoredAllocation(matchId, { ...draft, status: "saved_remote", savedAt: new Date().toISOString() });
+            saveStoredAllocation(allocationScope, matchId, {
+              ...draft,
+              status: "saved_remote",
+              savedAt: new Date().toISOString(),
+            });
           }
         } catch {
         }
       }),
-    ).then(() => router.refresh());
-  }, [session, router]);
+    );
+  }, [session]);
 
   return null;
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
-import { ALLOCATION_EVENT, getStoredAllocation } from "@/lib/local-store";
+import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation } from "@/lib/local-store";
 import { getOutcomeColor, getOutcomeHint, getPickStateLabel } from "@/lib/match-ui";
 import { MatchSummaryCard } from "@/components/match-summary-card";
 
@@ -12,11 +13,13 @@ type MatchOverviewProps = {
 };
 
 export function MatchOverview({ match }: MatchOverviewProps) {
+  const session = useContext(SessionContext);
+  const allocationScope = buildAllocationScope(session);
   const [effectiveMatch, setEffectiveMatch] = useState(match);
 
   useEffect(() => {
     const sync = () => {
-      const storedDraft = getStoredAllocation(match.id);
+      const storedDraft = getStoredAllocation(allocationScope, match.id);
       if (!storedDraft?.allocations?.length) {
         setEffectiveMatch(match);
         return;
@@ -45,7 +48,7 @@ export function MatchOverview({ match }: MatchOverviewProps) {
       window.removeEventListener(ALLOCATION_EVENT, sync);
       window.removeEventListener("storage", sync);
     };
-  }, [match]);
+  }, [allocationScope, match]);
 
   const leadingConsensus = useMemo(
     () => [...effectiveMatch.consensus].sort((left, right) => right.percentage - left.percentage)[0] ?? null,

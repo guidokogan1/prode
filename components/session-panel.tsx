@@ -1,61 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import type { SessionState } from "@/lib/domain";
-import { clearStoredSession, getStoredSession, SESSION_EVENT } from "@/lib/local-store";
-import { useEffect, useState } from "react";
+import { useContext } from "react";
+import { SessionContext } from "@/components/session-provider";
+import { clearStoredSession } from "@/lib/local-store";
 
 export function SessionPanel() {
-  const [session, setSession] = useState<SessionState | null>(null);
-
-  useEffect(() => {
-    const sync = async () => {
-      try {
-        const response = await fetch("/api/session", { cache: "no-store" });
-        const payload = (await response.json()) as { session: SessionState };
-
-        if (payload.session.kind === "anonymous") {
-          const localSession = getStoredSession();
-          if (localSession) {
-            setSession({
-              kind: "local",
-              appMode: payload.session.appMode,
-              displayName: localSession.displayName,
-              demoPersonaSlug: payload.session.demoPersonaSlug,
-            });
-            return;
-          }
-        }
-
-        setSession(payload.session);
-        return;
-      } catch {
-        const localSession = getStoredSession();
-        setSession(
-          localSession
-            ? {
-                kind: "local",
-                appMode: "demo",
-                displayName: localSession.displayName,
-              }
-            : {
-                kind: "anonymous",
-                appMode: "demo",
-                displayName: null,
-              },
-        );
-      }
-    };
-
-    void sync();
-    window.addEventListener(SESSION_EVENT, sync);
-    window.addEventListener("storage", sync);
-
-    return () => {
-      window.removeEventListener(SESSION_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
+  const session = useContext(SessionContext);
 
   async function handleLogout() {
     try {
@@ -65,20 +16,6 @@ export function SessionPanel() {
     }
 
     clearStoredSession();
-    setSession((current) =>
-      current
-        ? {
-            kind: current.appMode === "demo" ? "demo" : "anonymous",
-            appMode: current.appMode,
-            displayName: current.appMode === "demo" ? current.displayName : null,
-            demoPersonaSlug: current.demoPersonaSlug,
-          }
-        : {
-            kind: "anonymous",
-            appMode: "demo",
-            displayName: null,
-          },
-    );
   }
 
   const sessionName = session?.displayName ?? "Sin entrar";

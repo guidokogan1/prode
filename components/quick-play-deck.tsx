@@ -10,7 +10,7 @@ import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
 import { formatCredits } from "@/lib/format";
 import { getOutcomeColor, getOutcomeFlag, getOutcomeHint, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
-import { saveStoredAllocation } from "@/lib/local-store";
+import { buildAllocationScope, saveStoredAllocation } from "@/lib/local-store";
 
 type QuickPlayDeckProps = {
   matches: MatchViewModel[];
@@ -63,6 +63,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   const [isSaving, setIsSaving] = useState(false);
   const nextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isChoosingRef = useRef(false);
+  const allocationScope = buildAllocationScope(session);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -154,7 +155,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       clearTimeout(nextTimerRef.current);
     }
 
-    saveStoredAllocation(match.id, {
+    saveStoredAllocation(allocationScope, match.id, {
       allocations: payload,
       savedAt: new Date().toISOString(),
       status: "draft",
@@ -190,7 +191,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
         throw new Error("remote save failed");
       }
 
-      saveStoredAllocation(match.id, {
+      saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "saved_remote",
@@ -198,7 +199,7 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       setSaveMessage("Guardado");
       setSaveTone("default");
     } catch {
-      saveStoredAllocation(match.id, {
+      saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "sync_error",
@@ -207,7 +208,6 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
       setSaveTone("warning");
     } finally {
       setIsSaving(false);
-      router.refresh();
     }
 
     nextTimerRef.current = setTimeout(() => {
@@ -414,7 +414,14 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
                       </motion.div>
                     ) : null}
 
-                    <VoteFace match={match} showDrawGesture={Boolean(showDrawGesture)} />
+                    <VoteFace
+                      match={match}
+                      showDrawGesture={Boolean(showDrawGesture)}
+                      outcomeTargets={quickPlayTargets}
+                      onSelectOutcome={(code) => {
+                        void chooseOutcome(code);
+                      }}
+                    />
                   </motion.div>
                 ) : null}
 

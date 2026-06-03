@@ -10,7 +10,7 @@ import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { formatCredits, formatNetAmount } from "@/lib/format";
 import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
-import { ALLOCATION_EVENT, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
+import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 import {
   deriveResolvedOutcome,
   formatCompactCredits,
@@ -47,6 +47,7 @@ function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCod
 export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
+  const allocationScope = buildAllocationScope(session);
   const [effectiveMatch, setEffectiveMatch] = useState(match);
   const cardState = useMemo(() => getMatchCardState(effectiveMatch, "hero"), [effectiveMatch]);
   const [phase, setPhase] = useState<CardPhase>("idle");
@@ -69,7 +70,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
   useEffect(() => {
     const sync = () => {
-      const storedDraft = getStoredAllocation(match.id);
+      const storedDraft = getStoredAllocation(allocationScope, match.id);
       if (!storedDraft?.allocations?.length) {
         setEffectiveMatch(match);
         return;
@@ -98,7 +99,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       window.removeEventListener(ALLOCATION_EVENT, sync);
       window.removeEventListener("storage", sync);
     };
-  }, [match]);
+  }, [allocationScope, match]);
 
   useEffect(() => {
     setIsEditingSaved(false);
@@ -186,7 +187,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       amount: item.amount,
     }));
 
-    saveStoredAllocation(effectiveMatch.id, {
+    saveStoredAllocation(allocationScope, effectiveMatch.id, {
       allocations: payload,
       savedAt: new Date().toISOString(),
       status: "draft",
@@ -214,7 +215,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
         throw new Error("remote save failed");
       }
 
-      saveStoredAllocation(effectiveMatch.id, {
+      saveStoredAllocation(allocationScope, effectiveMatch.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "saved_remote",
@@ -222,7 +223,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       setSaveMessage("Guardado");
       setSaveTone("default");
     } catch {
-      saveStoredAllocation(effectiveMatch.id, {
+      saveStoredAllocation(allocationScope, effectiveMatch.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "sync_error",
@@ -231,7 +232,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       setSaveTone("warning");
     } finally {
       setIsSaving(false);
-      router.refresh();
       if (saveResetTimeoutRef.current) {
         clearTimeout(saveResetTimeoutRef.current);
       }

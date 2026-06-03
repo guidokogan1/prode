@@ -14,11 +14,16 @@ type VoteFaceProps = {
 };
 
 export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLabel, outcomeTargets, onSelectOutcome }: VoteFaceProps) {
+  const handlePressStart = (event: React.PointerEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+  };
+
   const leftControl = outcomeTargets && onSelectOutcome ? (
     <button
       type="button"
       className="button-ghost"
       style={{ minHeight: 0, padding: 0, color: "#3D9B5F", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em", justifyContent: "flex-start" }}
+      onPointerDown={handlePressStart}
       onClick={() => onSelectOutcome(outcomeTargets.left)}
     >
       ← {match.home.name}
@@ -30,12 +35,13 @@ export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLa
   const drawControl =
     showDrawGesture && outcomeTargets?.draw && onSelectOutcome ? (
       <button
-        type="button"
-        className="button-ghost"
-        style={{ minHeight: 0, padding: 0, color: "#5B8FF0", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}
-        onClick={() => onSelectOutcome(outcomeTargets.draw!)}
-      >
-        ↑ Empate
+      type="button"
+      className="button-ghost"
+      style={{ minHeight: 0, padding: 0, color: "#5B8FF0", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}
+      onPointerDown={handlePressStart}
+      onClick={() => onSelectOutcome(outcomeTargets.draw!)}
+    >
+      ↑ Empate
       </button>
     ) : showDrawGesture ? (
       <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em" }}>↑ Empate</span>
@@ -48,6 +54,7 @@ export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLa
       type="button"
       className="button-ghost"
       style={{ minHeight: 0, padding: 0, color: "#E8413A", fontSize: ".78rem", fontWeight: 700, letterSpacing: "-0.01em", justifyContent: "flex-end" }}
+      onPointerDown={handlePressStart}
       onClick={() => onSelectOutcome(outcomeTargets.right)}
     >
       {match.away.name} →

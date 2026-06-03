@@ -1,7 +1,6 @@
 "use client";
 
 import { useContext, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
@@ -16,7 +15,7 @@ import {
   getQuickPlayOutcomeTargets,
   getQuickPlaySwipeOutcome,
 } from "@/lib/match-ui";
-import { saveStoredAllocation } from "@/lib/local-store";
+import { buildAllocationScope, saveStoredAllocation } from "@/lib/local-store";
 
 type MatchVoteCardProps = {
   match: MatchViewModel;
@@ -42,7 +41,6 @@ function buildPresetHint(match: MatchViewModel, selectedOutcome: MatchOutcomeCod
 }
 
 export function MatchVoteCard({ match }: MatchVoteCardProps) {
-  const router = useRouter();
   const session = useContext(SessionContext);
   const [phase, setPhase] = useState<CardPhase>("idle");
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
@@ -51,6 +49,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
   const [isSaving, setIsSaving] = useState(false);
   const isChoosingRef = useRef(false);
+  const allocationScope = buildAllocationScope(session);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -127,7 +126,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
       amount: item.amount,
     }));
 
-    saveStoredAllocation(match.id, {
+    saveStoredAllocation(allocationScope, match.id, {
       allocations: payload,
       savedAt: new Date().toISOString(),
       status: "draft",
@@ -155,7 +154,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
         throw new Error("remote save failed");
       }
 
-      saveStoredAllocation(match.id, {
+      saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "saved_remote",
@@ -163,7 +162,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
       setSaveMessage("Guardado");
       setSaveTone("default");
     } catch {
-      saveStoredAllocation(match.id, {
+      saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "sync_error",
@@ -172,7 +171,6 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
       setSaveTone("warning");
     } finally {
       setIsSaving(false);
-      router.refresh();
     }
   }
 
@@ -250,7 +248,14 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                 />
               ) : null}
 
-              <VoteFace match={match} showDrawGesture={showDrawGesture} />
+              <VoteFace
+                match={match}
+                showDrawGesture={showDrawGesture}
+                outcomeTargets={quickPlayTargets}
+                onSelectOutcome={(code) => {
+                  void chooseOutcome(code);
+                }}
+              />
             </motion.div>
           ) : null}
 

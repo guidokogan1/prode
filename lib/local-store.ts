@@ -1,4 +1,4 @@
-import type { DraftSyncState, SessionKind } from "@/lib/domain";
+import type { DraftSyncState, SessionKind, SessionState } from "@/lib/domain";
 
 const SESSION_KEY = "mundial-pool.session";
 const ALLOCATION_PREFIX = "mundial-pool.allocation.";
@@ -31,6 +31,30 @@ export type StoredChampionPick = {
 
 function canUseStorage() {
   return typeof window !== "undefined";
+}
+
+function buildAllocationScopedKey(scopeKey: string, matchId: string) {
+  return `${ALLOCATION_PREFIX}${scopeKey}.${matchId}`;
+}
+
+function buildLegacyAllocationKey(matchId: string) {
+  return `${ALLOCATION_PREFIX}${matchId}`;
+}
+
+export function buildAllocationScope(session: SessionState | null) {
+  if (session?.kind === "remote" && session.userId) {
+    return `remote:${session.userId}`;
+  }
+
+  if (session?.kind === "demo") {
+    return `demo:${session.demoPersonaSlug ?? "default"}`;
+  }
+
+  if (session?.kind === "local") {
+    return `local:${session.displayName ?? "guest"}`;
+  }
+
+  return "guest";
 }
 
 export function getStoredSession(): StoredSession | null {
@@ -68,12 +92,15 @@ export function clearStoredSession() {
   window.dispatchEvent(new CustomEvent(SESSION_EVENT, { detail: null }));
 }
 
-export function getStoredAllocation(matchId: string): StoredAllocationDraft | null {
+export function getStoredAllocation(scopeKey: string, matchId: string): StoredAllocationDraft | null {
   if (!canUseStorage()) {
     return null;
   }
 
-  const raw = window.localStorage.getItem(`${ALLOCATION_PREFIX}${matchId}`);
+  const raw =
+    window.localStorage.getItem(buildAllocationScopedKey(scopeKey, matchId)) ??
+    (scopeKey !== "guest" ? window.localStorage.getItem(buildAllocationScopedKey("guest", matchId)) : null) ??
+    window.localStorage.getItem(buildLegacyAllocationKey(matchId));
   if (!raw) {
     return null;
   }
@@ -85,35 +112,57 @@ export function getStoredAllocation(matchId: string): StoredAllocationDraft | nu
   }
 }
 
-export function saveStoredAllocation(matchId: string, draft: StoredAllocationDraft) {
+export function saveStoredAllocation(scopeKey: string, matchId: string, draft: StoredAllocationDraft) {
   if (!canUseStorage()) {
     return;
   }
 
-  window.localStorage.setItem(`${ALLOCATION_PREFIX}${matchId}`, JSON.stringify(draft));
-  window.dispatchEvent(new CustomEvent(ALLOCATION_EVENT, { detail: { matchId, draft } }));
+  const nextKey = buildAllocationScopedKey(scopeKey, matchId);
+  window.localStorage.setItem(nextKey, JSON.stringify(draft));
+  const guestKey = buildAllocationScopedKey("guest", matchId);
+  if (guestKey !== nextKey) {
+    window.localStorage.removeItem(guestKey);
+  }
+  const legacyKey = buildLegacyAllocationKey(matchId);
+  if (legacyKey !== nextKey) {
+    window.localStorage.removeItem(legacyKey);
+  }
+  window.dispatchEvent(new CustomEvent(ALLOCATION_EVENT, { detail: { scopeKey, matchId, draft } }));
 }
 
-export function listSyncErrorAllocations(): { matchId: string; draft: StoredAllocationDraft }[] {
+export function listSyncErrorAllocations(scopeKey: string): { matchId: string; draft: StoredAllocationDraft }[] {
   if (!canUseStorage()) {
     return [];
   }
-  const out: { matchId: string; draft: StoredAllocationDraft }[] = [];
+  const out = new Map<string, StoredAllocationDraft>();
   for (let i = 0; i < window.localStorage.length; i += 1) {
     const key = window.localStorage.key(i);
     if (!key?.startsWith(ALLOCATION_PREFIX)) continue;
+    const scopedPrefix = `${ALLOCATION_PREFIX}${scopeKey}.`;
+    const guestPrefix = `${ALLOCATION_PREFIX}guest.`;
+    const isScopedKey = key.startsWith(scopedPrefix);
+    const isGuestKey = scopeKey !== "guest" && key.startsWith(guestPrefix);
+    const isLegacyKey = !key.slice(ALLOCATION_PREFIX.length).includes(".");
+    if (!isScopedKey && !isGuestKey && !isLegacyKey) continue;
     const raw = window.localStorage.getItem(key);
     if (!raw) continue;
     try {
       const draft = JSON.parse(raw) as StoredAllocationDraft;
       if (draft.status === "sync_error") {
-        out.push({ matchId: key.slice(ALLOCATION_PREFIX.length), draft });
+        const matchId = isScopedKey
+          ? key.slice(scopedPrefix.length)
+          : isGuestKey
+            ? key.slice(guestPrefix.length)
+            : key.slice(ALLOCATION_PREFIX.length);
+        if (!out.has(matchId) || isScopedKey) {
+          out.set(matchId, draft);
+        }
       }
     } catch {
       continue;
     }
   }
-  return out;
+  return Array.from(out.entries()).map(([matchId, draft]) => ({ matchId, draft }));
 }
 
 export function getStoredChampionPick(scopeKey: string): StoredChampionPick | null {

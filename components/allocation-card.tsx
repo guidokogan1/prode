@@ -6,7 +6,7 @@ import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
 import { buildBalancedAllocation, buildPresetAllocation, MATCH_CREDIT, OUTCOME_CAP, sumAllocations, validateAllocations } from "@/lib/game";
 import { getOutcomeColor, getPickStateLabel } from "@/lib/match-ui";
-import { ALLOCATION_EVENT, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
+import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 
 type AllocationCardProps = {
   match: MatchViewModel;
@@ -20,6 +20,7 @@ const QUICK_INTENSITIES = [
 
 export function AllocationCard({ match }: AllocationCardProps) {
   const session = useContext(SessionContext);
+  const allocationScope = buildAllocationScope(session);
   const initialAllocations = useMemo(
     () =>
       match.allocation.map((item, index) => ({
@@ -36,7 +37,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
 
   useEffect(() => {
     const syncAllocation = () => {
-      const storedDraft = getStoredAllocation(match.id);
+      const storedDraft = getStoredAllocation(allocationScope, match.id);
       if (storedDraft?.allocations?.length) {
         setAllocations(
           storedDraft.allocations.map((item, index) => ({
@@ -69,7 +70,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       window.removeEventListener(ALLOCATION_EVENT, syncAllocation);
       window.removeEventListener("storage", syncAllocation);
     };
-  }, [initialAllocations, match]);
+  }, [allocationScope, initialAllocations, match]);
 
   const total = sumAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })));
   const remaining = MATCH_CREDIT - total;
@@ -142,7 +143,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       amount: item.amount,
     }));
 
-    saveStoredAllocation(match.id, {
+    saveStoredAllocation(allocationScope, match.id, {
       allocations: payload,
       savedAt: new Date().toISOString(),
       status: "draft",
@@ -163,7 +164,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       const result = (await response.json()) as { ok: boolean; message?: string; reason?: string; state?: string };
 
       if (!response.ok || !result.ok) {
-        saveStoredAllocation(match.id, {
+        saveStoredAllocation(allocationScope, match.id, {
           allocations: payload,
           savedAt: new Date().toISOString(),
           status: "sync_error",
@@ -173,7 +174,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
         return;
       }
 
-      saveStoredAllocation(match.id, {
+      saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: result.state === "saved_remote" ? "saved_remote" : "saved_local",
@@ -181,7 +182,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       setSaveState("saved");
       setSaveMessage(result.state === "saved_remote" ? "Guardado" : "Guardado local");
     } catch {
-      saveStoredAllocation(match.id, {
+      saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "sync_error",
