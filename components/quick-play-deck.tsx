@@ -96,7 +96,6 @@ export function QuickPlayDeck({ matches }: QuickPlayDeckProps) {
   };
 
   function moveNext() {
-    setCurrentIndex((value) => value + 1);
     resetPhase();
   }
 
