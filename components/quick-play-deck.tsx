@@ -103,8 +103,14 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
   const match = done ? null : deck[Math.min(currentIndex, deck.length - 1)];
   const liveMatch = effectiveMatches.find((item) => item.status === "live") ?? null;
   const quickPlayTargets = match ? getQuickPlayOutcomeTargets(match) : null;
-  const projectedGroups = useMemo(() => buildProjectedGroups(effectiveMatches), [effectiveMatches]);
-  const projectedKnockout = useMemo(() => buildProjectedKnockout(effectiveMatches), [effectiveMatches]);
+  const projectedGroups = useMemo(
+    () => buildProjectedGroups(effectiveMatches, allocationScope),
+    [allocationScope, effectiveMatches],
+  );
+  const projectedKnockout = useMemo(
+    () => buildProjectedKnockout(effectiveMatches, allocationScope),
+    [allocationScope, effectiveMatches],
+  );
 
   const resetPhase = () => {
     setPhase("idle");
@@ -278,22 +284,17 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
       <div style={{ minHeight: 0, display: "grid", gap: 10, alignContent: "start" }}>
         {done ? (
           <motion.div
-            className="surface-card"
-            initial={{ opacity: 0, scale: 0.92 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             style={{
-              minHeight: 360,
-              padding: 22,
               display: "grid",
-              gap: 18,
+              gap: 16,
+              paddingBottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 88px)",
             }}
           >
-            <div style={{ display: "grid", gap: 8, textAlign: "center" }}>
-              <span style={{ fontSize: "3.5rem", lineHeight: 1 }}>🎯</span>
-              <div style={{ display: "grid", gap: 4 }}>
-                <h2 className="section-title">Ya jugaste todo por ahora</h2>
-                <p className="muted-copy">Así se vería el Mundial según tus picks hasta acá.</p>
-              </div>
+            <div style={{ display: "grid", gap: 6 }}>
+              <h2 className="section-title">Ya jugaste todo por ahora</h2>
+              <p className="muted-copy">Así se vería el Mundial según tus picks hasta acá.</p>
             </div>
 
             {projectedGroups.length ? (
@@ -343,15 +344,6 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
               </section>
             ) : null}
 
-            <div style={{ display: "grid", gap: 10 }}>
-              <button className="button-primary" onClick={() => router.push("/matches")}>
-                ¿Querés editarlo? Estás a tiempo
-              </button>
-              <button className="button-secondary" onClick={() => router.push("/matches")} style={{ justifyContent: "space-between", width: "100%" }}>
-                <span>Ver partidos</span>
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
           </motion.div>
         ) : (() => {
           const activeMatch = match!;
@@ -746,7 +738,7 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
       </div>
 
       <AnimatePresence initial={false}>
-        {(phase === "idle" || done) && !liveMatch ? (
+        {phase === "idle" && !done && !liveMatch ? (
           <motion.div
             key="home-shortcuts"
             initial={{ opacity: 0, y: 8 }}
@@ -785,6 +777,29 @@ export function QuickPlayDeck({ matches, onMatchSaved }: QuickPlayDeckProps) {
             </span>
             <span style={{ color: "#FF3B30", fontWeight: 800 }}>ver →</span>
           </motion.button>
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence initial={false}>
+        {done ? (
+          <motion.div
+            key="done-edit-cta"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 14 }}
+            style={{
+              position: "fixed",
+              left: "50%",
+              transform: "translateX(-50%)",
+              bottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px)",
+              width: "min(calc(100vw - 32px), 560px)",
+              zIndex: 40,
+            }}
+          >
+            <button className="button-primary" onClick={() => router.push("/matches")} style={{ width: "100%" }}>
+              ¿Querés editarlo? Estás a tiempo
+            </button>
+          </motion.div>
         ) : null}
       </AnimatePresence>
     </div>
@@ -834,12 +849,34 @@ function isPendingQuickPlayMatch(match: MatchViewModel) {
   return match.userStateLabel === "Te falta jugar";
 }
 
-function getLeadingPickedOutcome(match: MatchViewModel) {
-  return [...match.allocation].sort((left, right) => right.amount - left.amount)[0] ?? null;
+function getLeadingPickedOutcome(match: MatchViewModel, allocationScope?: string) {
+  const leadingServerOutcome = [...match.allocation].sort((left, right) => right.amount - left.amount)[0] ?? null;
+  if (leadingServerOutcome && leadingServerOutcome.amount > 0) {
+    return leadingServerOutcome;
+  }
+
+  if (!allocationScope || typeof window === "undefined") {
+    return leadingServerOutcome;
+  }
+
+  const storedDraft = getStoredAllocation(allocationScope, match.id);
+  if (!storedDraft?.allocations?.length) {
+    return leadingServerOutcome;
+  }
+
+  const amountByLabel = new Map(storedDraft.allocations.map((item) => [item.label, item.amount]));
+  return (
+    match.allocation
+      .map((item) => ({
+        ...item,
+        amount: amountByLabel.get(item.label) ?? item.amount,
+      }))
+      .sort((left, right) => right.amount - left.amount)[0] ?? leadingServerOutcome
+  );
 }
 
-function buildProjectedGroups(matches: MatchViewModel[]) {
-  const groupMatches = matches.filter((match) => match.stage === "Fase de grupos" && match.groupLabel);
+function buildProjectedGroups(matches: MatchViewModel[], allocationScope: string) {
+  const groupMatches = matches.filter((match) => match.groupLabel);
   const groups = new Map<string, Map<string, { name: string; flag: string; points: number; wins: number }>>();
 
   for (const match of groupMatches) {
@@ -855,7 +892,7 @@ function buildProjectedGroups(matches: MatchViewModel[]) {
       }
     }
 
-    const leading = getLeadingPickedOutcome(match);
+    const leading = getLeadingPickedOutcome(match, allocationScope);
     if (!leading || leading.amount <= 0) {
       continue;
     }
@@ -883,7 +920,7 @@ function buildProjectedGroups(matches: MatchViewModel[]) {
     }));
 }
 
-function buildProjectedKnockout(matches: MatchViewModel[]) {
+function buildProjectedKnockout(matches: MatchViewModel[], allocationScope: string) {
   const stageOrder = [
     { stage: "Dieciseisavos", next: "Octavos de final" },
     { stage: "Octavos de final", next: "Cuartos de final" },
@@ -897,7 +934,7 @@ function buildProjectedKnockout(matches: MatchViewModel[]) {
     .find(({ stage }) => {
       const stageMatches = matches.filter((match) => match.stage === stage);
       return stageMatches.length > 0 && stageMatches.every((match) => {
-        const leading = getLeadingPickedOutcome(match);
+        const leading = getLeadingPickedOutcome(match, allocationScope);
         return Boolean(leading && leading.amount > 0);
       });
     });
@@ -909,7 +946,7 @@ function buildProjectedKnockout(matches: MatchViewModel[]) {
   const winners = matches
     .filter((match) => match.stage === completeStage.stage)
     .map((match) => {
-      const leading = getLeadingPickedOutcome(match);
+      const leading = getLeadingPickedOutcome(match, allocationScope);
       if (!leading) return null;
       if (leading.code === "home" || leading.code === "home_qualifies") return match.home;
       if (leading.code === "away" || leading.code === "away_qualifies") return match.away;
