@@ -23,7 +23,7 @@ export default async function ChampionPage() {
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link className="button-ghost" href="/">
+        <Link className="button-secondary" href="/" style={{ minHeight: 38 }}>
           Volver
         </Link>
       </div>

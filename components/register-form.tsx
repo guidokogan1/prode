@@ -66,6 +66,14 @@ export function RegisterForm() {
 
   return (
     <form className="surface-card" style={{ padding: 20, display: "grid", gap: 18 }} onSubmit={handleSubmit}>
+      <div className="split-row" style={{ alignItems: "start" }}>
+        <div className="title-stack">
+          <p className="eyebrow">Registro</p>
+          <h2 className="section-title">Crear usuario</h2>
+        </div>
+        <span className="pill">4-digit PIN</span>
+      </div>
+
       <div className="field">
         <label htmlFor="registerName">Nombre</label>
         <input
@@ -112,7 +120,7 @@ export function RegisterForm() {
         />
       </div>
 
-      {error ? <p className="error-copy">{error}</p> : null}
+      {error ? <p className="error-copy">{error}</p> : <p className="micro-copy">Elegí un nombre claro para aparecer en la tabla y un PIN simple de recordar.</p>}
 
       <button className="button-primary" type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Creando..." : "Crear cuenta"}

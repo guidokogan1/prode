@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed, DM_Serif_Display } from "next/font/google";
+import { Barlow_Condensed, Inter } from "next/font/google";
 import { BottomNav } from "@/components/bottom-nav";
 import { DemoFloatingBar } from "@/components/demo-floating-bar";
 import { SessionProvider } from "@/components/session-provider";
@@ -8,22 +8,16 @@ import { getActiveDemoPersonaSlug } from "@/lib/demo-state";
 import { getDemoPersonas } from "@/lib/mock-data";
 import "./globals.css";
 
-const barlow = Barlow({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-barlow",
+  variable: "--font-inter",
 });
 
 const barlowCondensed = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-barlow-condensed",
-});
-
-const dmSerifDisplay = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-serif-display",
 });
 
 export const metadata: Metadata = {
@@ -59,8 +53,8 @@ export default async function RootLayout({
   const showDemoBar = process.env.NEXT_PUBLIC_ENABLE_DEMO === "1";
 
   return (
-    <html lang="es">
-      <body className={`${barlow.variable} ${barlowCondensed.variable} ${dmSerifDisplay.variable}`}>
+    <html lang="es" className={`${inter.variable} ${barlowCondensed.variable}`}>
+      <body>
         <SessionProvider>
           <SyncRetry />
           <div className="app-shell">

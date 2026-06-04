@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { List, Trophy, User, Zap } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "Jugar", icon: Zap },
+  { href: "/", label: "Hoy", icon: Zap },
   { href: "/matches", label: "Partidos", icon: List },
   { href: "/ranking", label: "Tabla", icon: Trophy },
-  { href: "/profile", label: "Yo", icon: User },
+  { href: "/profile", label: "Perfil", icon: User },
 ];
 
 export function BottomNav() {

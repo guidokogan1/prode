@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useContext } from "react";
+import { LogOut } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import { clearStoredSession } from "@/lib/local-store";
 
@@ -19,14 +20,6 @@ export function SessionPanel() {
   }
 
   const sessionName = session?.displayName ?? "Sin entrar";
-  const sessionBadge =
-    session?.kind === "remote"
-      ? "Conectado"
-      : session?.kind === "local"
-        ? "Local"
-        : session?.kind === "demo"
-          ? "Demo"
-          : "Invitado";
   const modeCopy =
     session?.kind === "remote"
       ? null
@@ -37,27 +30,30 @@ export function SessionPanel() {
           : "Entrá para guardar tus jugadas.";
 
   return (
-    <section className="surface-card-soft panel-stack">
-      <div className="panel-head">
-        <div className="stack-sm">
-          <p className="eyebrow">Sesión</p>
-          <h2 className="section-title">{sessionName}</h2>
-        </div>
-        <span className="pill">{sessionBadge}</span>
+    <section style={{ display: "grid", gap: 14 }}>
+      <div className="stack-sm">
+        <p className="eyebrow">Cuenta</p>
+        <h2 className="section-title">{sessionName}</h2>
       </div>
 
       {modeCopy ? <p className="muted-copy">{modeCopy}</p> : null}
 
-      <div className="actions-row">
-        <Link className="button-primary" href="/login">
-          {session?.kind === "anonymous" || session?.kind === "demo" ? "Iniciar sesión" : "Cambiar acceso"}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) auto", gap: 10, alignItems: "stretch", minHeight: 52 }}>
+        <Link className="button-primary" href="/login" style={{ width: "100%", minHeight: 52, height: 52 }}>
+          {session?.kind === "anonymous" || session?.kind === "demo" ? "Iniciar sesión" : "Cambiar cuenta"}
         </Link>
-        <Link className="button-secondary" href="/pin">
+        <Link className="button-secondary" href="/pin" style={{ width: "100%", minHeight: 52, height: 52 }}>
           Cambiar PIN
         </Link>
         {session && (session.kind === "remote" || session.kind === "local") ? (
-          <button className="button-secondary" onClick={() => void handleLogout()}>
-            Salir
+          <button
+            className="button-secondary"
+            onClick={() => void handleLogout()}
+            style={{ width: 52, minHeight: 52, height: 52, paddingInline: 0, justifyContent: "center" }}
+            aria-label="Salir"
+            title="Salir"
+          >
+            <LogOut size={16} />
           </button>
         ) : null}
       </div>

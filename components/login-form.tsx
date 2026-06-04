@@ -59,6 +59,14 @@ export function LoginForm() {
 
   return (
     <form className="surface-card" style={{ padding: 20, display: "grid", gap: 18 }} onSubmit={handleSubmit}>
+      <div className="split-row" style={{ alignItems: "start" }}>
+        <div className="title-stack">
+          <p className="eyebrow">Login</p>
+          <h2 className="section-title">Tu acceso</h2>
+        </div>
+        <span className="pill">Pool ready</span>
+      </div>
+
       <div className="field">
         <label htmlFor="displayName">Nombre</label>
         <input
@@ -89,7 +97,7 @@ export function LoginForm() {
         />
       </div>
 
-      {error ? <p className="error-copy">{error}</p> : null}
+      {error ? <p className="error-copy">{error}</p> : <p className="micro-copy">Entrás con el mismo nombre y PIN que usás para guardar tus jugadas.</p>}
 
       <button className="button-primary" type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Ingresando..." : "Iniciar sesión"}

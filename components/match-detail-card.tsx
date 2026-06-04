@@ -249,14 +249,24 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const showSettledSummaryHero = cardState.mode === "settled" && phase === "idle";
   const compactHeroMinHeight = 176;
   const chosenColor = chosenOutcome ? getOutcomeColor(chosenOutcome) : null;
+  const heroPanelBackground = "rgba(12, 17, 24, 0.96)";
+  const heroPanelBorder = "rgba(255,255,255,0.1)";
+  const chosenOutcomeLabel = chosenOutcome
+    ? effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"
+    : null;
+  const chosenOutcomeHint = chosenOutcome ? getOutcomeHint(chosenOutcome, effectiveMatch.marketType) : null;
+  const showChosenHint =
+    chosenOutcomeLabel &&
+    chosenOutcomeHint &&
+    chosenOutcomeLabel.trim().toLowerCase() !== chosenOutcomeHint.trim().toLowerCase();
 
   const heroToneColor =
     cardState.heroTone === "positive"
-      ? "#7EDC96"
+      ? "var(--gold)"
       : cardState.heroTone === "negative"
-        ? "#FF8B84"
+        ? "var(--live)"
         : cardState.heroTone === "live"
-        ? "#FF8B84"
+        ? "var(--live)"
           : "#EDE8D9";
 
   async function snapCardBack() {
@@ -278,33 +288,25 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
   return (
     <section className="section-stack-lg">
-      <div style={{ display: "grid", gap: 16 }}>
-        <div className="split-row" style={{ alignItems: "start", flexWrap: "wrap", paddingInline: 4 }}>
-          <button className="button-ghost" onClick={handleBack} type="button" style={{ minHeight: 42, borderRadius: 999, paddingInline: 14, display: "inline-flex", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "grid", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", alignSelf: "start", paddingInline: 4 }}>
+          <button className="button-secondary" onClick={handleBack} type="button" style={{ minHeight: 42, borderRadius: 999, paddingInline: 14, display: "inline-flex", alignItems: "center", gap: 8 }}>
             <ArrowLeft size={16} />
             <span>Volver</span>
           </button>
-          <span className="micro-copy">{effectiveMatch.stage}</span>
         </div>
 
         {showMatchCenter ? (
           <div
-            className="surface-card"
+            className={phase === "idle" ? "surface-card" : undefined}
             style={{
               position: "relative",
-              padding: 12,
-              background:
-                phase === "chosen" && chosenColor
-                  ? `linear-gradient(160deg, color-mix(in srgb, ${chosenColor} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`
-                  : undefined,
-              border:
-                phase === "chosen" && chosenColor
-                  ? `1px solid ${chosenColor}30`
-                  : undefined,
-              boxShadow:
-                phase === "chosen" && chosenColor
-                  ? `0 32px 80px rgba(0,0,0,0.65), 0 0 50px ${chosenColor}15`
-                  : undefined,
+              padding: phase === "idle" ? 12 : 0,
+              minHeight: phase === "idle" ? undefined : 250,
+              background: phase === "idle" ? undefined : "transparent",
+              border: phase === "idle" ? undefined : "0",
+              boxShadow: phase === "idle" ? undefined : "none",
+              overflow: "visible",
             }}
           >
             <AnimatePresence mode="wait">
@@ -329,7 +331,8 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     y,
                     rotate,
                     opacity: cardOpacity,
-                    minHeight: 302,
+                    minHeight: 250,
+                    display: "grid",
                     position: "relative",
                     overflow: "hidden",
                     borderRadius: 18,
@@ -360,26 +363,26 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               ) : null}
 
               {phase === "idle" && isInteractiveEditor ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 18, marginTop: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 4 }}>
                   <motion.button
                     whileTap={{ scale: 0.88 }}
                     whileHover={{ scale: 1.03 }}
                     onClick={() => void chooseOutcome(quickPlayTargets.left)}
-                    style={{
-                      width: 58,
-                      height: 58,
-                      borderRadius: 999,
-                      border: "1.5px solid rgba(61,155,95,0.35)",
-                      background: "rgba(61,155,95,0.12)",
-                      boxShadow: "0 4px 20px rgba(61,155,95,0.18)",
-                      display: "grid",
-                      placeItems: "center",
-                      color: "#3D9B5F",
-                    }}
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 999,
+                        border: "1.5px solid rgba(216,255,86,0.3)",
+                        background: "rgba(216,255,86,0.12)",
+                        boxShadow: "0 4px 20px rgba(216,255,86,0.16)",
+                        display: "grid",
+                        placeItems: "center",
+                        color: "var(--gold)",
+                      }}
                     type="button"
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{effectiveMatch.home.flag}</span>
+                      <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.home.flag}</span>
                       <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
                         {effectiveMatch.home.name.slice(0, 3)}
                       </span>
@@ -391,18 +394,18 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                       whileHover={{ scale: 1.03 }}
                       onClick={() => void chooseOutcome(quickPlayTargets.draw!)}
                       style={{
-                        width: 48,
-                        height: 48,
+                        width: 44,
+                        height: 44,
                         borderRadius: 999,
-                        border: "1.5px solid rgba(91,143,240,0.35)",
-                        background: "rgba(91,143,240,0.12)",
-                        boxShadow: "0 4px 20px rgba(91,143,240,0.16)",
+                        border: "1.5px solid rgba(120,167,255,0.35)",
+                        background: "rgba(120,167,255,0.12)",
+                        boxShadow: "0 4px 20px rgba(120,167,255,0.16)",
                         display: "grid",
                         placeItems: "center",
                       }}
                       type="button"
                     >
-                      <span style={{ fontSize: "1.2rem" }}>🤝</span>
+                      <span style={{ fontSize: "1rem" }}>🤝</span>
                     </motion.button>
                   ) : null}
                   <motion.button
@@ -410,20 +413,20 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     whileHover={{ scale: 1.03 }}
                     onClick={() => void chooseOutcome(quickPlayTargets.right)}
                     style={{
-                      width: 58,
-                      height: 58,
-                      borderRadius: 999,
-                      border: "1.5px solid rgba(232,65,58,0.35)",
-                      background: "rgba(232,65,58,0.12)",
-                      boxShadow: "0 4px 20px rgba(232,65,58,0.18)",
-                      display: "grid",
-                      placeItems: "center",
-                      color: "#E8413A",
-                    }}
+                        width: 52,
+                        height: 52,
+                        borderRadius: 999,
+                        border: "1.5px solid rgba(255,85,71,0.35)",
+                        background: "rgba(255,85,71,0.12)",
+                        boxShadow: "0 4px 20px rgba(255,85,71,0.18)",
+                        display: "grid",
+                        placeItems: "center",
+                        color: "var(--live)",
+                      }}
                     type="button"
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{effectiveMatch.away.flag}</span>
+                      <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.away.flag}</span>
                       <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
                         {effectiveMatch.away.name.slice(0, 3)}
                       </span>
@@ -440,30 +443,33 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   exit={{ scale: 0.94, opacity: 0, y: -14 }}
                   transition={{ type: "spring", stiffness: 250, damping: 24 }}
                   style={{
-                    minHeight: 302,
+                    minHeight: 250,
+                    height: "100%",
                     display: "grid",
-                    gap: 16,
-                    alignContent: "start",
-                    padding: 18,
+                    gap: 12,
+                    gridTemplateRows: "auto auto 1fr auto",
+                    alignContent: "stretch",
+                    padding: 14,
+                    background: `linear-gradient(180deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 12%, #17202a) 0%, #0b1016 100%)`,
+                    border: `1px solid ${getOutcomeColor(chosenOutcome)}24`,
+                    borderRadius: 14,
                   }}
                 >
-                  <div className="split-row" style={{ alignItems: "center", gap: 12 }}>
-                    <span className="eyebrow">{effectiveMatch.stage}</span>
-                    <span className="micro-copy">{effectiveMatch.kickoffLabel}</span>
-                  </div>
+                  <p className="eyebrow">Vas con</p>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 999, background: chosenColor ?? "#EDE8D9" }} />
-                    <p className="eyebrow">Vas con</p>
-                  </div>
-
-                  <div className="title-stack">
-                    <h2 className="section-title">{effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</h2>
-                    <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>{getOutcomeHint(chosenOutcome, effectiveMatch.marketType)}</p>
+                  <div className="title-stack" style={{ gap: 2 }}>
+                    <h2 className="display-title" style={{ fontSize: "clamp(1.8rem, 8vw, 2.2rem)", lineHeight: 0.94 }}>
+                      {chosenOutcomeLabel}
+                    </h2>
+                    {showChosenHint ? (
+                      <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>
+                        {chosenOutcomeHint}
+                      </p>
+                    ) : null}
                   </div>
 
                   <p className="eyebrow">¿Cómo la querés jugar?</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, alignSelf: "center" }}>
                     {INTENSITIES.map((option) => {
                       const Icon = option.icon;
                       return (
@@ -473,26 +479,26 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                           whileHover={{ scale: 1.03 }}
                           onClick={() => void handleIntensityPick(option)}
                           style={{
-                            minHeight: 108,
-                            borderRadius: 16,
+                            minHeight: 96,
+                            borderRadius: 12,
                             border: "1px solid rgba(255,255,255,0.09)",
-                            background: "rgba(255,255,255,0.04)",
+                            background: "rgba(255,255,255,0.035)",
                             display: "grid",
                             placeItems: "center",
-                            gap: 8,
-                            padding: 14,
+                            gap: 6,
+                            padding: 12,
                             color: "#EDE8D9",
                           }}
                         >
-                          <Icon size={24} />
-                          <span style={{ fontFamily: "var(--font-display)", fontSize: ".94rem", fontWeight: 700 }}>{option.label}</span>
-                          <span className="micro-copy">{getIntensityCopy(option.id)}</span>
+                          <Icon size={20} style={{ color: option.id === "hard" ? "var(--live)" : option.id === "medium" ? "#EDE8D9" : "var(--gold)" }} />
+                          <span style={{ fontFamily: "var(--font-display)", fontSize: ".88rem", fontWeight: 700 }}>{option.label}</span>
+                          <span className="micro-copy" style={{ textAlign: "center" }}>{getIntensityCopy(option.id)}</span>
                         </motion.button>
                       );
                     })}
                   </div>
 
-                  <button className="button-ghost" onClick={resetPhase}>
+                  <button className="button-ghost" onClick={resetPhase} style={{ minHeight: 36, justifySelf: "center", alignSelf: "end", paddingInline: 0 }}>
                     Cambiar
                   </button>
                 </motion.div>
@@ -505,11 +511,20 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.94, opacity: 0, y: -24 }}
                   transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                  style={{ minHeight: 302, display: "grid", placeItems: "center", textAlign: "center", padding: 18 }}
+                  className="surface-card"
+                  style={{
+                    minHeight: 270,
+                    display: "grid",
+                    placeItems: "center",
+                    textAlign: "center",
+                    padding: 16,
+                    background: heroPanelBackground,
+                    borderColor: heroPanelBorder,
+                  }}
                 >
                   <div className="section-stack" style={{ justifyItems: "center" }}>
-                    <div style={{ width: 64, height: 64, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(61,155,95,0.18)", border: "2px solid #3D9B5F", boxShadow: isSaving ? "0 0 0 12px rgba(61,155,95,0.08)" : "0 0 0 0 rgba(61,155,95,0)" }}>
-                      <Check size={28} style={{ color: "#3D9B5F" }} />
+                    <div style={{ width: 56, height: 56, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(216,255,86,0.14)", border: "2px solid rgba(216,255,86,0.48)", boxShadow: isSaving ? "0 0 0 10px rgba(216,255,86,0.08)" : "0 0 0 0 rgba(216,255,86,0)" }}>
+                      <Check size={24} style={{ color: "var(--gold)" }} />
                     </div>
                     <p className="section-title">Guardado</p>
                     <p className="muted-copy">
@@ -517,26 +532,38 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                       {" · "}
                       {getIntensityCopy(chosenIntensity)}
                     </p>
-                    {saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : saveTone === "loading" ? "#EDE8D9" : "#7A9A81" }}>{saveMessage}</span> : null}
+                    {saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "var(--live)" : saveTone === "loading" ? "#EDE8D9" : "var(--gold)" }}>{saveMessage}</span> : null}
                   </div>
                 </motion.div>
               ) : null}
             </AnimatePresence>
           </div>
         ) : showSavedSummaryHero ? (
-          <div className="surface-card" style={{ position: "relative", padding: 18 }}>
+          <div className="surface-card" style={{ position: "relative", padding: 16, background: heroPanelBackground, borderColor: heroPanelBorder }}>
             <div
               style={{
-                minHeight: compactHeroMinHeight,
+                minHeight: 220,
+                height: "100%",
                 display: "grid",
-                alignContent: "start",
-                justifyItems: "start",
-                gap: 12,
+                gridTemplateRows: "auto 1fr auto",
+                justifyItems: "center",
+                gap: 14,
+                textAlign: "center",
               }}
             >
-              <div className="title-stack">
+              <div
+                className="title-stack"
+                style={{
+                  justifyItems: "center",
+                  alignContent: "center",
+                  alignSelf: "stretch",
+                  gap: 6,
+                  minHeight: 0,
+                }}
+              >
                 <p className="eyebrow">Esta es tu jugada</p>
-                <h2 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.7rem)", lineHeight: 0.98 }}>
+                {cardState.leadingUserOutcome ? <span style={{ fontSize: "2.8rem", lineHeight: 1 }}>{getOutcomeFlag(cardState.leadingUserOutcome.code, effectiveMatch)}</span> : null}
+                <h2 className="display-title" style={{ fontSize: "clamp(1.9rem, 8vw, 2.3rem)", lineHeight: 0.94 }}>
                   {cardState.heroValue}
                 </h2>
                 <p className="muted-copy" style={{ color: cardState.leadingUserOutcome ? getOutcomeColor(cardState.leadingUserOutcome.code) : undefined }}>
@@ -544,23 +571,27 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 </p>
               </div>
 
-              <button className="button-secondary" style={{ minHeight: 44, borderRadius: 999, paddingInline: 16 }} onClick={() => setIsEditingSaved(true)} type="button">
+              <div />
+
+              <button className="button-secondary" style={{ minHeight: 42, width: "100%", borderRadius: 999, paddingInline: 14 }} onClick={() => setIsEditingSaved(true)} type="button">
                 Cambiar jugada
               </button>
             </div>
           </div>
         ) : showLiveSummaryHero ? (
-          <div className="surface-card" style={{ position: "relative", padding: 18 }}>
+          <div className="surface-card" style={{ position: "relative", padding: 16, background: heroPanelBackground, borderColor: heroPanelBorder }}>
             <div
               style={{
-                minHeight: compactHeroMinHeight,
+                minHeight: 220,
+                height: "100%",
                 display: "grid",
-                alignContent: "start",
-                justifyItems: "start",
-                gap: 12,
+                gridTemplateRows: "auto 1fr auto",
+                justifyItems: "center",
+                gap: 14,
+                textAlign: "center",
               }}
             >
-              <div className="title-stack">
+              <div className="title-stack" style={{ justifyItems: "center", gap: 6 }}>
                 <p className="eyebrow">Esta es tu jugada</p>
                 <h2 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.7rem)", lineHeight: 0.98 }}>
                   {cardState.heroValue}
@@ -570,8 +601,10 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 </p>
               </div>
 
+              <div />
+
               <div className="split-row" style={{ width: "100%", alignItems: "end" }}>
-                <div className="title-stack">
+                <div className="title-stack" style={{ textAlign: "left" }}>
                   <span className="micro-copy">Marcador</span>
                   <strong style={{ fontFamily: "var(--font-accent)", fontSize: "2rem", letterSpacing: "-0.06em" }}>{cardState.scoreOrKickoffLabel}</strong>
                 </div>
@@ -582,17 +615,19 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
             </div>
           </div>
         ) : showSettledSummaryHero ? (
-          <div className="surface-card" style={{ position: "relative", padding: 18 }}>
+          <div className="surface-card" style={{ position: "relative", padding: 16, background: heroPanelBackground, borderColor: heroPanelBorder }}>
             <div
               style={{
-                minHeight: compactHeroMinHeight,
+                minHeight: 220,
+                height: "100%",
                 display: "grid",
-                alignContent: "start",
-                justifyItems: "start",
-                gap: 12,
+                gridTemplateRows: "auto 1fr auto",
+                justifyItems: "center",
+                gap: 14,
+                textAlign: "center",
               }}
             >
-              <div className="title-stack">
+              <div className="title-stack" style={{ justifyItems: "center", gap: 6 }}>
                 <p className="eyebrow">Resultado final</p>
                 <h2 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.7rem)", lineHeight: 0.98, color: heroToneColor }}>
                   {cardState.heroValue}
@@ -600,8 +635,10 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 <p className="muted-copy">{cardState.heroDescription}</p>
               </div>
 
+              <div />
+
               <div className="split-row" style={{ width: "100%", alignItems: "end" }}>
-                <div className="title-stack">
+                <div className="title-stack" style={{ textAlign: "left" }}>
                   <span className="micro-copy">Ganó</span>
                   <strong style={{ color: cardState.winningOutcome ? getOutcomeColor(cardState.winningOutcome) : undefined }}>
                     {cardState.winningOutcome ? `${getOutcomeFlag(cardState.winningOutcome, effectiveMatch)} ${effectiveMatch.consensus.find((item) => item.code === cardState.winningOutcome)?.label ?? "Resultado"}` : "Final"}
@@ -623,26 +660,16 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           ) : null}
           {phase === "saved" && saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : "#7A9A81" }}>{saveMessage}</span> : null}
 
-          <div style={{ display: "grid", gap: 12 }}>
-            {cardState.leadingConsensus ? (
-              <div style={{ display: "grid", gap: 4 }}>
-                <span className="micro-copy">Grupo</span>
-                <strong style={{ color: getOutcomeColor(cardState.leadingConsensus.code) }}>
-                  {cardState.leadingConsensus.label} {cardState.leadingConsensus.percentage}%
-                </strong>
-              </div>
-            ) : (
-              <span className="micro-copy">Todavía sin lectura del grupo.</span>
-            )}
+          <div style={{ display: "grid", gap: 14 }}>
             {groupBuckets.map((bucket) => {
               const isWinning = resolvedOutcome === bucket.outcome.code;
               const pickCount = effectiveMatch.pickCountByCode[bucket.outcome.code] ?? bucket.tickets.length;
               const isRevealed = effectiveMatch.marketStatus === "revealed" || effectiveMatch.marketStatus === "settled";
 
               return (
-                <article key={bucket.outcome.code} style={{ display: "grid", gap: 10, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <article key={bucket.outcome.code} style={{ display: "grid", gap: 10, paddingTop: 2, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                   <div className="split-row">
-                    <strong style={{ color: isWinning ? getOutcomeColor(bucket.outcome.code) : "#EDE8D9", fontSize: "1rem" }}>
+                    <strong style={{ color: isWinning ? getOutcomeColor(bucket.outcome.code) : "#EDE8D9", fontSize: "1rem", textTransform: "uppercase" }}>
                       {getOutcomeFlag(bucket.outcome.code, effectiveMatch)} {bucket.outcome.label}
                     </strong>
                     <span className="micro-copy">{pickCount} picks</span>
@@ -661,16 +688,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                         </div>
                       ))}
                     </div>
-                  ) : pickCount === 0 ? (
-                    <span className="micro-copy">Sin jugadas</span>
                   ) : null}
                 </article>
               );
             })}
             {totalPot > 0 ? (
-              <div className="split-row" style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="split-row" style={{ paddingTop: 4 }}>
                 <span className="muted-copy">Pozo</span>
-                <strong style={{ color: "#D8B56A", fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.05em" }}>
+                <strong style={{ color: "var(--gold)", fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.05em" }}>
                   {formatCompactCredits(totalPot)} cr
                 </strong>
               </div>

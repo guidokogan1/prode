@@ -14,16 +14,16 @@ export function MatchCard({ match }: MatchCardProps) {
   const cardState = getMatchCardState(match, "compact");
   const statusTone =
     cardState.mode === "live"
-      ? "rgba(255,59,48,0.07)"
+      ? "rgba(255,85,71,0.05)"
       : cardState.mode === "settled"
-        ? "rgba(61,155,95,0.06)"
-        : "rgba(255,255,255,0.03)";
+        ? "rgba(216,255,86,0.04)"
+        : "rgba(255,255,255,0.02)";
   const statusBorder =
     cardState.mode === "live"
-      ? "rgba(255,59,48,0.2)"
+      ? "rgba(255,85,71,0.28)"
       : cardState.mode === "settled"
-        ? "rgba(61,155,95,0.15)"
-        : "rgba(255,255,255,0.06)";
+        ? "rgba(216,255,86,0.2)"
+        : "rgba(255,255,255,0.1)";
 
   return (
     <motion.div
@@ -38,17 +38,16 @@ export function MatchCard({ match }: MatchCardProps) {
         className="surface-card-soft"
         style={{
           padding: "16px 16px 14px",
-          borderRadius: 20,
+          borderRadius: 18,
           display: "grid",
-          gap: 12,
-          background: statusTone,
+          gap: 13,
+          background: `color-mix(in srgb, rgba(10,14,20,0.98) 92%, ${statusTone} 8%)`,
           borderColor: statusBorder,
         }}
       >
-        <div className="split-row" style={{ alignItems: "start", flexWrap: "wrap" }}>
+        <div className="split-row" style={{ alignItems: "center", flexWrap: "wrap", minHeight: 32 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span className="pill">{cardState.primaryStatusLabel}</span>
-            {cardState.secondaryStatusLabel ? <span className="pill">{cardState.secondaryStatusLabel}</span> : null}
+            <span className="pill">{cardState.secondaryStatusLabel ?? cardState.primaryStatusLabel}</span>
           </div>
           <span className="micro-copy">{cardState.scoreOrKickoffLabel}</span>
         </div>
@@ -56,7 +55,7 @@ export function MatchCard({ match }: MatchCardProps) {
         <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 10, alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>{match.home.flag}</span>
+              <span style={{ fontSize: "1.25rem", flexShrink: 0, width: 28, textAlign: "center" }}>{match.home.flag}</span>
               <strong
                 style={{
                   fontFamily: "var(--font-body)",
@@ -75,16 +74,16 @@ export function MatchCard({ match }: MatchCardProps) {
               <strong
                 style={{
                   fontFamily: "var(--font-accent)",
-                  fontSize: "1.05rem",
-                  color: cardState.mode === "live" ? "#FF3B30" : "#EDE8D9",
-                  letterSpacing: "-0.05em",
+                  fontSize: "1.3rem",
+                  color: cardState.mode === "live" ? "var(--live)" : "var(--text-primary)",
+                  letterSpacing: "-0.06em",
                   whiteSpace: "nowrap",
                 }}
               >
                 {match.home.score} - {match.away.score}
               </strong>
             ) : (
-              <span style={{ color: "rgba(255,255,255,0.16)", textAlign: "center" }}>VS</span>
+              <span style={{ color: "var(--text-tertiary)", textAlign: "center", fontFamily: "var(--font-display)", fontSize: ".95rem", letterSpacing: ".08em" }}>VS</span>
             )}
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, minWidth: 0 }}>
@@ -101,18 +100,20 @@ export function MatchCard({ match }: MatchCardProps) {
               >
                 {match.away.name}
               </strong>
-              <span style={{ fontSize: "1.25rem", flexShrink: 0 }}>{match.away.flag}</span>
+              <span style={{ fontSize: "1.25rem", flexShrink: 0, width: 28, textAlign: "center" }}>{match.away.flag}</span>
             </div>
           </div>
 
-          <div className="split-row" style={{ alignItems: "end", gap: 12, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 10 }}>
+          <div className="split-row" style={{ alignItems: "end", gap: 12, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 11 }}>
             <div style={{ display: "grid", gap: 3 }}>
               <span className="micro-copy">Tu jugada</span>
-              <strong style={{ fontSize: ".96rem", letterSpacing: "-0.02em" }}>{cardState.heroValue}</strong>
+              <strong style={{ fontSize: "1rem", letterSpacing: "-0.02em", textTransform: "uppercase" }}>{cardState.heroValue}</strong>
             </div>
-            <span className="micro-copy" style={{ color: cardState.leadingUserOutcome ? getOutcomeColor(cardState.leadingUserOutcome.code) : undefined }}>
-              {cardState.heroDescription}
-            </span>
+            {cardState.mode !== "editable-empty" ? (
+              <span className="micro-copy" style={{ color: cardState.leadingUserOutcome ? getOutcomeColor(cardState.leadingUserOutcome.code) : undefined }}>
+                {cardState.heroDescription}
+              </span>
+            ) : null}
           </div>
         </div>
       </Link>

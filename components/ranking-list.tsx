@@ -13,14 +13,14 @@ export function RankingList({ items }: RankingListProps) {
           key={item.name}
           className="surface-card-soft"
           style={{
-            padding: "14px 16px",
-            borderRadius: 18,
+            padding: "15px 16px",
+            borderRadius: 16,
             display: "grid",
             gridTemplateColumns: "24px 38px minmax(0, 1fr) auto",
             alignItems: "center",
             gap: 12,
-            background: item.isCurrentUser ? "rgba(212,166,75,0.08)" : "rgba(255,255,255,0.03)",
-            borderColor: item.isCurrentUser ? "rgba(212,166,75,0.25)" : "rgba(255,255,255,0.06)",
+            background: item.isCurrentUser ? "rgba(216,255,86,0.08)" : "rgba(255,255,255,0.045)",
+            borderColor: item.isCurrentUser ? "rgba(216,255,86,0.24)" : "rgba(255,255,255,0.1)",
           }}
         >
           <span
@@ -30,7 +30,7 @@ export function RankingList({ items }: RankingListProps) {
               textAlign: "center",
               fontFamily: "var(--font-accent)",
               fontWeight: 800,
-              color: item.position <= 3 ? ["#D4A64B", "#A0A0A0", "#CD7F32"][item.position - 1] : "#4A6A4D",
+              color: item.position <= 3 ? ["var(--gold)", "#d6d8dd", "#ff8f57"][item.position - 1] : "var(--text-secondary)",
             }}
           >
             {item.position}
@@ -42,8 +42,8 @@ export function RankingList({ items }: RankingListProps) {
               borderRadius: 999,
               display: "grid",
               placeItems: "center",
-              background: item.isCurrentUser ? "rgba(212,166,75,0.18)" : "rgba(255,255,255,0.07)",
-              color: item.isCurrentUser ? "#D8B56A" : "#EDE8D9",
+              background: item.isCurrentUser ? "rgba(216,255,86,0.14)" : "rgba(255,255,255,0.07)",
+              color: item.isCurrentUser ? "var(--gold)" : "#EDE8D9",
               fontFamily: "var(--font-accent)",
               fontWeight: 800,
               flexShrink: 0,
@@ -54,11 +54,12 @@ export function RankingList({ items }: RankingListProps) {
           <div style={{ display: "grid", gap: 3, flex: 1, minWidth: 0 }}>
             <strong
               style={{
-                color: item.isCurrentUser ? "#D8B56A" : "#EDE8D9",
+                color: item.isCurrentUser ? "var(--gold)" : "#EDE8D9",
                 fontFamily: "var(--font-body)",
                 fontWeight: 700,
                 fontStyle: "normal",
                 letterSpacing: "-0.02em",
+                textTransform: "uppercase",
               }}
             >
               {item.name}
@@ -68,7 +69,7 @@ export function RankingList({ items }: RankingListProps) {
             </span>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0, minWidth: 68 }}>
-            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.18rem", color: item.netAmount >= 0 ? "#EDE8D9" : "#E8413A", whiteSpace: "nowrap", letterSpacing: "-0.04em" }}>{formatNetAmount(item.netAmount)}</strong>
+            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.34rem", color: item.netAmount >= 0 ? "#EDE8D9" : "var(--live)", whiteSpace: "nowrap", letterSpacing: "-0.05em" }}>{formatNetAmount(item.netAmount)}</strong>
             <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", letterSpacing: ".08em", textTransform: "uppercase" }}>
               {item.isCurrentUser ? "vos" : "neto"}
             </div>

@@ -11,9 +11,8 @@ export default async function RankingPage() {
   if (!ranking.length) {
     return (
       <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
-        <section className="title-stack" style={{ paddingTop: 8 }}>
-          <p className="eyebrow">Tabla</p>
-          <h1 className="display-title">Ranking</h1>
+        <section className="title-stack" style={{ paddingTop: 8, gap: 6 }}>
+          <h1 className="display-title">Tabla actual</h1>
         </section>
         <section className="surface-card-soft soft-panel section-stack" style={{ textAlign: "center", padding: 32 }}>
           <p className="muted-copy">Todavía no hay resultados. La tabla se arma cuando empiecen a liquidarse los partidos.</p>
@@ -24,28 +23,26 @@ export default async function RankingPage() {
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
-      <section className="title-stack" style={{ paddingTop: 8 }}>
-        <p className="eyebrow">Tabla</p>
-        <h1 className="display-title">Ranking</h1>
-        <p className="muted-copy" style={{ fontFamily: "var(--font-body)" }}>Ordenado por ganancia acumulada</p>
+      <section className="title-stack" style={{ paddingTop: 8, gap: 6 }}>
+        <h1 className="display-title">Tabla actual</h1>
       </section>
 
       <section className="two-col-grid">
         {currentUser ? (
-          <section className="surface-card-soft soft-panel section-stack">
+          <section className="surface-card-soft soft-panel section-stack" style={{ background: "rgba(255,255,255,0.05)" }}>
             <span className="micro-copy">Tu puesto</span>
             <div className="split-row">
-              <strong style={{ fontSize: "1.05rem" }}>#{currentUser.position} {currentUser.name}</strong>
-              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", letterSpacing: "-0.04em" }}>{formatNetAmount(currentUser.netAmount)}</strong>
+              <strong style={{ fontSize: "1.05rem", textTransform: "uppercase" }}>#{currentUser.position} {currentUser.name}</strong>
+              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.05em", color: "var(--gold)" }}>{formatNetAmount(currentUser.netAmount)}</strong>
             </div>
           </section>
         ) : null}
         {leader ? (
-          <section className="surface-card-soft soft-panel section-stack">
+          <section className="surface-card-soft soft-panel section-stack" style={{ background: "rgba(216,255,86,0.06)", borderColor: "rgba(216,255,86,0.18)" }}>
             <span className="micro-copy">Líder</span>
             <div className="split-row">
-              <strong style={{ fontSize: "1.05rem" }}>#{leader.position} {leader.name}</strong>
-              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.2rem", letterSpacing: "-0.04em", color: "#D8B56A" }}>{formatNetAmount(leader.netAmount)}</strong>
+              <strong style={{ fontSize: "1.05rem", textTransform: "uppercase" }}>#{leader.position} {leader.name}</strong>
+              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.05em", color: "var(--gold)" }}>{formatNetAmount(leader.netAmount)}</strong>
             </div>
           </section>
         ) : null}
@@ -55,7 +52,7 @@ export default async function RankingPage() {
 
       <section className="section-stack" style={{ gap: 12 }}>
         <div className="split-row">
-          <h2 className="section-title" style={{ fontFamily: "var(--font-body)", fontWeight: 700 }}>General</h2>
+          <h2 className="section-title">General</h2>
           <span className="pill">{ranking.length}</span>
         </div>
         <RankingList items={ranking} />

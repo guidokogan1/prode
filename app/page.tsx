@@ -19,32 +19,13 @@ export default async function HomePage() {
     <main
       className="page-shell"
       style={{
-        background: "radial-gradient(ellipse 120% 60% at 50% 0%, #1C3A22 0%, #091409 55%)",
         display: "grid",
-        gridTemplateRows: "auto auto 1fr",
-        gap: 10,
+        gridTemplateRows: "auto 1fr",
+        gap: 16,
         overflow: "hidden",
         minHeight: "calc(100dvh - var(--bottom-nav-height) - var(--safe-bottom))",
       }}
     >
-      <section className="split-row" style={{ paddingTop: 2 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: "1.05rem" }}>⚽</span>
-          <span
-            style={{
-              fontFamily: "var(--font-barlow), system-ui, sans-serif",
-              fontWeight: 800,
-              fontStyle: "normal",
-              letterSpacing: ".12em",
-              textTransform: "uppercase",
-              fontSize: ".96rem",
-            }}
-          >
-            Mundial 26
-          </span>
-        </div>
-      </section>
-
       <HomePageClient
         initialSummary={summary}
         featuredMatches={regularMatches}

@@ -10,15 +10,15 @@ export default async function MatchesPage() {
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 22 }}>
-      <section style={{ display: "grid", gap: 8, paddingTop: 8 }}>
-        <p className="eyebrow">Fixture</p>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
+      <section style={{ display: "grid", gap: 8, paddingTop: 4 }}>
+        <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
           <div style={{ display: "grid", gap: 4 }}>
-            <h1 className="display-title">{summary.pendingPicks} por jugar</h1>
-            <p className="muted-copy">Entrá a corregir por grupo o llave</p>
+            <p className="eyebrow">Fixture board</p>
+            <h1 className="display-title">Partidos</h1>
+            <p className="muted-copy">Seguí cada cruce.</p>
           </div>
-          <span className="status-pill status-pill-gold" style={{ whiteSpace: "nowrap", minWidth: 102, justifyContent: "center", flexShrink: 0 }}>
-            {summary.liveMatches} en vivo
+          <span className="status-pill status-pill-live" style={{ whiteSpace: "nowrap", minWidth: 88, justifyContent: "center", flexShrink: 0, marginTop: 4 }}>
+            {summary.liveMatches} live
           </span>
         </div>
       </section>
@@ -28,9 +28,10 @@ export default async function MatchesPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ display: "grid", gap: 4 }}>
               <h2 className="section-title">{group.title}</h2>
+              <span className="micro-copy">Bloque de partidos</span>
             </div>
-            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.05)" }} />
-            <span className="micro-copy">{group.pendingCount > 0 ? `${group.pendingCount} por jugar` : group.matches.length}</span>
+            <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+            <span className="pill">{group.pendingCount > 0 ? `${group.pendingCount} por jugar` : `${group.matches.length} matches`}</span>
           </div>
 
           <div style={{ display: "grid", gap: 10 }}>

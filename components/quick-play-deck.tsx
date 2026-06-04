@@ -266,7 +266,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
           Math.min(currentIndex - Math.floor((totalDots - 1) / 2), deck.length - totalDots),
         );
         return (
-          <div style={{ display: "flex", justifyContent: "center", gap: 6, minHeight: 12 }}>
+          <div style={{ display: "flex", justifyContent: "flex-start", gap: 5, minHeight: 10 }}>
             {Array.from({ length: totalDots }).map((_, slot) => {
               const matchIndex = startIndex + slot;
               const isCurrent = matchIndex === currentIndex;
@@ -275,10 +275,10 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                 <span
                   key={`deck-dot-${matchIndex}`}
                   style={{
-                    width: isCurrent ? 20 : 6,
-                    height: 6,
+                    width: isCurrent ? 16 : 5,
+                    height: 5,
                     borderRadius: 999,
-                    background: isDone ? "#3D9B5F" : isCurrent ? "#D4A64B" : "rgba(255,255,255,0.12)",
+                    background: isDone ? "var(--gold)" : isCurrent ? "#e7efff" : "rgba(255,255,255,0.12)",
                     transition: "all 220ms ease",
                   }}
                 />
@@ -288,43 +288,42 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
         );
       })() : null}
 
-      <div style={{ minHeight: 0, display: "grid", gap: 10, alignContent: "start" }}>
+      <div style={{ minHeight: 0, display: "grid", gap: 16, alignContent: "start" }}>
         {done ? (
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             style={{
               display: "grid",
-              gap: 16,
-              paddingBottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 88px)",
+              gap: 20,
+              paddingBottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 28px)",
             }}
           >
-            <div style={{ display: "grid", gap: 6 }}>
-              <h2 className="section-title">Ya jugaste todo por ahora</h2>
-              <p className="muted-copy">Así se vería el Mundial según tus picks hasta acá.</p>
+            <div style={{ display: "grid", gap: 10 }}>
+              <h2 className="display-title">El torneo segun tus apuestas</h2>
             </div>
 
             {projectedGroups.length ? (
-              <section style={{ display: "grid", gap: 10 }}>
-                <div className="split-row" style={{ alignItems: "center" }}>
+              <section style={{ display: "grid", gap: 16 }}>
+                <div className="split-row" style={{ alignItems: "end" }}>
                   <p className="eyebrow">Tus grupos</p>
                   <span className="micro-copy">Según tus decisiones</span>
                 </div>
-                <div style={{ display: "grid", gap: 10 }}>
+                <div style={{ display: "grid", gap: 16 }}>
                   {projectedGroups.map((group) => (
-                    <article key={group.label} className="surface-card-soft" style={{ padding: 14, borderRadius: 18, display: "grid", gap: 10 }}>
-                      <div className="split-row">
-                        <strong>{group.label}</strong>
+                    <article key={group.label} className="surface-card-soft" style={{ padding: 16, borderRadius: 14, display: "grid", gap: 12 }}>
+                      <div className="split-row" style={{ alignItems: "start" }}>
+                        <strong style={{ fontFamily: "var(--font-display)", fontSize: "1rem", letterSpacing: ".01em", textTransform: "uppercase" }}>{group.label}</strong>
                         <span className="micro-copy">{group.teams.length} equipos</span>
                       </div>
-                      <div style={{ display: "grid", gap: 8 }}>
+                      <div style={{ display: "grid", gap: 10 }}>
                         {group.teams.map((team, index) => (
-                          <div key={`${group.label}-${team.name}`} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 10, alignItems: "center" }}>
-                            <span className="micro-copy">#{index + 1}</span>
-                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {team.flag} {team.name}
+                          <div key={`${group.label}-${team.name}`} style={{ display: "grid", gridTemplateColumns: "34px minmax(0, 1fr) auto", gap: 12, alignItems: "center" }}>
+                            <span className="micro-copy" style={{ letterSpacing: ".02em" }}>#{index + 1}</span>
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "14px", lineHeight: 1.08, fontWeight: 600 }}>
+                              <span style={{ marginRight: 8 }}>{team.flag}</span>{team.name}
                             </span>
-                            <strong>{team.points} pts</strong>
+                            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1rem", letterSpacing: "-0.02em" }}>{team.points} pts</strong>
                           </div>
                         ))}
                       </div>
@@ -335,15 +334,15 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
             ) : null}
 
             {projectedKnockout ? (
-              <section style={{ display: "grid", gap: 10 }}>
-                <div className="split-row" style={{ alignItems: "center" }}>
+              <section style={{ display: "grid", gap: 16 }}>
+                <div className="split-row" style={{ alignItems: "end" }}>
                   <p className="eyebrow">{projectedKnockout.title}</p>
                   <span className="micro-copy">{projectedKnockout.subtitle}</span>
                 </div>
-                <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ display: "grid", gap: 10 }}>
                   {projectedKnockout.rows.map((row) => (
-                    <article key={row.id} className="surface-card-soft" style={{ padding: 14, borderRadius: 18, display: "grid", gap: 4 }}>
-                      <strong>{row.label}</strong>
+                    <article key={row.id} className="surface-card-soft" style={{ padding: 14, borderRadius: 12, display: "grid", gap: 5 }}>
+                      <strong style={{ fontSize: ".98rem" }}>{row.label}</strong>
                       {row.hint ? <span className="micro-copy">{row.hint}</span> : null}
                     </article>
                   ))}
@@ -365,30 +364,28 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                     aria-hidden="true"
                     style={{
                       position: "absolute",
-                      left: 24,
-                      right: 24,
-                      top: 12,
-                      bottom: -4,
-                      borderRadius: 24,
-                      background: "linear-gradient(160deg, #1F3E28 0%, #0E1D13 100%)",
-                      border: "1px solid rgba(255,255,255,0.09)",
-                      boxShadow: "0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)",
-                      opacity: 0.28,
+                      left: 14,
+                      right: 14,
+                      top: 10,
+                      bottom: -2,
+                      borderRadius: 16,
+                      background: "linear-gradient(180deg, rgba(19,26,36,0.92) 0%, rgba(10,14,20,0.92) 100%)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      opacity: 0.34,
                     }}
                   />
                   <div
                     aria-hidden="true"
                     style={{
                       position: "absolute",
-                      left: 40,
-                      right: 40,
-                      top: 22,
-                      bottom: -8,
-                      borderRadius: 24,
-                      background: "linear-gradient(160deg, #1F3E28 0%, #0E1D13 100%)",
-                      border: "1px solid rgba(255,255,255,0.09)",
-                      boxShadow: "0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)",
-                      opacity: 0.14,
+                      left: 24,
+                      right: 24,
+                      top: 18,
+                      bottom: -6,
+                      borderRadius: 16,
+                      background: "linear-gradient(180deg, rgba(19,26,36,0.92) 0%, rgba(10,14,20,0.92) 100%)",
+                      border: "1px solid rgba(255,255,255,0.05)",
+                      opacity: 0.16,
                     }}
                   />
                 </>
@@ -429,7 +426,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       opacity: cardOpacity,
                       position: "relative",
                       zIndex: 2,
-                      minHeight: 332,
+                      minHeight: 246,
                       fontFamily: "var(--font-barlow), system-ui, sans-serif",
                       willChange: "transform, opacity",
                     }}
@@ -448,9 +445,9 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                         background: "linear-gradient(135deg, rgba(61,155,95,0.55) 0%, transparent 55%)",
                       }}
                     >
-                      <div style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
-                        <span style={{ fontSize: "3rem", lineHeight: 1 }}>{activeMatch.home.flag}</span>
-                        <span style={{ color: "#3D9B5F", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
+                      <div style={{ position: "absolute", left: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
+                          <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>{activeMatch.home.flag}</span>
+                        <span style={{ color: "var(--gold)", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                           {activeMatch.marketType === "qualifies" ? "clasifica" : "gana"}
                         </span>
                       </div>
@@ -465,9 +462,9 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                         background: "linear-gradient(225deg, rgba(232,65,58,0.55) 0%, transparent 55%)",
                       }}
                     >
-                      <div style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
-                        <span style={{ fontSize: "3rem", lineHeight: 1 }}>{activeMatch.away.flag}</span>
-                        <span style={{ color: "#E8413A", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
+                      <div style={{ position: "absolute", right: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
+                          <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>{activeMatch.away.flag}</span>
+                        <span style={{ color: "var(--live)", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                           {activeMatch.marketType === "qualifies" ? "clasifica" : "gana"}
                         </span>
                       </div>
@@ -483,9 +480,9 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                           background: "linear-gradient(0deg, rgba(91,143,240,0.5) 0%, transparent 50%)",
                         }}
                       >
-                        <div style={{ position: "absolute", top: 20, left: "50%", transform: "translateX(-50%)", display: "grid", gap: 8, justifyItems: "center" }}>
-                          <span style={{ fontSize: "2.6rem", lineHeight: 1 }}>🤝</span>
-                          <span style={{ color: "#5B8FF0", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
+                        <div style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
+                          <span style={{ fontSize: "2.2rem", lineHeight: 1 }}>🤝</span>
+                          <span style={{ color: "var(--outcome-draw)", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                             empate
                           </span>
                         </div>
@@ -511,12 +508,12 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                     exit={{ scale: 0.94, opacity: 0, y: -14 }}
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     style={{
-                      minHeight: 332,
-                      padding: 16,
-                      background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
+                      minHeight: 292,
+                      padding: 14,
+                      background: `linear-gradient(180deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 16%, #18212d) 0%, #0b1016 100%)`,
                       border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
-                      boxShadow: `0 32px 80px rgba(0,0,0,0.65), 0 0 50px ${getOutcomeColor(chosenOutcome)}15`,
-                      borderRadius: 24,
+                      boxShadow: `0 16px 38px rgba(0,0,0,0.3)`,
+                      borderRadius: 14,
                       display: "flex",
                       flexDirection: "column",
                       position: "relative",
@@ -553,7 +550,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gap: 12, marginTop: "auto", marginBottom: "auto", position: "relative", zIndex: 1 }}>
+                      <div style={{ display: "grid", gap: 10, marginTop: "auto", marginBottom: "auto", position: "relative", zIndex: 1 }}>
                       <p className="eyebrow">¿Cómo la querés jugar?</p>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
                         {INTENSITIES.map((option) => {
@@ -567,10 +564,10 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                               whileHover={{ scale: 1.03 }}
                               onClick={() => void handleIntensityPick(option)}
                               style={{
-                                minHeight: 112,
-                                borderRadius: 16,
-                                border: "1px solid rgba(255,255,255,0.09)",
-                                background: "rgba(255,255,255,0.04)",
+                            minHeight: 92,
+                            borderRadius: 12,
+                            border: "1px solid rgba(255,255,255,0.09)",
+                            background: "rgba(255,255,255,0.035)",
                                 display: "grid",
                                 placeItems: "center",
                                 gap: 8,
@@ -602,12 +599,12 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                     transition={{ type: "spring", stiffness: 250, damping: 24 }}
                     className="surface-card"
                     style={{
-                      minHeight: 332,
+                      minHeight: 292,
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
                       textAlign: "center",
-                      padding: 28,
+                      padding: 20,
                       position: "relative",
                       zIndex: 4,
                       overflow: "hidden",
@@ -753,8 +750,8 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
             exit={{ opacity: 0, y: 8 }}
             style={{ display: "grid", gap: 8 }}
           >
-            <button className="button-secondary" onClick={() => router.push("/matches")} style={{ justifyContent: "space-between", width: "100%" }}>
-              <span>Cargá grupos de una</span>
+            <button className="button-secondary" onClick={() => router.push("/matches")} style={{ justifyContent: "space-between", width: "100%", minHeight: 40 }}>
+              <span>Ir al fixture completo</span>
               <span aria-hidden="true">→</span>
             </button>
           </motion.div>
@@ -809,6 +806,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                   width: "100%",
                   maxWidth: "calc(var(--shell-width) - 32px)",
                   pointerEvents: "auto",
+                  boxShadow: "0 0 0 1px rgba(216,255,86,0.42), 0 0 28px rgba(216,255,86,0.34), 0 14px 34px rgba(0,0,0,0.34)",
                 }}
               >
                 Edita tus partidos

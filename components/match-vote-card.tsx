@@ -205,7 +205,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                 opacity: cardOpacity,
                 position: "relative",
                 zIndex: 2,
-                minHeight: 332,
+                minHeight: 246,
                 fontFamily: "var(--font-barlow), system-ui, sans-serif",
                 willChange: "transform, opacity",
               }}
@@ -267,14 +267,14 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               transition={{ type: "spring", stiffness: 250, damping: 24 }}
               className="surface-card"
               style={{
-                minHeight: 332,
-                padding: 16,
-                background: `linear-gradient(160deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 22%, #1F3E28) 0%, #112015 38%, #0E1D13 100%)`,
+                minHeight: 292,
+                padding: 14,
+                background: `linear-gradient(180deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 12%, #17202a) 0%, #0b1016 100%)`,
                 border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
-                boxShadow: `0 32px 80px rgba(0,0,0,0.65), 0 0 50px ${getOutcomeColor(chosenOutcome)}15`,
+                boxShadow: `0 16px 38px rgba(0,0,0,0.3)`,
                 display: "flex",
                 flexDirection: "column",
-                gap: 16,
+                gap: 12,
               }}
             >
               <div className="split-row">
@@ -283,10 +283,10 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: "2.4rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, match)}</span>
-                <div className="title-stack">
+                <span style={{ fontSize: "2rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, match)}</span>
+                <div className="title-stack" style={{ gap: 2 }}>
                   <p className="eyebrow">Vas con</p>
-                  <strong style={{ fontSize: "1.15rem" }}>
+                  <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.6rem", letterSpacing: "-0.02em", textTransform: "uppercase" }}>
                     {match.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}
                   </strong>
                   <span className="micro-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>
@@ -296,7 +296,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               </div>
 
               <p className="eyebrow">¿Cómo la querés jugar?</p>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10, marginTop: "auto" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: "auto" }}>
                 {INTENSITIES.map((option) => {
                   const Icon = option.icon;
                   return (
@@ -306,26 +306,26 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                       whileHover={{ scale: 1.03 }}
                       onClick={() => void handleIntensityPick(option)}
                       style={{
-                        minHeight: 112,
-                        borderRadius: 16,
+                        minHeight: 96,
+                        borderRadius: 12,
                         border: "1px solid rgba(255,255,255,0.09)",
-                        background: "rgba(255,255,255,0.04)",
+                        background: "rgba(255,255,255,0.035)",
                         display: "grid",
                         placeItems: "center",
-                        gap: 8,
-                        padding: 16,
+                        gap: 6,
+                        padding: 12,
                         color: "#EDE8D9",
                       }}
                     >
-                      <Icon size={26} />
-                      <span style={{ fontFamily: "var(--font-display)", fontSize: ".98rem", fontWeight: 700 }}>{option.label}</span>
-                      <span className="micro-copy" style={{ color: "#7A9A81" }}>{getIntensityCopy(option.id)}</span>
+                      <Icon size={20} style={{ color: option.id === "hard" ? "var(--live)" : option.id === "medium" ? "#EDE8D9" : "var(--gold)" }} />
+                      <span style={{ fontFamily: "var(--font-display)", fontSize: ".88rem", fontWeight: 700 }}>{option.label}</span>
+                      <span className="micro-copy" style={{ textAlign: "center" }}>{getIntensityCopy(option.id)}</span>
                     </motion.button>
                   );
                 })}
               </div>
 
-              <button className="button-ghost" onClick={resetPhase}>
+              <button className="button-ghost" onClick={resetPhase} style={{ minHeight: 36, justifySelf: "start", paddingInline: 0 }}>
                 Cambiar
               </button>
             </motion.div>

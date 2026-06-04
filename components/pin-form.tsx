@@ -70,6 +70,14 @@ export function PinForm() {
 
   return (
     <form className="surface-card" style={{ padding: 20, display: "grid", gap: 18 }} onSubmit={handleSubmit}>
+      <div className="split-row" style={{ alignItems: "start" }}>
+        <div className="title-stack">
+          <p className="eyebrow">Seguridad</p>
+          <h2 className="section-title">Actualizar PIN</h2>
+        </div>
+        <span className="pill">Secure update</span>
+      </div>
+
       <div className="field">
         <label htmlFor="pinName">Nombre</label>
         <input
@@ -137,7 +145,7 @@ export function PinForm() {
       </div>
 
       {error ? <p className="error-copy">{error}</p> : null}
-      {success ? <p className="micro-copy" style={{ color: "#7EDC96" }}>{success}</p> : null}
+      {success ? <p className="micro-copy" style={{ color: "var(--gold)" }}>{success}</p> : <p className="micro-copy">Usá siempre un PIN de 4 dígitos. Si entra bien, el cambio queda aplicado al instante.</p>}
 
       <button className="button-primary" type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Guardando..." : "Cambiar PIN"}

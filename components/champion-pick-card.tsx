@@ -134,17 +134,27 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
 
   if (mode === "summary") {
     return (
-      <section className="surface-card-soft panel-stack">
-        <div className="title-stack">
+      <section className="surface-card-soft panel-stack" style={{ background: "rgba(255,255,255,0.035)", minHeight: 157, gap: 10 }}>
+        <div className="title-stack" style={{ gap: 6 }}>
           <p className="eyebrow">Campeón</p>
-          <h2 className="section-title">
+          <h2 className="section-title" style={{ fontSize: "clamp(1.3rem, 5.4vw, 1.6rem)" }}>
             {selectedOption ? `${selectedOption.flag} ${selectedOption.name}` : "Sin elegir"}
           </h2>
           <p className="muted-copy">{locked ? "Ya quedó cerrado." : "Podés cambiarlo hasta que arranque el Mundial."}</p>
         </div>
 
         {!locked ? (
-          <Link className="button-secondary" href="/champion">
+          <Link
+            className="button-secondary"
+            href="/champion"
+            style={{
+              justifySelf: "stretch",
+              width: "100%",
+              minHeight: 52,
+              height: 52,
+              paddingInline: 16,
+            }}
+          >
             {selectedTeam ? "Editar campeón" : "Elegir campeón"}
           </Link>
         ) : null}
@@ -153,19 +163,20 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
   }
 
   return (
-    <section className="section-stack" style={{ gap: 18 }}>
+    <section className="section-stack" style={{ gap: 14 }}>
       <div className="title-stack">
         <p className="eyebrow">Campeón</p>
         <h1 className="display-title">Elegí campeón</h1>
-        <p className="muted-copy">{locked ? "Ya no se puede cambiar." : "Elegí uno antes de que arranque el Mundial."}</p>
+        <p className="muted-copy">{locked ? "Ya no se puede cambiar." : "Mercado largo del torneo. Elegí uno antes del arranque."}</p>
       </div>
 
       <section
         className="surface-card-soft"
         style={{
-          padding: 18,
+          padding: 14,
           display: "grid",
-          gap: 8,
+          gap: 6,
+          background: "rgba(255,255,255,0.035)",
         }}
       >
         <span className="eyebrow">{selectedOption ? "Tu campeón" : "Sin elegir"}</span>
@@ -194,26 +205,26 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
                   disabled={locked}
                   onClick={() => setSelectedTeam(team.name)}
                   style={{
-                    minHeight: 72,
-                    borderRadius: 16,
-                    border: selected ? "1px solid rgba(212,166,75,0.4)" : "1px solid rgba(255,255,255,0.08)",
-                    background: selected ? "linear-gradient(160deg, rgba(212,166,75,0.16) 0%, rgba(212,166,75,0.08) 100%)" : "rgba(255,255,255,0.03)",
+                    minHeight: 64,
+                    borderRadius: 12,
+                    border: selected ? "1px solid rgba(216,255,86,0.34)" : "1px solid rgba(255,255,255,0.08)",
+                    background: selected ? "linear-gradient(180deg, rgba(216,255,86,0.12) 0%, rgba(255,255,255,0.03) 100%)" : "rgba(255,255,255,0.03)",
                     justifyContent: "space-between",
-                    paddingInline: 14,
+                    paddingInline: 12,
                     gap: 10,
-                    boxShadow: selected ? "0 0 0 1px rgba(212,166,75,0.08), 0 14px 28px rgba(0,0,0,0.22)" : "none",
+                    boxShadow: selected ? "0 0 0 1px rgba(216,255,86,0.06), 0 10px 20px rgba(0,0,0,0.18)" : "none",
                     transform: selected ? "translateY(-1px)" : "none",
                     transition: "background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
                   }}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: "1.3rem" }}>{team.flag}</span>
-                    <span style={{ color: selected ? "#F4E3B2" : "#EDE8D9", fontWeight: selected ? 700 : 600 }}>{team.name}</span>
+                    <span style={{ color: selected ? "var(--gold)" : "#EDE8D9", fontWeight: selected ? 700 : 600 }}>{team.name}</span>
                   </span>
                   <span
                     className="micro-copy"
                     style={{
-                      color: selected ? "#F0C96B" : "#667D69",
+                      color: selected ? "var(--gold)" : "var(--text-tertiary)",
                       fontWeight: 700,
                     }}
                   >
@@ -226,7 +237,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
         </section>
       ))}
 
-      {!locked && selectedOption ? <div aria-hidden="true" style={{ height: 140 }} /> : null}
+      {!locked && selectedOption ? <div aria-hidden="true" style={{ height: 88 }} /> : null}
 
       {!locked && selectedOption ? (
         <section
@@ -236,13 +247,13 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
             left: 16,
             right: 16,
             bottom: "calc(var(--bottom-nav-height) + var(--safe-bottom) + 12px)",
-            padding: 18,
+            padding: 14,
             display: "grid",
-            gap: 12,
-            background: "linear-gradient(160deg, rgba(17,32,21,0.96) 0%, rgba(10,21,12,0.96) 100%)",
+            gap: 10,
+            background: "linear-gradient(180deg, rgba(16,22,30,0.98) 0%, rgba(10,14,20,0.98) 100%)",
             border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 18px 40px rgba(0,0,0,0.34)",
-            backdropFilter: "blur(12px)",
+            boxShadow: "0 12px 26px rgba(0,0,0,0.24)",
+            backdropFilter: "blur(10px)",
             zIndex: 50,
           }}
         >

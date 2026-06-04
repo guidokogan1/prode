@@ -154,7 +154,7 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
     defaultTab: "play",
     isInteractive: match.isEditable,
     showDrawGesture,
-    heroValue: "Elegi resultado",
+    heroValue: "Pendiente",
     heroDescription: "Arrastra o toca",
     heroTone: "neutral",
     winningOutcome: null,

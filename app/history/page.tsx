@@ -6,9 +6,15 @@ export default async function HistoryPage() {
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
-      <section style={{ display: "grid", gap: 6, paddingTop: 8 }}>
-        <p className="eyebrow">Historial</p>
-        <h1 className="display-title">Últimas jugadas</h1>
+      <section className="surface-card" style={{ display: "grid", gap: 10, padding: 14 }}>
+        <div className="split-row" style={{ alignItems: "start" }}>
+          <div className="title-stack">
+            <p className="eyebrow">Ledger</p>
+            <h1 className="display-title">Historial</h1>
+          </div>
+          <span className="pill">{history.length}</span>
+        </div>
+        <p className="muted-copy">Tus jugadas cerradas, ordenadas por resultado.</p>
       </section>
 
       {!history.length ? (
@@ -23,12 +29,12 @@ export default async function HistoryPage() {
             key={item.id}
             className="surface-card-soft"
             style={{
-              padding: 18,
-              borderRadius: 20,
-              background: item.netAmount >= 0 ? "rgba(61,155,95,0.08)" : "rgba(232,65,58,0.07)",
-              borderColor: item.netAmount >= 0 ? "rgba(61,155,95,0.18)" : "rgba(232,65,58,0.15)",
+              padding: 14,
+              borderRadius: 14,
+              background: item.netAmount >= 0 ? "rgba(216,255,86,0.05)" : "rgba(255,85,71,0.05)",
+              borderColor: item.netAmount >= 0 ? "rgba(216,255,86,0.16)" : "rgba(255,85,71,0.18)",
               display: "grid",
-              gap: 12,
+              gap: 10,
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
@@ -36,7 +42,7 @@ export default async function HistoryPage() {
                 <strong>{item.title}</strong>
                 <span className="micro-copy">{item.stage}</span>
               </div>
-              <span className={item.netAmount >= 0 ? "money-positive" : "money-negative"} style={{ fontFamily: "var(--font-display)", fontSize: "1.25rem" }}>
+              <span className={item.netAmount >= 0 ? "money-positive" : "money-negative"} style={{ fontFamily: "var(--font-display)", fontSize: "1.08rem", letterSpacing: "-0.02em" }}>
                 {formatNetAmount(item.netAmount)}
               </span>
             </div>
@@ -53,7 +59,7 @@ export default async function HistoryPage() {
                 <div
                   key={`${item.id}-${allocation.label}`}
                   className="surface-card-soft"
-                  style={{ padding: "10px 12px", borderRadius: 14, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}
+                  style={{ padding: "9px 10px", borderRadius: 10, display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", background: "rgba(255,255,255,0.03)" }}
                 >
                   <span className="micro-copy">{allocation.label}</span>
                   <strong>{formatCredits(allocation.amount)}</strong>
