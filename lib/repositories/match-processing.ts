@@ -1,3 +1,4 @@
+import { syncDummyMatchesLifecycle } from "@/lib/dummy-matches";
 import { syncMatchMarket } from "@/lib/repositories/market-sync";
 import { recomputeLeaderboardSnapshots, settleMatchMarket } from "@/lib/repositories/settlements";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -56,6 +57,12 @@ export async function processAllMatchLifecycles() {
     };
   }
 
+  const dummySync = await syncDummyMatchesLifecycle(supabase);
+
+  if (!dummySync.ok) {
+    return dummySync;
+  }
+
   const matchesQuery = await supabase
     .from("matches")
     .select("id")
@@ -83,6 +90,7 @@ export async function processAllMatchLifecycles() {
 
   return {
     ok: true as const,
+    dummySync,
     processed: results.length,
     results,
   };

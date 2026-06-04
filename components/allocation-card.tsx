@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
@@ -19,6 +20,7 @@ const QUICK_INTENSITIES = [
 ];
 
 export function AllocationCard({ match }: AllocationCardProps) {
+  const router = useRouter();
   const session = useContext(SessionContext);
   const allocationScope = buildAllocationScope(session);
   const initialAllocations = useMemo(
@@ -181,6 +183,9 @@ export function AllocationCard({ match }: AllocationCardProps) {
       });
       setSaveState("saved");
       setSaveMessage(result.state === "saved_remote" ? "Guardado" : "Guardado local");
+      if (result.state === "saved_remote") {
+        router.refresh();
+      }
     } catch {
       saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,

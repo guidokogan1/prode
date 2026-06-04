@@ -1,3 +1,4 @@
+import { isDummyMatchId } from "@/lib/dummy-matches";
 import { MatchCard } from "@/components/match-card";
 import { getMatchActionPriority } from "@/lib/match-ui";
 import { getHomeSummary } from "@/lib/repositories/home";
@@ -48,7 +49,11 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
   const knockoutMatches = matches.filter((match) => match.stage !== "Fase de grupos");
 
   const groupStageGroups = [...new Set(groupStageMatches.map((match) => match.groupLabel).filter(Boolean))]
-    .sort((left, right) => String(left).localeCompare(String(right)))
+    .sort((left, right) => {
+      if (left === "Grupo X") return -1;
+      if (right === "Grupo X") return 1;
+      return String(left).localeCompare(String(right));
+    })
     .map((groupLabel) => ({
       id: String(groupLabel),
       title: String(groupLabel),
@@ -75,5 +80,14 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
   return [...groupStageGroups, ...knockoutGroups].map((group) => ({
     ...group,
     pendingCount: group.matches.filter((match) => getMatchActionPriority(match) === 0).length,
+    matches: group.matches
+      .slice()
+      .sort((left, right) => {
+        if (isDummyMatchId(left.id) !== isDummyMatchId(right.id)) {
+          return isDummyMatchId(left.id) ? -1 : 1;
+        }
+
+        return 0;
+      }),
   }));
 }

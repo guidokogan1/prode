@@ -219,6 +219,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       });
       setSaveMessage("Guardado");
       setSaveTone("default");
+      router.refresh();
     } catch {
       saveStoredAllocation(allocationScope, effectiveMatch.id, {
         allocations: payload,

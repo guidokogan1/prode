@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChampionPickCard } from "@/components/champion-pick-card";
 import { isChampionPickLocked } from "@/lib/champion";
+import { shouldIncludeMatchInChampionPool } from "@/lib/dummy-matches";
 import { listMatches } from "@/lib/repositories/matches";
 import { getProfile } from "@/lib/repositories/profile";
 
@@ -10,7 +11,7 @@ export default async function ChampionPage() {
   const teams = Array.from(
     new Map(
       matches
-        .filter((match) => match.groupLabel)
+        .filter((match) => match.groupLabel && shouldIncludeMatchInChampionPool(match.id))
         .flatMap((match) => [
           { name: match.home.name, flag: match.home.flag, groupLabel: match.groupLabel },
           { name: match.away.name, flag: match.away.flag, groupLabel: match.groupLabel },

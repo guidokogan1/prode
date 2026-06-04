@@ -2,19 +2,23 @@
 
 import { useState } from "react";
 import { ChampionHomeCard } from "@/components/champion-home-card";
+import { MatchCard } from "@/components/match-card";
 import { QuickPlayDeck } from "@/components/quick-play-deck";
 import type { HomeSummary, MatchViewModel } from "@/lib/domain";
+import { getDummyHomeSectionTitle } from "@/lib/dummy-matches";
 import { formatNetAmount } from "@/lib/format";
 
 type HomePageClientProps = {
   initialSummary: HomeSummary;
   featuredMatches: MatchViewModel[];
+  dummyMatches: MatchViewModel[];
   needsChampionPick: boolean;
 };
 
 export function HomePageClient({
   initialSummary,
   featuredMatches,
+  dummyMatches,
   needsChampionPick,
 }: HomePageClientProps) {
   const [pendingPicks, setPendingPicks] = useState(initialSummary.pendingPicks);
@@ -51,6 +55,24 @@ export function HomePageClient({
       </section>
 
       <div style={{ display: "grid", gap: 12, minHeight: 0 }}>
+        {dummyMatches.length ? (
+          <section className="surface-card-soft" style={{ padding: 16, borderRadius: 22, display: "grid", gap: 12 }}>
+            <div className="split-row" style={{ alignItems: "end", gap: 12 }}>
+              <div style={{ display: "grid", gap: 4 }}>
+                <p className="eyebrow">{getDummyHomeSectionTitle()}</p>
+                <h2 className="section-title">Grupo X</h2>
+              </div>
+              <span className="micro-copy">{dummyMatches.length} partidos</span>
+            </div>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              {dummyMatches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {needsChampionPick ? (
           <ChampionHomeCard />
         ) : (

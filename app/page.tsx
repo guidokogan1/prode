@@ -1,3 +1,4 @@
+import { isDummyMatchId } from "@/lib/dummy-matches";
 import { HomePageClient } from "@/components/home-page-client";
 import { isChampionPickLocked } from "@/lib/champion";
 import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
@@ -9,6 +10,8 @@ export default async function HomePage() {
     getMatchesForHome(),
     getProfile(),
   ]);
+  const dummyMatches = featuredMatches.filter((match) => isDummyMatchId(match.id));
+  const regularMatches = featuredMatches.filter((match) => !isDummyMatchId(match.id));
 
   const needsChampionPick = !isChampionPickLocked() && (!profile.championPick || profile.championPick === "Sin elegir");
 
@@ -44,7 +47,8 @@ export default async function HomePage() {
 
       <HomePageClient
         initialSummary={summary}
-        featuredMatches={featuredMatches}
+        featuredMatches={regularMatches}
+        dummyMatches={dummyMatches}
         needsChampionPick={needsChampionPick}
       />
     </main>

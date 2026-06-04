@@ -1,4 +1,5 @@
 import worldCup2026Data from "@/data/world-cup-2026.json";
+import { getDummyGroupLabel, getDummyTeamMeta } from "@/lib/dummy-matches";
 
 type SeedTeam = {
   code: string;
@@ -73,10 +74,15 @@ export const WORLD_CUP_2026_GROUP_FIXTURES: GroupStageFixture[] = groups.flatMap
 );
 
 export function getWorldCupTeamMeta(code: string) {
-  return teamMetaByCode.get(code);
+  return teamMetaByCode.get(code) ?? getDummyTeamMeta(code);
 }
 
 export function getWorldCupGroupLabel(homeCode: string, awayCode: string, stageCode: string) {
+  const dummyGroupLabel = getDummyGroupLabel(homeCode, awayCode, stageCode);
+  if (dummyGroupLabel) {
+    return dummyGroupLabel;
+  }
+
   if (stageCode !== "group") {
     return undefined;
   }
@@ -90,4 +96,3 @@ export function getWorldCupGroupLabel(homeCode: string, awayCode: string, stageC
 
   return `Grupo ${home.groupLetter}`;
 }
-

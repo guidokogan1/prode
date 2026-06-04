@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
@@ -36,6 +37,7 @@ function getIntensityCopy(intensity: IntensityPreset) {
 }
 
 export function MatchVoteCard({ match }: MatchVoteCardProps) {
+  const router = useRouter();
   const session = useContext(SessionContext);
   const [phase, setPhase] = useState<CardPhase>("idle");
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
@@ -157,6 +159,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
       });
       setSaveMessage("Guardado");
       setSaveTone("default");
+      router.refresh();
     } catch {
       saveStoredAllocation(allocationScope, match.id, {
         allocations: payload,
