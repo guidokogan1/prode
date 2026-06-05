@@ -12,6 +12,7 @@ import type {
   SaveTicketResult,
   SessionState,
 } from "@/lib/domain";
+import { deriveDummyMatchState, isDummyMatchId } from "@/lib/dummy-matches";
 import { formatNetAmount, MATCH_CREDIT, validateAllocations } from "@/lib/game";
 import { logPickEvent } from "@/lib/pick-events";
 import { getServerSessionState } from "@/lib/product/session-state";
@@ -533,7 +534,23 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
       .match(matchId ? { id: matchId } : {})
       .returns<MatchQueryRow[]>();
 
-    const matchRows = matchesQuery.data ?? [];
+    const matchRows = (matchesQuery.data ?? []).map((row) => {
+      if (!isDummyMatchId(row.id)) {
+        return row;
+      }
+      const derived = deriveDummyMatchState(row.id);
+      if (!derived) {
+        return row;
+      }
+      return {
+        ...row,
+        status: derived.status,
+        home_score_90: derived.homeScore90,
+        away_score_90: derived.awayScore90,
+        home_score_ft: derived.homeScoreFt,
+        away_score_ft: derived.awayScoreFt,
+      };
+    });
     if (!matchRows.length) {
       return [];
     }
@@ -545,7 +562,21 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
       .in("match_id", matchIds)
       .returns<MarketQueryRow[]>();
 
-    const marketRows = marketsQuery.data ?? [];
+    const dummyStatusByMatchId = new Map(
+      matchRows
+        .filter((row) => isDummyMatchId(row.id))
+        .map((row) => [row.id, row.status] as const),
+    );
+    const marketRows = (marketsQuery.data ?? []).map((row) => {
+      const dummyStatus = dummyStatusByMatchId.get(row.match_id);
+      if (!dummyStatus || row.status !== "open") {
+        return row;
+      }
+      if (dummyStatus === "live" || dummyStatus === "finished") {
+        return { ...row, status: "locked" };
+      }
+      return row;
+    });
     const marketIds = marketRows.map((row) => row.id);
 
     const [outcomesQuery, currentUserData, allTicketData] = await Promise.all([
