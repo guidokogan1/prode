@@ -115,6 +115,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
   );
 
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   async function handleSave() {
     if (!selectedTeam || locked || isSaving) {
@@ -122,8 +123,8 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
     }
 
     setIsSaving(true);
+    setSaveError(null);
 
-    // Wait up to 5s for the session to populate. SessionProvider can be slow on cellular.
     let currentSession = session;
     if (!currentSession) {
       for (let i = 0; i < 25; i += 1) {
@@ -141,12 +142,27 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
     }
 
     if (currentSession?.kind === "remote") {
-      router.push("/");
-      void fetch("/api/champion", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ teamName: selectedTeam }),
-      }).then(() => router.refresh());
+      try {
+        const response = await fetch("/api/champion", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ teamName: selectedTeam }),
+        });
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { reason?: string } | null;
+          setSaveError(payload?.reason ?? "No pudimos guardar tu campeón. Probá de nuevo.");
+          setIsSaving(false);
+          return;
+        }
+
+        router.push("/");
+        router.refresh();
+      } catch {
+        setSaveError("Falla de red al guardar. Revisá tu conexión y probá de nuevo.");
+        setIsSaving(false);
+      }
       return;
     }
 
@@ -301,6 +317,8 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
               </strong>
             </div>
           </div>
+
+          {saveError ? <p className="error-copy">{saveError}</p> : null}
 
           <button
             className="button-primary"
