@@ -427,92 +427,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 </motion.div>
               ) : null}
 
-              {phase === "idle" && isInteractiveEditor ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 4 }}>
-                  <motion.button
-                    whileTap={{ scale: 0.88 }}
-                    whileHover={{ scale: 1.03 }}
-                    onClick={() => void chooseOutcome(quickPlayTargets.left)}
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 999,
-                        border: "1.5px solid rgba(216,255,86,0.3)",
-                        background: "rgba(216,255,86,0.12)",
-                        boxShadow: "0 4px 20px rgba(216,255,86,0.16)",
-                        display: "grid",
-                        placeItems: "center",
-                        color: "var(--gold)",
-                      }}
-                    type="button"
-                  >
-                    <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.home.flag}</span>
-                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
-                        {effectiveMatch.home.name.slice(0, 3)}
-                      </span>
-                    </div>
-                  </motion.button>
-                  {cardState.showDrawGesture && quickPlayTargets.draw ? (
-                    <motion.button
-                      whileTap={{ scale: 0.88 }}
-                      whileHover={{ scale: 1.03 }}
-                      onClick={() => void chooseOutcome(quickPlayTargets.draw!)}
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 999,
-                        border: "1.5px solid rgba(120,167,255,0.35)",
-                        background: "rgba(120,167,255,0.12)",
-                        boxShadow: "0 4px 20px rgba(120,167,255,0.16)",
-                        display: "grid",
-                        placeItems: "center",
-                      }}
-                      type="button"
-                    >
-                      <span style={{ fontSize: "1rem" }}>🤝</span>
-                    </motion.button>
-                  ) : null}
-                  <motion.button
-                    whileTap={{ scale: 0.88 }}
-                    whileHover={{ scale: 1.03 }}
-                    onClick={() => void chooseOutcome(quickPlayTargets.right)}
-                    style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 999,
-                        border: "1.5px solid rgba(255,85,71,0.35)",
-                        background: "rgba(255,85,71,0.12)",
-                        boxShadow: "0 4px 20px rgba(255,85,71,0.18)",
-                        display: "grid",
-                        placeItems: "center",
-                        color: "var(--live)",
-                      }}
-                    type="button"
-                  >
-                    <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.away.flag}</span>
-                      <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
-                        {effectiveMatch.away.name.slice(0, 3)}
-                      </span>
-                    </div>
-                  </motion.button>
-                </div>
-              ) : null}
-              {isFinePointer && isInteractiveEditor && phase === "idle" ? (
-                <p
-                  className="micro-copy"
-                  style={{
-                    textAlign: "center",
-                    marginTop: 8,
-                    color: "var(--text-tertiary)",
-                    letterSpacing: ".06em",
-                  }}
-                >
-                  Atajos: <kbd>←</kbd>{cardState.showDrawGesture ? <> <kbd>↑</kbd></> : null} <kbd>→</kbd>
-                </p>
-              ) : null}
-
               {phase === "chosen" && chosenOutcome ? (
                 <motion.div
                   key={`detail-chosen-${effectiveMatch.id}-${chosenOutcome}`}
@@ -615,6 +529,92 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 </motion.div>
               ) : null}
             </AnimatePresence>
+
+            {phase === "idle" && isInteractiveEditor ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 12 }}>
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => void chooseOutcome(quickPlayTargets.left)}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 999,
+                    border: "1.5px solid rgba(216,255,86,0.3)",
+                    background: "rgba(216,255,86,0.12)",
+                    boxShadow: "0 4px 20px rgba(216,255,86,0.16)",
+                    display: "grid",
+                    placeItems: "center",
+                    color: "var(--gold)",
+                  }}
+                  type="button"
+                >
+                  <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
+                    <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.home.flag}</span>
+                    <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
+                      {effectiveMatch.home.name.slice(0, 3)}
+                    </span>
+                  </div>
+                </motion.button>
+                {cardState.showDrawGesture && quickPlayTargets.draw ? (
+                  <motion.button
+                    whileTap={{ scale: 0.88 }}
+                    whileHover={{ scale: 1.03 }}
+                    onClick={() => void chooseOutcome(quickPlayTargets.draw!)}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 999,
+                      border: "1.5px solid rgba(120,167,255,0.35)",
+                      background: "rgba(120,167,255,0.12)",
+                      boxShadow: "0 4px 20px rgba(120,167,255,0.16)",
+                      display: "grid",
+                      placeItems: "center",
+                    }}
+                    type="button"
+                  >
+                    <span style={{ fontSize: "1rem" }}>🤝</span>
+                  </motion.button>
+                ) : null}
+                <motion.button
+                  whileTap={{ scale: 0.88 }}
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => void chooseOutcome(quickPlayTargets.right)}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 999,
+                    border: "1.5px solid rgba(255,85,71,0.35)",
+                    background: "rgba(255,85,71,0.12)",
+                    boxShadow: "0 4px 20px rgba(255,85,71,0.18)",
+                    display: "grid",
+                    placeItems: "center",
+                    color: "var(--live)",
+                  }}
+                  type="button"
+                >
+                  <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
+                    <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.away.flag}</span>
+                    <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
+                      {effectiveMatch.away.name.slice(0, 3)}
+                    </span>
+                  </div>
+                </motion.button>
+              </div>
+            ) : null}
+            {isFinePointer && isInteractiveEditor && phase === "idle" ? (
+              <p
+                className="micro-copy"
+                style={{
+                  textAlign: "center",
+                  marginTop: 8,
+                  color: "var(--text-tertiary)",
+                  letterSpacing: ".06em",
+                }}
+              >
+                Atajos: <kbd>←</kbd>{cardState.showDrawGesture ? <> <kbd>↑</kbd></> : null} <kbd>→</kbd>
+              </p>
+            ) : null}
           </div>
         ) : showSavedSummaryHero ? (
           <div className="surface-card" style={{ position: "relative", padding: 16, background: heroPanelBackground, borderColor: heroPanelBorder }}>
