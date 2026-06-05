@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { MATCH_CREDIT } from "@/lib/game";
+import { recomputeLeaderboardSnapshots } from "@/lib/repositories/settlements";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -80,26 +82,38 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, settled: true, picksUpdated: 0, reason: "no se pudieron leer picks." });
   }
 
+  const totalPool = picksQuery.data.length * MATCH_CREDIT;
+  const winnerPicks = picksQuery.data.filter((pick) => pick.team_id === winnerTeamId);
+  const winningPool = winnerPicks.length * MATCH_CREDIT;
+
   const settledAt = new Date().toISOString();
   let picksUpdated = 0;
   for (const pick of picksQuery.data) {
     const isWinner = pick.team_id === winnerTeamId;
+    const grossReturn = isWinner && winningPool > 0 ? (totalPool * MATCH_CREDIT) / winningPool : 0;
+    const netResult = grossReturn - MATCH_CREDIT;
     const update = await supabase
       .from("champion_picks")
       .update({
-        gross_return_amount: isWinner ? 10000 : 0,
-        net_result_amount: isWinner ? 10000 : -10000,
+        gross_return_amount: Number(grossReturn.toFixed(2)),
+        net_result_amount: Number(netResult.toFixed(2)),
         settled_at: settledAt,
       })
       .eq("id", pick.id);
     if (!update.error) picksUpdated += 1;
   }
 
+  const leaderboard = await recomputeLeaderboardSnapshots();
+
   return NextResponse.json({
     ok: true,
     settled: true,
     winnerTeamId,
+    totalPool,
+    winningPool,
+    winnerPicksCount: winnerPicks.length,
     picksUpdated,
     finalMatchId: finalMatchQuery.data.id,
+    leaderboardOk: leaderboard.ok,
   });
 }

@@ -1,12 +1,15 @@
 import { LeaderboardPodium } from "@/components/leaderboard-podium";
 import { RankingList } from "@/components/ranking-list";
+import { ShareByIdButton } from "@/components/share-by-id-button";
 import { formatNetAmount } from "@/lib/format";
 import { getRanking } from "@/lib/repositories/ranking";
+import { getTournamentFinalState } from "@/lib/repositories/tournament";
 
 export default async function RankingPage() {
-  const ranking = await getRanking();
+  const [ranking, tournament] = await Promise.all([getRanking(), getTournamentFinalState()]);
   const currentUser = ranking.find((item) => item.isCurrentUser) ?? null;
   const leader = ranking[0] ?? null;
+  const finished = tournament.finished;
 
   if (!ranking.length) {
     return (
@@ -22,9 +25,25 @@ export default async function RankingPage() {
   }
 
   return (
-    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
+    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }} id="ranking-share-target">
       <section className="title-stack" style={{ paddingTop: 8, gap: 6 }}>
-        <h1 className="display-title">Tabla actual</h1>
+        <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
+          <div className="title-stack" style={{ gap: 6 }}>
+            {finished ? <p className="eyebrow" style={{ color: "var(--gold)" }}>Mundial terminado</p> : null}
+            <h1 className="display-title">{finished ? "Tabla final" : "Tabla actual"}</h1>
+            {finished && tournament.winnerTeam ? (
+              <p className="muted-copy">
+                Campeón {tournament.winnerTeam.flag} {tournament.winnerTeam.name}
+              </p>
+            ) : null}
+          </div>
+          <ShareByIdButton
+            targetId="ranking-share-target"
+            fileName="prode-tabla.jpg"
+            shareText={finished ? "Cómo terminó la tabla del prode" : "Así va la tabla del prode"}
+            label="Compartir"
+          />
+        </div>
       </section>
 
       <section className="two-col-grid">

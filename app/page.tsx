@@ -1,7 +1,10 @@
 import { HomePageClient } from "@/components/home-page-client";
+import { TournamentFinaleHero } from "@/components/tournament-finale-hero";
 import { isChampionPickLocked } from "@/lib/champion";
 import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
 import { getProfile } from "@/lib/repositories/profile";
+import { getRanking } from "@/lib/repositories/ranking";
+import { getTournamentFinalState } from "@/lib/repositories/tournament";
 
 const ART_OFFSET_MS = -3 * 60 * 60 * 1000;
 
@@ -10,11 +13,26 @@ function toArtDateString(iso: string): string {
 }
 
 export default async function HomePage() {
-  const [summary, featuredMatches, profile] = await Promise.all([
+  const [summary, featuredMatches, profile, tournamentState] = await Promise.all([
     getHomeSummary(),
     getMatchesForHome(),
     getProfile(),
+    getTournamentFinalState(),
   ]);
+
+  if (tournamentState.finished) {
+    const ranking = await getRanking();
+    return (
+      <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
+        <TournamentFinaleHero
+          tournament={tournamentState}
+          ranking={ranking.slice(0, 5)}
+          currentUserName={profile.name}
+          currentUserChampionPick={profile.championPick}
+        />
+      </main>
+    );
+  }
 
   const todayArt = toArtDateString(new Date().toISOString());
   const todayMatches = featuredMatches

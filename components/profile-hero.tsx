@@ -3,14 +3,23 @@ import { formatNetAmount } from "@/lib/format";
 
 type ProfileHeroProps = {
   profile: ProfileViewModel;
+  rankingPosition?: number | null;
+  isOverallWinner?: boolean;
 };
 
-export function ProfileHero({ profile }: ProfileHeroProps) {
+export function ProfileHero({ profile, rankingPosition = null, isOverallWinner = false }: ProfileHeroProps) {
   return (
     <section style={{ display: "grid", gap: 16 }}>
       <div className="title-stack" style={{ gap: 6, paddingTop: 8 }}>
-        <h1 className="display-title">{profile.name}</h1>
-        <p className="muted-copy">Tu resumen</p>
+        {isOverallWinner ? (
+          <p className="eyebrow" style={{ color: "var(--gold)" }}>🏆 Campeón del prode</p>
+        ) : null}
+        <h1 className="display-title" style={{ color: isOverallWinner ? "var(--gold)" : undefined }}>
+          {profile.name}
+        </h1>
+        <p className="muted-copy">
+          {rankingPosition != null ? `Estás #${rankingPosition} · ` : ""}Tu resumen
+        </p>
       </div>
 
       <div className="compact-grid-2">

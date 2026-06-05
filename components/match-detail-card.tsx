@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { ArrowLeft, Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
+import { ShareImageButton } from "@/components/share-image-button";
 import { VoteFace } from "@/components/vote-face";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
@@ -56,6 +57,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const [isFinePointer, setIsFinePointer] = useState(false);
   const isChoosingRef = useRef(false);
   const saveResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shareTargetRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) {
@@ -365,13 +367,23 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   }
 
   return (
-    <section className="section-stack-lg">
+    <section className="section-stack-lg" ref={shareTargetRef}>
       <div style={{ display: "grid", gap: 6 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", alignSelf: "start", paddingInline: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingInline: 4 }}>
           <button className="button-secondary" onClick={handleBack} type="button" style={{ minHeight: 42, borderRadius: 999, paddingInline: 14, display: "inline-flex", alignItems: "center", gap: 8 }}>
             <ArrowLeft size={16} />
             <span>Volver</span>
           </button>
+          {cardState.mode === "settled" ? (
+            <ShareImageButton
+              targetRef={shareTargetRef}
+              fileName={`prode-${effectiveMatch.home.name.toLowerCase()}-${effectiveMatch.away.name.toLowerCase()}.jpg`}
+              shareText={`Cómo quedó ${effectiveMatch.home.name} vs ${effectiveMatch.away.name}`}
+              label="Compartir"
+              className="button-ghost"
+              style={{ minHeight: 42 }}
+            />
+          ) : null}
         </div>
 
         {showMatchCenter ? (

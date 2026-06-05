@@ -184,7 +184,8 @@ describe("match ui helpers", () => {
       primaryStatusLabel: "Final",
       secondaryStatusLabel: "Acertaste",
       isInteractive: false,
-      heroValue: "+6.154",
+      heroValue: "Ganaste +6.154",
+      heroTone: "positive",
     });
   });
 });

@@ -163,20 +163,33 @@ export async function recomputeLeaderboardSnapshots() {
     };
   }
 
-  const rankingQuery = await supabase
-    .from("settlements")
-    .select("net_result_amount, ticket:tickets(user_id, user:users(display_name))")
-    .returns<
-      {
-        net_result_amount: number;
-        ticket: {
-          user_id: string;
-          user: {
-            display_name: string;
+  const [rankingQuery, championQuery] = await Promise.all([
+    supabase
+      .from("settlements")
+      .select("net_result_amount, ticket:tickets(user_id, user:users(display_name))")
+      .returns<
+        {
+          net_result_amount: number;
+          ticket: {
+            user_id: string;
+            user: {
+              display_name: string;
+            } | null;
           } | null;
-        } | null;
-      }[]
-    >();
+        }[]
+      >(),
+    supabase
+      .from("champion_picks")
+      .select("net_result_amount, user_id, user:users(display_name)")
+      .not("settled_at", "is", null)
+      .returns<
+        {
+          net_result_amount: number | null;
+          user_id: string;
+          user: { display_name: string } | null;
+        }[]
+      >(),
+  ]);
 
   if (rankingQuery.error) {
     return {
@@ -185,24 +198,31 @@ export async function recomputeLeaderboardSnapshots() {
     };
   }
 
-  const sorted = computeLeaderboard(
-    (rankingQuery.data ?? [])
-      .map((row) => {
-        const userId = row.ticket?.user_id;
-        const displayName = row.ticket?.user?.display_name;
+  const matchRows = (rankingQuery.data ?? [])
+    .map((row) => {
+      const userId = row.ticket?.user_id;
+      const displayName = row.ticket?.user?.display_name;
+      if (!userId || !displayName) return null;
+      return {
+        userId,
+        displayName,
+        netResultAmount: row.net_result_amount,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null);
 
-        if (!userId || !displayName) {
-          return null;
-        }
+  const championRows = (championQuery.data ?? [])
+    .map((row) => {
+      if (!row.user || typeof row.net_result_amount !== "number") return null;
+      return {
+        userId: row.user_id,
+        displayName: row.user.display_name,
+        netResultAmount: row.net_result_amount,
+      };
+    })
+    .filter((row): row is NonNullable<typeof row> => row !== null);
 
-        return {
-          userId,
-          displayName,
-          netResultAmount: row.net_result_amount,
-        };
-      })
-      .filter((row): row is NonNullable<typeof row> => row !== null),
-  );
+  const sorted = computeLeaderboard([...matchRows, ...championRows]);
 
   await supabase.from("leaderboard_snapshots").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
