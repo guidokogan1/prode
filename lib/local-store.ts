@@ -205,3 +205,38 @@ export function saveStoredChampionPick(scopeKey: string, pick: StoredChampionPic
   window.localStorage.setItem(`${CHAMPION_PREFIX}${scopeKey}`, JSON.stringify(pick));
   window.dispatchEvent(new CustomEvent(CHAMPION_EVENT, { detail: { scopeKey, pick } }));
 }
+
+const PENDING_CHAMPION_PICK_KEY = "mundial-pool.champion.__pending__";
+
+export function getPendingChampionPick(): StoredChampionPick | null {
+  if (!canUseStorage()) {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(PENDING_CHAMPION_PICK_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as StoredChampionPick;
+  } catch {
+    return null;
+  }
+}
+
+export function setPendingChampionPick(pick: StoredChampionPick) {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.setItem(PENDING_CHAMPION_PICK_KEY, JSON.stringify(pick));
+}
+
+export function clearPendingChampionPick() {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.removeItem(PENDING_CHAMPION_PICK_KEY);
+}

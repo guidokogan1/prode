@@ -2,11 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getAuthErrorMessage } from "@/lib/auth-feedback";
+
+function resolveNextPath(raw: string | null): string {
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+}
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = resolveNextPath(searchParams.get("next"));
   const [displayName, setDisplayName] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
@@ -49,7 +57,7 @@ export function RegisterForm() {
       });
 
       if (response.ok) {
-        router.push("/");
+        router.push(nextPath);
         router.refresh();
         return;
       }
@@ -126,7 +134,7 @@ export function RegisterForm() {
         {isSubmitting ? "Creando..." : "Crear cuenta"}
       </button>
 
-      <Link className="button-secondary" href="/login">
+      <Link className="button-secondary" href={nextPath === "/" ? "/login" : `/login?next=${encodeURIComponent(nextPath)}`}>
         Ya tengo cuenta
       </Link>
     </form>

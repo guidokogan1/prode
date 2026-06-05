@@ -5,7 +5,14 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SessionContext } from "@/components/session-provider";
 import type { SessionState } from "@/lib/domain";
-import { CHAMPION_EVENT, getStoredChampionPick, saveStoredChampionPick } from "@/lib/local-store";
+import {
+  CHAMPION_EVENT,
+  clearPendingChampionPick,
+  getPendingChampionPick,
+  getStoredChampionPick,
+  saveStoredChampionPick,
+  setPendingChampionPick,
+} from "@/lib/local-store";
 
 type ChampionOption = {
   name: string;
@@ -58,6 +65,31 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
       window.removeEventListener("storage", sync);
     };
   }, [initialPick, localScope]);
+
+  useEffect(() => {
+    if (session?.kind !== "remote" || locked) {
+      return;
+    }
+
+    const pending = getPendingChampionPick();
+    if (!pending?.teamName) {
+      return;
+    }
+
+    const isValidTeam = teams.some((team) => team.name === pending.teamName);
+    if (!isValidTeam) {
+      clearPendingChampionPick();
+      return;
+    }
+
+    clearPendingChampionPick();
+    setSelectedTeam(pending.teamName);
+    void fetch("/api/champion", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamName: pending.teamName }),
+    }).then(() => router.refresh());
+  }, [session, locked, teams, router]);
 
   const groupedTeams = useMemo(() => {
     const groups = new Map<string, ChampionOption[]>();
@@ -127,6 +159,10 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
       return;
     }
 
+    setPendingChampionPick({
+      teamName: selectedTeam,
+      savedAt: new Date().toISOString(),
+    });
     router.push("/login?next=/champion");
   }
 
