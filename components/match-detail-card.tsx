@@ -738,14 +738,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           </div>
         ) : null}
 
-        <div style={{ display: "grid", gap: 12, paddingInline: 4 }}>
+        <div style={{ display: "grid", gap: 12, paddingInline: 4, marginTop: 14 }}>
           {phase === "idle" && cardState.mode === "editable-empty" ? <span className="micro-copy">Elegí un lado desde la cancha de arriba.</span> : null}
           {phase === "idle" && cardState.mode === "editable-saved" && isEditingSaved ? (
             <span className="micro-copy">Elegí el nuevo lado desde la cancha de arriba.</span>
           ) : null}
           {phase === "saved" && saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "#D4A64B" : "#7A9A81" }}>{saveMessage}</span> : null}
 
-          <div style={{ display: "grid", gap: 14 }}>
+          <div style={{ display: "grid", gap: 18 }}>
             {groupBuckets.map((bucket) => {
               const isWinning = resolvedOutcome === bucket.outcome.code;
               const isRevealed = effectiveMatch.marketStatus === "revealed" || effectiveMatch.marketStatus === "settled";
@@ -757,12 +757,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   : "var(--text-tertiary)";
 
               return (
-                <article key={bucket.outcome.code} style={{ display: "grid", gap: 10, paddingTop: 2, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="split-row">
+                <article key={bucket.outcome.code} style={{ display: "grid", gap: 12, paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="split-row" style={{ gap: 16 }}>
                     <strong style={{ color: headerColor, fontSize: "1rem", textTransform: "uppercase" }}>
                       {getOutcomeFlag(bucket.outcome.code, effectiveMatch)} {bucket.outcome.label}
                     </strong>
-                    <span className="micro-copy">
+                    <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>
                       {totalOnOutcome > 0 ? `${formatCredits(totalOnOutcome)} cr` : "sin picks"}
                     </span>
                   </div>
@@ -789,10 +789,10 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
             })}
 
             {liquidationRows.length ? (
-              <section style={{ display: "grid", gap: 10, paddingTop: 4 }}>
-                <div className="split-row">
+              <section style={{ display: "grid", gap: 12, paddingTop: 12 }}>
+                <div className="split-row" style={{ gap: 16 }}>
                   <strong style={{ fontSize: "1rem", textTransform: "uppercase", color: "#EDE8D9" }}>Liquidación</strong>
-                  <span className="micro-copy">Neto por jugador</span>
+                  <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>Neto por jugador</span>
                 </div>
                 <div style={{ display: "grid", gap: 8 }}>
                   {liquidationRows.map((row) => {
@@ -822,7 +822,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
             ) : null}
 
             {totalPot > 0 ? (
-              <div className="split-row" style={{ paddingTop: 4 }}>
+              <div className="split-row" style={{ paddingTop: 14, marginTop: 4, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <span className="muted-copy">Pozo</span>
                 <strong style={{ color: "var(--gold)", fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.05em" }}>
                   {formatCompactCredits(totalPot)} cr
