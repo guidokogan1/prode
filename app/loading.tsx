@@ -1,18 +1,19 @@
+import { DaySectionSkeleton } from "@/components/skeletons";
+
 export default function Loading() {
   return (
-    <main className="page-shell" style={{ display: "grid", placeItems: "center", padding: 24 }}>
-      <div
-        aria-hidden="true"
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 999,
-          border: "2px solid rgba(212,166,75,0.18)",
-          borderTopColor: "#D4A64B",
-          animation: "spin 700ms linear infinite",
-        }}
-      />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
+      <section style={{ display: "grid", gap: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 12 }}>
+          <div style={{ display: "grid", gap: 8, flex: 1 }}>
+            <div className="loading-block" style={{ width: 96, height: 10 }} />
+            <div className="loading-block" style={{ width: 188, height: 38, borderRadius: 14 }} />
+          </div>
+          <div className="loading-block" style={{ width: 96, height: 64, borderRadius: 12 }} />
+        </div>
+      </section>
+
+      <DaySectionSkeleton cardCount={3} />
     </main>
   );
 }

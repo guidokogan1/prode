@@ -1,39 +1,51 @@
 export default function ProfileLoading() {
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
-      <section className="surface-card-strong loading-shell" style={{ padding: 22, borderRadius: 24 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 22 }}>
-          <div style={{ display: "grid", gap: 10 }}>
-            <div className="loading-block" style={{ width: 64, height: 64, borderRadius: 999 }} />
-            <div className="loading-block" style={{ width: 44, height: 12 }} />
-            <div className="loading-block" style={{ width: 176, height: 48, borderRadius: 16 }} />
-            <div className="loading-block" style={{ width: 240, height: 14, borderRadius: 10 }} />
-          </div>
-          <div className="surface-card-soft loading-shell" style={{ width: 138, height: 84, borderRadius: 16 }} />
+      <section style={{ display: "grid", gap: 16 }}>
+        <div className="title-stack" style={{ gap: 6, paddingTop: 8 }}>
+          <div className="loading-block" style={{ width: 196, height: 38, borderRadius: 14 }} />
+          <div className="loading-block" style={{ width: 96, height: 12 }} />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(108px, 1fr))", gap: 12 }}>
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div key={`profile-stat-loading-${index}`} className="surface-card-soft loading-shell" style={{ minHeight: 110, borderRadius: 16, padding: "14px 12px" }}>
-              <div style={{ display: "grid", gap: 8, justifyItems: "center" }}>
-                <div className="loading-block" style={{ width: 18, height: 18, borderRadius: 999 }} />
-                <div className="loading-block" style={{ width: 82, height: 16 }} />
-                <div className="loading-block" style={{ width: 58, height: 12 }} />
+        <div className="compact-grid-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={`profile-stat-loading-${index}`}
+              className="surface-card-soft loading-shell"
+              style={{ minHeight: 95, borderRadius: 16, padding: "14px 12px", display: "grid", placeItems: "center" }}
+            >
+              <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
+                <div className="loading-block" style={{ width: 22, height: 22, borderRadius: 999 }} />
+                <div className="loading-block" style={{ width: 64, height: 18 }} />
+                <div className="loading-block" style={{ width: 74, height: 10 }} />
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {Array.from({ length: 3 }).map((_, index) => (
-        <section key={`profile-section-loading-${index}`} className="surface-card-soft loading-shell" style={{ minHeight: 110, borderRadius: 24, padding: 18 }}>
-          <div style={{ display: "grid", gap: 12 }}>
-            <div className="loading-block" style={{ width: 116, height: 12 }} />
-            <div className="loading-block" style={{ width: 186, height: 34, borderRadius: 14 }} />
-            <div className="loading-block" style={{ width: "100%", height: 52, borderRadius: 16 }} />
-          </div>
-        </section>
-      ))}
+      <section
+        className="surface-card-soft loading-shell"
+        style={{ borderRadius: 18, padding: 14, display: "grid", gap: 10 }}
+      >
+        <div style={{ display: "grid", gap: 6 }}>
+          <div className="loading-block" style={{ width: 72, height: 10 }} />
+          <div className="loading-block" style={{ width: 188, height: 26, borderRadius: 12 }} />
+          <div className="loading-block" style={{ width: 232, height: 12 }} />
+        </div>
+        <div className="loading-block" style={{ width: "100%", height: 52, borderRadius: 12 }} />
+      </section>
+
+      <section style={{ display: "grid", gap: 14 }}>
+        <div className="stack-sm" style={{ display: "grid", gap: 6 }}>
+          <div className="loading-block" style={{ width: 64, height: 10 }} />
+          <div className="loading-block" style={{ width: 168, height: 22, borderRadius: 10 }} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 10 }}>
+          <div className="loading-block" style={{ width: "100%", height: 52, borderRadius: 12 }} />
+          <div className="loading-block" style={{ width: 52, height: 52, borderRadius: 12 }} />
+        </div>
+      </section>
     </main>
   );
 }
