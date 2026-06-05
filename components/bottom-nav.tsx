@@ -42,8 +42,10 @@ export function BottomNav() {
         {links}
       </nav>
       <nav className="top-nav-desktop" aria-label="Navegacion principal">
-        <div className="top-nav-brand">Mundial Pool</div>
-        <div className="top-nav-links">{links}</div>
+        <div className="top-nav-inner">
+          <div className="top-nav-brand">Mundial Pool</div>
+          <div className="top-nav-links">{links}</div>
+        </div>
       </nav>
     </>
   );

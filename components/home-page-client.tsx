@@ -57,9 +57,9 @@ export function HomePageClient({
     pendingPicks > 0
       ? `${pendingPicks} por jugar`
       : todayMatches.length > 0
-        ? "Partidos del día"
-        : nextDayMatches.length > 0
-          ? "Próximo día"
+        ? "Hoy se juega"
+        : nextDayMatches.length > 0 && nextDayLabel
+          ? nextDayLabel
           : "Sin partidos por ahora";
 
   const showStats = pendingPicks > 0;
@@ -70,7 +70,7 @@ export function HomePageClient({
         <div className="split-row" style={{ alignItems: "start" }}>
           <div className="title-stack" style={{ gap: 6 }}>
             <p className="eyebrow">Hoy en el pool</p>
-            <h1 className="display-title" style={{ maxWidth: 220 }}>{headline}</h1>
+            <h1 className="display-title">{headline}</h1>
             {showStats ? (
               <p className="micro-copy" style={{ maxWidth: 220 }}>
                 Live, pendientes y tu neto en una sola vista.
@@ -131,11 +131,11 @@ export function HomePageClient({
               }}
             />
             {todayMatches.length > 0 ? (
-              <DaySection title="Partidos del día" subtitle="Hoy se juega" matches={todayMatches} />
+              <DaySection title="Partidos del día" subtitle={null} matches={todayMatches} />
             ) : null}
           </>
         ) : todayMatches.length > 0 ? (
-          <DaySection title="Partidos del día" subtitle="Hoy se juega" matches={todayMatches} />
+          <DaySection title="Partidos del día" subtitle={null} matches={todayMatches} />
         ) : nextDayMatches.length > 0 ? (
           <DaySection title="Próximo día" subtitle={nextDayLabel} matches={nextDayMatches} />
         ) : null}

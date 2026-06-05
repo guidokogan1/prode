@@ -745,27 +745,39 @@ kbd {
   :root {
     --shell-width: 760px;
     --bottom-nav-height: 0px;
+    --top-nav-height: 60px;
   }
 
   .bottom-nav-mobile {
     display: none;
   }
 
+  .app-shell {
+    padding-top: calc(var(--top-nav-height) + 20px);
+  }
+
   .top-nav-desktop {
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 30;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    display: block;
+    background: linear-gradient(180deg, rgba(7, 10, 14, 0.94) 0%, rgba(7, 10, 14, 0.82) 100%);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .top-nav-inner {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
     width: 100%;
     max-width: var(--shell-width);
+    min-height: var(--top-nav-height);
     margin: 0 auto;
     padding: 12px 18px;
-    background: linear-gradient(180deg, rgba(7, 10, 14, 0.94) 0%, rgba(7, 10, 14, 0.82) 100%);
-    backdrop-filter: blur(18px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .top-nav-brand {
