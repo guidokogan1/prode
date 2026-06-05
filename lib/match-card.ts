@@ -42,15 +42,31 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
 
   if (resolvedOutcome) {
     const winningLabel = match.consensus.find((item) => item.code === resolvedOutcome)?.label ?? "Resultado";
-    const netLabel = getUserNetLabel(match.userStateLabel);
-    const tone = getUserResultTone(match.userStateLabel);
+    const settlementTone = getUserResultTone(match.userStateLabel);
+    const settlementNet = settlementTone !== "neutral" ? getUserNetLabel(match.userStateLabel) : null;
     const pickedWinner = leadingUserOutcome?.code === resolvedOutcome;
-    const secondaryStatusLabel = !leadingUserOutcome ? "Sin jugar" : pickedWinner ? "Acertaste" : "No entro";
-    const heroDescription = !leadingUserOutcome
-      ? `No jugaste este partido. Gano ${winningLabel}.`
-      : pickedWinner
-        ? `Fuiste con ${leadingUserOutcome.label}. Acertaste el lado. Cerro ${netLabel}.`
-        : `Fuiste con ${leadingUserOutcome.label}, pero gano ${winningLabel}.`;
+
+    let heroValue: string;
+    let heroTone: "positive" | "negative" | "neutral";
+    let secondaryStatusLabel: string;
+    let heroDescription: string;
+
+    if (!leadingUserOutcome) {
+      heroValue = "No jugaste";
+      heroTone = "neutral";
+      secondaryStatusLabel = "Sin jugar";
+      heroDescription = `Ganó ${winningLabel}.`;
+    } else if (pickedWinner) {
+      heroValue = settlementNet ? `Ganaste ${settlementNet}` : "Ganaste";
+      heroTone = "positive";
+      secondaryStatusLabel = "Acertaste";
+      heroDescription = `Fuiste con ${leadingUserOutcome.label}.`;
+    } else {
+      heroValue = settlementNet ? `Perdiste ${settlementNet}` : "Perdiste";
+      heroTone = "negative";
+      secondaryStatusLabel = "No entró";
+      heroDescription = `Fuiste con ${leadingUserOutcome.label}. Ganó ${winningLabel}.`;
+    }
 
     return {
       mode: "settled",
@@ -60,9 +76,9 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       defaultTab: "play",
       isInteractive: false,
       showDrawGesture: false,
-      heroValue: netLabel,
+      heroValue,
       heroDescription,
-      heroTone: tone === "positive" ? "positive" : tone === "negative" ? "negative" : "neutral",
+      heroTone,
       winningOutcome: resolvedOutcome,
       leadingUserOutcome,
       leadingConsensus,

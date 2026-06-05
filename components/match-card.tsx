@@ -120,10 +120,38 @@ export function MatchCard({ match }: MatchCardProps) {
           <div className="split-row" style={{ alignItems: "end", gap: 12, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 11 }}>
             <div style={{ display: "grid", gap: 3 }}>
               <span className="micro-copy">Tu jugada</span>
-              <strong style={{ fontSize: "1rem", letterSpacing: "-0.02em", textTransform: "uppercase" }}>{cardState.heroValue}</strong>
+              <strong
+                style={{
+                  fontSize: "1rem",
+                  letterSpacing: "-0.02em",
+                  textTransform: "uppercase",
+                  color:
+                    cardState.heroTone === "positive"
+                      ? "var(--gold)"
+                      : cardState.heroTone === "negative"
+                        ? "var(--live)"
+                        : undefined,
+                }}
+              >
+                {cardState.heroValue}
+              </strong>
             </div>
             {cardState.mode !== "editable-empty" ? (
-              <span className="micro-copy" style={{ color: cardState.leadingUserOutcome ? getOutcomeColor(cardState.leadingUserOutcome.code) : undefined }}>
+              <span
+                className="micro-copy"
+                style={{
+                  color:
+                    cardState.mode === "settled"
+                      ? cardState.heroTone === "positive"
+                        ? "var(--gold)"
+                        : cardState.heroTone === "negative"
+                          ? "var(--live)"
+                          : undefined
+                      : cardState.leadingUserOutcome
+                        ? getOutcomeColor(cardState.leadingUserOutcome.code)
+                        : undefined,
+                }}
+              >
                 {cardState.heroDescription}
               </span>
             ) : null}

@@ -696,11 +696,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <div className="surface-card" style={{ position: "relative", padding: 16, background: heroPanelBackground, borderColor: heroPanelBorder }}>
             <div
               style={{
-                minHeight: 220,
-                height: "100%",
                 display: "grid",
-                gridTemplateRows: "auto 1fr auto",
-                justifyItems: "center",
                 gap: 14,
                 textAlign: "center",
               }}
@@ -713,18 +709,16 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 <p className="muted-copy">{cardState.heroDescription}</p>
               </div>
 
-              <div />
-
-              <div className="split-row" style={{ width: "100%", alignItems: "end" }}>
-                <div className="title-stack" style={{ textAlign: "left" }}>
+              <div className="split-row" style={{ width: "100%", alignItems: "end", paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="title-stack" style={{ textAlign: "left", gap: 2 }}>
                   <span className="micro-copy">Ganó</span>
                   <strong style={{ color: cardState.winningOutcome ? getOutcomeColor(cardState.winningOutcome) : undefined }}>
                     {cardState.winningOutcome ? `${getOutcomeFlag(cardState.winningOutcome, effectiveMatch)} ${effectiveMatch.consensus.find((item) => item.code === cardState.winningOutcome)?.label ?? "Resultado"}` : "Final"}
                   </strong>
                 </div>
-                <div className="title-stack text-right">
+                <div className="title-stack text-right" style={{ gap: 2 }}>
                   <span className="micro-copy">Marcador</span>
-                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "2rem", letterSpacing: "-0.06em" }}>{cardState.scoreOrKickoffLabel}</strong>
+                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.8rem", letterSpacing: "-0.06em" }}>{cardState.scoreOrKickoffLabel}</strong>
                 </div>
               </div>
             </div>
