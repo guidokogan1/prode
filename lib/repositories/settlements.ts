@@ -64,7 +64,7 @@ export async function settleMatchMarket(matchId: string) {
 
   const allocationsQuery = await supabase
     .from("ticket_allocations")
-    .select("ticket_id, amount, ticket:tickets(user_id), outcome:market_outcomes(code)")
+    .select("ticket_id, amount, ticket:tickets!inner(user_id, match_market_id), outcome:market_outcomes(code)")
     .eq("ticket.match_market_id", market.id)
     .returns<AllocationRow[]>();
 

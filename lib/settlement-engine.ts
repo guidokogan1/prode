@@ -26,8 +26,20 @@ export function computeMarketSettlements(
     throw new Error("No hay credito apostado al outcome ganador.");
   }
 
-  const rows = allocations.map((row) => {
-    const winningStake = row.outcomeCode === winningOutcomeCode ? row.amount : 0;
+  const winningStakeByTicket = new Map<string, number>();
+  const ticketOrder: string[] = [];
+  for (const row of allocations) {
+    if (!winningStakeByTicket.has(row.ticketId)) {
+      ticketOrder.push(row.ticketId);
+      winningStakeByTicket.set(row.ticketId, 0);
+    }
+    if (row.outcomeCode === winningOutcomeCode) {
+      winningStakeByTicket.set(row.ticketId, (winningStakeByTicket.get(row.ticketId) ?? 0) + row.amount);
+    }
+  }
+
+  const rows = ticketOrder.map((ticketId) => {
+    const winningStake = winningStakeByTicket.get(ticketId) ?? 0;
     const result = settleTicket({
       totalPool,
       winningPool,
@@ -35,7 +47,7 @@ export function computeMarketSettlements(
     });
 
     return {
-      ticketId: row.ticketId,
+      ticketId,
       winningBetAmount: winningStake,
       grossReturnAmount: Number(result.grossReturn.toFixed(2)),
       netResultAmount: Number(result.netResult.toFixed(2)),
