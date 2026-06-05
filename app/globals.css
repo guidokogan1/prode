@@ -735,6 +735,23 @@ kbd {
   }
 }
 
+@keyframes winner-confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(120vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
 .button-primary:focus-visible,
 .button-secondary:focus-visible,
 .button-ghost:focus-visible,

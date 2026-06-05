@@ -1,5 +1,6 @@
 import { HomePageClient } from "@/components/home-page-client";
 import { TournamentFinaleHero } from "@/components/tournament-finale-hero";
+import { WinnerCelebrationOverlay } from "@/components/winner-celebration-overlay";
 import { isChampionPickLocked } from "@/lib/champion";
 import { getHomeSummary, getMatchesForHome } from "@/lib/repositories/home";
 import { getProfile } from "@/lib/repositories/profile";
@@ -22,8 +23,19 @@ export default async function HomePage() {
 
   if (tournamentState.finished) {
     const ranking = await getRanking();
+    const currentUser = ranking.find((entry) => entry.name === profile.name) ?? null;
+    const userIsLeader = currentUser?.position === 1;
     return (
       <main className="page-shell page-scroll" style={{ display: "grid", gap: 18 }}>
+        {userIsLeader && tournamentState.winnerTeam && currentUser ? (
+          <WinnerCelebrationOverlay
+            userName={profile.name}
+            netAmount={currentUser.netAmount}
+            winnerTeamName={tournamentState.winnerTeam.name}
+            winnerTeamFlag={tournamentState.winnerTeam.flag}
+            storageKey={`prode-winner-celebrated:${tournamentState.settledAt ?? "default"}`}
+          />
+        ) : null}
         <TournamentFinaleHero
           tournament={tournamentState}
           ranking={ranking.slice(0, 5)}

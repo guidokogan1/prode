@@ -47,16 +47,18 @@ export function ChampionFinaleCard({ tournament, userPick }: ChampionFinaleCardP
           {headline}
         </strong>
       </div>
-      {pickedWinner ? (
-        <ShareByIdButton
-          targetId="champion-finale-share-target"
-          fileName="prode-campeon.jpg"
-          shareText={`Acerté el campeón del Mundial: ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`}
-          label="Compartir"
-          className="button-ghost"
-          style={{ marginTop: 4 }}
-        />
-      ) : null}
+      <ShareByIdButton
+        targetId="champion-finale-share-target"
+        fileName="prode-campeon.jpg"
+        shareText={
+          pickedWinner
+            ? `Acerté el campeón del Mundial: ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`
+            : `Pegamos el prode del Mundial. Campeón ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`
+        }
+        label="Compartir"
+        className="button-ghost"
+        style={{ marginTop: 4 }}
+      />
     </section>
   );
 }
