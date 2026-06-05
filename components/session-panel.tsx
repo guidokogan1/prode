@@ -38,13 +38,16 @@ export function SessionPanel() {
 
       {modeCopy ? <p className="muted-copy">{modeCopy}</p> : null}
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) auto", gap: 10, alignItems: "stretch", minHeight: 52 }}>
-        <Link className="button-primary" href="/login" style={{ width: "100%", minHeight: 52, height: 52 }}>
-          {session?.kind === "anonymous" || session?.kind === "demo" ? "Iniciar sesión" : "Cambiar cuenta"}
-        </Link>
-        <Link className="button-secondary" href="/pin" style={{ width: "100%", minHeight: 52, height: 52 }}>
-          Cambiar PIN
-        </Link>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", gap: 10, alignItems: "stretch", minHeight: 52 }}>
+        {session?.kind === "anonymous" || session?.kind === "demo" ? (
+          <Link className="button-primary" href="/login" style={{ width: "100%", minHeight: 52, height: 52 }}>
+            Iniciar sesión
+          </Link>
+        ) : (
+          <Link className="button-secondary" href="/pin" style={{ width: "100%", minHeight: 52, height: 52 }}>
+            Cambiar PIN
+          </Link>
+        )}
         {session && (session.kind === "remote" || session.kind === "local") ? (
           <button
             className="button-secondary"

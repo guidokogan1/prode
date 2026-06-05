@@ -186,7 +186,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
 
   if (mode === "summary") {
     return (
-      <section className="surface-card-soft panel-stack" style={{ background: "rgba(255,255,255,0.035)", minHeight: 157, gap: 10 }}>
+      <section className="surface-card-soft panel-stack" style={{ background: "rgba(255,255,255,0.035)", gap: 10 }}>
         <div className="title-stack" style={{ gap: 6 }}>
           <p className="eyebrow">Campeón</p>
           <h2 className="section-title" style={{ fontSize: "clamp(1.3rem, 5.4vw, 1.6rem)" }}>
