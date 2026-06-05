@@ -78,6 +78,11 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
   useEffect(() => {
     const sync = () => {
+      if (!match.isEditable) {
+        setEffectiveMatch(match);
+        return;
+      }
+
       const storedDraft = getStoredAllocation(allocationScope, match.id);
       if (!storedDraft?.allocations?.length) {
         setEffectiveMatch(match);
