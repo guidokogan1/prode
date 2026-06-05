@@ -1,11 +1,18 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChampionPickCard } from "@/components/champion-pick-card";
 import { isChampionPickLocked } from "@/lib/champion";
 import { shouldIncludeMatchInChampionPool } from "@/lib/dummy-matches";
 import { listMatches } from "@/lib/repositories/matches";
 import { getProfile } from "@/lib/repositories/profile";
+import { getTournamentFinalState } from "@/lib/repositories/tournament";
 
 export default async function ChampionPage() {
+  const tournament = await getTournamentFinalState();
+  if (tournament.finished) {
+    redirect("/profile");
+  }
+
   const [profile, matches] = await Promise.all([getProfile(), listMatches()]);
 
   const teams = Array.from(

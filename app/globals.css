@@ -700,6 +700,41 @@ kbd {
   line-height: 1.2;
 }
 
+.finale-sparkle {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  animation: finale-sparkle-float 3.2s ease-in-out infinite;
+}
+
+@keyframes finale-sparkle-float {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.05);
+  }
+  70% {
+    opacity: 0.45;
+    transform: translateY(-2px) scale(0.95);
+  }
+}
+
+.finale-hero-celebrate {
+  animation: finale-hero-pulse 4.2s ease-in-out infinite;
+}
+
+@keyframes finale-hero-pulse {
+  0%, 100% {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), 0 0 0 0 rgba(216, 255, 86, 0);
+  }
+  50% {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), 0 0 28px 4px rgba(216, 255, 86, 0.18);
+  }
+}
+
 .button-primary:focus-visible,
 .button-secondary:focus-visible,
 .button-ghost:focus-visible,

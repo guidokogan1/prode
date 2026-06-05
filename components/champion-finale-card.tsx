@@ -1,3 +1,4 @@
+import { ShareByIdButton } from "@/components/share-by-id-button";
 import type { TournamentFinalState } from "@/lib/repositories/tournament";
 
 type ChampionFinaleCardProps = {
@@ -19,6 +20,7 @@ export function ChampionFinaleCard({ tournament, userPick }: ChampionFinaleCardP
 
   return (
     <section
+      id="champion-finale-share-target"
       className="surface-card-soft"
       style={{
         padding: 16,
@@ -45,6 +47,16 @@ export function ChampionFinaleCard({ tournament, userPick }: ChampionFinaleCardP
           {headline}
         </strong>
       </div>
+      {pickedWinner ? (
+        <ShareByIdButton
+          targetId="champion-finale-share-target"
+          fileName="prode-campeon.jpg"
+          shareText={`Acerté el campeón del Mundial: ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`}
+          label="Compartir"
+          className="button-ghost"
+          style={{ marginTop: 4 }}
+        />
+      ) : null}
     </section>
   );
 }

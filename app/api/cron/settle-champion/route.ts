@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MATCH_CREDIT } from "@/lib/game";
+import { CHAMPION_CREDIT } from "@/lib/champion";
 import { recomputeLeaderboardSnapshots } from "@/lib/repositories/settlements";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -82,16 +82,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, settled: true, picksUpdated: 0, reason: "no se pudieron leer picks." });
   }
 
-  const totalPool = picksQuery.data.length * MATCH_CREDIT;
+  const totalPool = picksQuery.data.length * CHAMPION_CREDIT;
   const winnerPicks = picksQuery.data.filter((pick) => pick.team_id === winnerTeamId);
-  const winningPool = winnerPicks.length * MATCH_CREDIT;
+  const winningPool = winnerPicks.length * CHAMPION_CREDIT;
 
   const settledAt = new Date().toISOString();
   let picksUpdated = 0;
   for (const pick of picksQuery.data) {
     const isWinner = pick.team_id === winnerTeamId;
-    const grossReturn = isWinner && winningPool > 0 ? (totalPool * MATCH_CREDIT) / winningPool : 0;
-    const netResult = grossReturn - MATCH_CREDIT;
+    const grossReturn = isWinner && winningPool > 0 ? (totalPool * CHAMPION_CREDIT) / winningPool : 0;
+    const netResult = grossReturn - CHAMPION_CREDIT;
     const update = await supabase
       .from("champion_picks")
       .update({

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ShareByIdButton } from "@/components/share-by-id-button";
 import { formatNetAmount } from "@/lib/format";
 import type { RankingEntry } from "@/lib/domain";
 import type { TournamentFinalState } from "@/lib/repositories/tournament";
@@ -24,15 +25,26 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
   return (
     <>
       <section
-        className="surface-card-strong"
+        id="finale-share-target"
+        className={userIsLeader ? "surface-card-strong finale-hero-celebrate" : "surface-card-strong"}
         style={{
           padding: 22,
           display: "grid",
           gap: 16,
           background: "linear-gradient(160deg, rgba(216,255,86,0.16) 0%, rgba(15,21,29,0.97) 60%)",
           borderColor: "rgba(216,255,86,0.28)",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
+        {userIsLeader ? (
+          <>
+            <span className="finale-sparkle" style={{ top: 12, left: 18, fontSize: "1.1rem", animationDelay: "0s" }} aria-hidden="true">✨</span>
+            <span className="finale-sparkle" style={{ top: 28, right: 22, fontSize: "0.9rem", animationDelay: "0.7s" }} aria-hidden="true">✨</span>
+            <span className="finale-sparkle" style={{ bottom: 18, left: 28, fontSize: "0.8rem", animationDelay: "1.4s" }} aria-hidden="true">⭐</span>
+            <span className="finale-sparkle" style={{ bottom: 30, right: 16, fontSize: "1rem", animationDelay: "0.3s" }} aria-hidden="true">✨</span>
+          </>
+        ) : null}
         <div className="title-stack" style={{ gap: 4, textAlign: "center", justifyItems: "center" }}>
           <p className="eyebrow" style={{ color: "var(--gold)" }}>Mundial terminado</p>
           <h1 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.6rem)", color: "var(--gold)" }}>
@@ -140,6 +152,18 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
       </section>
 
       <section style={{ display: "grid", gap: 10, paddingInline: 4 }}>
+        <ShareByIdButton
+          targetId="finale-share-target"
+          fileName="prode-mundial-final.jpg"
+          shareText={
+            userIsLeader
+              ? `Salí campeón del prode con ${formatNetAmount(userInRanking?.netAmount ?? 0)} 🏆`
+              : "Así terminó el prode del Mundial"
+          }
+          label="Compartir resultado"
+          className="button-primary"
+          style={{ justifyContent: "center" }}
+        />
         <Link className="button-secondary" href="/profile" style={{ justifyContent: "space-between" }}>
           <span>Tu resumen</span>
           <span aria-hidden="true">→</span>
