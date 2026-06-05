@@ -717,7 +717,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               <div className="split-row" style={{ width: "100%", alignItems: "end", paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                 <div className="title-stack" style={{ textAlign: "left", gap: 2 }}>
                   <span className="micro-copy">Ganó</span>
-                  <strong style={{ color: cardState.winningOutcome ? getOutcomeColor(cardState.winningOutcome) : undefined }}>
+                  <strong style={{ color: "var(--gold)" }}>
                     {cardState.winningOutcome ? `${getOutcomeFlag(cardState.winningOutcome, effectiveMatch)} ${effectiveMatch.consensus.find((item) => item.code === cardState.winningOutcome)?.label ?? "Resultado"}` : "Final"}
                   </strong>
                 </div>
@@ -740,30 +740,61 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <div style={{ display: "grid", gap: 14 }}>
             {groupBuckets.map((bucket) => {
               const isWinning = resolvedOutcome === bucket.outcome.code;
+              const isSettled = effectiveMatch.marketStatus === "settled" || effectiveMatch.statusVariant === "settled";
               const pickCount = effectiveMatch.pickCountByCode[bucket.outcome.code] ?? bucket.tickets.length;
               const isRevealed = effectiveMatch.marketStatus === "revealed" || effectiveMatch.marketStatus === "settled";
+              const headerColor = !resolvedOutcome
+                ? "#EDE8D9"
+                : isWinning
+                  ? "var(--gold)"
+                  : "var(--text-tertiary)";
 
               return (
                 <article key={bucket.outcome.code} style={{ display: "grid", gap: 10, paddingTop: 2, paddingBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
                   <div className="split-row">
-                    <strong style={{ color: isWinning ? getOutcomeColor(bucket.outcome.code) : "#EDE8D9", fontSize: "1rem", textTransform: "uppercase" }}>
+                    <strong style={{ color: headerColor, fontSize: "1rem", textTransform: "uppercase" }}>
                       {getOutcomeFlag(bucket.outcome.code, effectiveMatch)} {bucket.outcome.label}
                     </strong>
                     <span className="micro-copy">{pickCount} picks</span>
                   </div>
                   {isRevealed && bucket.tickets.length ? (
                     <div style={{ display: "grid", gap: 8 }}>
-                      {bucket.tickets.map((ticket) => (
-                        <div key={`${bucket.outcome.code}-${ticket.userName}`} className="split-row">
-                          <div style={{ display: "grid", gap: 2 }}>
+                      {bucket.tickets.map((ticket) => {
+                        const netColor =
+                          ticket.netAmount == null
+                            ? undefined
+                            : ticket.netAmount > 0
+                              ? "var(--gold)"
+                              : ticket.netAmount < 0
+                                ? "var(--live)"
+                                : undefined;
+                        return (
+                          <div key={`${bucket.outcome.code}-${ticket.userName}`} className="split-row">
                             <strong style={{ fontSize: ".92rem" }}>{ticket.userName}</strong>
-                            {ticket.netAmount != null ? <span className="micro-copy">{formatNetAmount(ticket.netAmount)}</span> : null}
+                            {isSettled && ticket.netAmount != null ? (
+                              <strong
+                                style={{
+                                  color: netColor,
+                                  fontFamily: "var(--font-accent)",
+                                  letterSpacing: "-0.04em",
+                                }}
+                              >
+                                {formatNetAmount(ticket.netAmount)}
+                              </strong>
+                            ) : (
+                              <strong
+                                style={{
+                                  color: isWinning ? "var(--gold)" : "var(--text-tertiary)",
+                                  fontFamily: "var(--font-accent)",
+                                  letterSpacing: "-0.04em",
+                                }}
+                              >
+                                {formatCredits(ticket.amount)}
+                              </strong>
+                            )}
                           </div>
-                          <strong style={{ color: isWinning ? getOutcomeColor(bucket.outcome.code) : "#97AD99", fontFamily: "var(--font-accent)", letterSpacing: "-0.04em" }}>
-                            {formatCredits(ticket.amount)}
-                          </strong>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   ) : null}
                 </article>
