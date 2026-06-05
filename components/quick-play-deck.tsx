@@ -133,7 +133,6 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
 
   function moveNext() {
     resetPhase();
-    setCurrentIndex((value) => value + 1);
   }
 
   async function chooseOutcome(code: MatchOutcomeCode) {
@@ -260,17 +259,19 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
     <div style={{ display: "grid", gap: 10, minHeight: 0 }}>
       {!done ? (() => {
         const MAX_DOTS = 8;
-        const totalDots = Math.min(MAX_DOTS, deck.length);
+        const savedCount = justSavedIds.size;
+        const totalMatches = deck.length + savedCount;
+        const totalDots = Math.min(MAX_DOTS, totalMatches);
         const startIndex = Math.max(
           0,
-          Math.min(currentIndex - Math.floor((totalDots - 1) / 2), deck.length - totalDots),
+          Math.min(savedCount - Math.floor((totalDots - 1) / 2), totalMatches - totalDots),
         );
         return (
           <div style={{ display: "flex", justifyContent: "flex-start", gap: 5, minHeight: 10 }}>
             {Array.from({ length: totalDots }).map((_, slot) => {
               const matchIndex = startIndex + slot;
-              const isCurrent = matchIndex === currentIndex;
-              const isDone = matchIndex < currentIndex;
+              const isCurrent = matchIndex === savedCount;
+              const isDone = matchIndex < savedCount;
               return (
                 <span
                   key={`deck-dot-${matchIndex}`}
