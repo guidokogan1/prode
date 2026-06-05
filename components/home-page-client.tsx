@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChampionHomeCard } from "@/components/champion-home-card";
+import { MatchCard } from "@/components/match-card";
 import { QuickPlayDeck } from "@/components/quick-play-deck";
 import type { HomeSummary, MatchViewModel } from "@/lib/domain";
 import { formatNetAmount } from "@/lib/format";
@@ -9,12 +10,14 @@ import { formatNetAmount } from "@/lib/format";
 type HomePageClientProps = {
   initialSummary: HomeSummary;
   featuredMatches: MatchViewModel[];
+  todayMatches: MatchViewModel[];
   needsChampionPick: boolean;
 };
 
 export function HomePageClient({
   initialSummary,
   featuredMatches,
+  todayMatches,
   needsChampionPick,
 }: HomePageClientProps) {
   const [pendingPicks, setPendingPicks] = useState(initialSummary.pendingPicks);
@@ -70,9 +73,26 @@ export function HomePageClient({
       </section>
 
       <div style={{ display: "grid", gap: 20, minHeight: 0 }}>
-        {needsChampionPick ? (
-          <ChampionHomeCard />
-        ) : (
+        {needsChampionPick ? <ChampionHomeCard /> : null}
+
+        {todayMatches.length ? (
+          <section style={{ display: "grid", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "grid", gap: 4 }}>
+                <h2 className="section-title">Partidos del día</h2>
+                <span className="micro-copy">Hoy se juega</span>
+              </div>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+              <span className="pill">{todayMatches.length} matches</span>
+            </div>
+
+            <div style={{ display: "grid", gap: 10 }}>
+              {todayMatches.map((match) => (
+                <MatchCard key={match.id} match={match} />
+              ))}
+            </div>
+          </section>
+        ) : !needsChampionPick ? (
           <QuickPlayDeck
             matches={featuredMatches}
             onMatchSaved={() => {
@@ -82,7 +102,7 @@ export function HomePageClient({
               setPendingPicks(count);
             }}
           />
-        )}
+        ) : null}
       </div>
     </>
   );

@@ -34,6 +34,7 @@ export type MatchViewModel = {
   stage: string;
   groupLabel?: string;
   venue: string;
+  kickoffAt?: string;
   kickoffLabel: string;
   status: MatchStatus;
   marketStatus: MarketStatus;

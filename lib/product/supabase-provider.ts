@@ -706,6 +706,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
             stage: stage.name,
             groupLabel: getWorldCupGroupLabel(home.fifa_code, away.fifa_code, stage.code),
             venue: row.venue_city ?? row.venue_name ?? "Sede",
+            kickoffAt: row.kickoff_at,
             kickoffLabel: formatKickoffLabel(row.kickoff_at),
             status: normalizeMatchStatus(row.status),
             marketStatus: normalizeMarketStatus(market.status),

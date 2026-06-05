@@ -46,8 +46,21 @@ export function MatchCard({ match }: MatchCardProps) {
         }}
       >
         <div className="split-row" style={{ alignItems: "center", flexWrap: "wrap", minHeight: 32 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <span className="pill">{cardState.secondaryStatusLabel ?? cardState.primaryStatusLabel}</span>
+            {match.groupLabel ? (
+              <span
+                className="micro-copy"
+                style={{
+                  textTransform: "uppercase",
+                  letterSpacing: ".08em",
+                  color: "var(--text-tertiary)",
+                  fontWeight: 600,
+                }}
+              >
+                {match.groupLabel}
+              </span>
+            ) : null}
           </div>
           <span className="micro-copy">{cardState.scoreOrKickoffLabel}</span>
         </div>
