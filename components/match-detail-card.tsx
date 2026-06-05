@@ -53,8 +53,20 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
   const [isSaving, setIsSaving] = useState(false);
+  const [isFinePointer, setIsFinePointer] = useState(false);
   const isChoosingRef = useRef(false);
   const saveResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return;
+    }
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    setIsFinePointer(mq.matches);
+    const handler = (event: MediaQueryListEvent) => setIsFinePointer(event.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -241,6 +253,56 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
 
   const isInteractiveEditor =
     cardState.mode === "editable-empty" || (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
+  const showDrawGesture = quickPlayTargets.draw != null;
+
+  useEffect(() => {
+    if (!isFinePointer || !isInteractiveEditor || phase !== "idle") {
+      return;
+    }
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        void chooseOutcome(quickPlayTargets.left);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        void chooseOutcome(quickPlayTargets.right);
+      } else if (event.key === "ArrowUp" && showDrawGesture && quickPlayTargets.draw) {
+        event.preventDefault();
+        void chooseOutcome(quickPlayTargets.draw);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isFinePointer, isInteractiveEditor, phase, quickPlayTargets, showDrawGesture]);
+
+  useEffect(() => {
+    if (!isFinePointer || phase !== "chosen") {
+      return;
+    }
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      const optionByKey: Record<string, (typeof INTENSITIES)[number] | undefined> = {
+        "1": INTENSITIES[0],
+        "2": INTENSITIES[1],
+        "3": INTENSITIES[2],
+      };
+      const option = optionByKey[event.key];
+      if (option) {
+        event.preventDefault();
+        void handleIntensityPick(option);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isFinePointer, phase]);
+
   const showMatchCenter =
     cardState.mode === "editable-empty" ||
     (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
@@ -270,9 +332,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           : "#EDE8D9";
 
   async function snapCardBack() {
+    const spring = isFinePointer
+      ? { type: "spring" as const, stiffness: 320, damping: 44, mass: 0.8 }
+      : { type: "spring" as const, stiffness: 540, damping: 34, mass: 0.72 };
     await Promise.all([
-      animate(x, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
-      animate(y, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
+      animate(x, 0, spring).finished,
+      animate(y, 0, spring).finished,
       animate(cardOpacity, 1, { duration: 0.14, ease: "easeOut" }).finished,
     ]);
   }
@@ -433,6 +498,19 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     </div>
                   </motion.button>
                 </div>
+              ) : null}
+              {isFinePointer && isInteractiveEditor && phase === "idle" ? (
+                <p
+                  className="micro-copy"
+                  style={{
+                    textAlign: "center",
+                    marginTop: 8,
+                    color: "var(--text-tertiary)",
+                    letterSpacing: ".06em",
+                  }}
+                >
+                  Atajos: <kbd>←</kbd>{cardState.showDrawGesture ? <> <kbd>↑</kbd></> : null} <kbd>→</kbd>
+                </p>
               ) : null}
 
               {phase === "chosen" && chosenOutcome ? (

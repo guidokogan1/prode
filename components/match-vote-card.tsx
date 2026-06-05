@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles } from "lucide-react";
@@ -45,8 +45,20 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
   const [isSaving, setIsSaving] = useState(false);
+  const [isFinePointer, setIsFinePointer] = useState(false);
   const isChoosingRef = useRef(false);
   const allocationScope = buildAllocationScope(session);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return;
+    }
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    setIsFinePointer(mq.matches);
+    const handler = (event: MediaQueryListEvent) => setIsFinePointer(event.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -60,12 +72,63 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
   const showDrawGesture = quickPlayTargets.draw != null;
 
   async function snapCardBack() {
+    const spring = isFinePointer
+      ? { type: "spring" as const, stiffness: 320, damping: 44, mass: 0.8 }
+      : { type: "spring" as const, stiffness: 540, damping: 34, mass: 0.72 };
     await Promise.all([
-      animate(x, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
-      animate(y, 0, { type: "spring", stiffness: 540, damping: 34, mass: 0.72 }).finished,
+      animate(x, 0, spring).finished,
+      animate(y, 0, spring).finished,
       animate(cardOpacity, 1, { duration: 0.14, ease: "easeOut" }).finished,
     ]);
   }
+
+  useEffect(() => {
+    if (!isFinePointer || phase !== "idle") {
+      return;
+    }
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        void chooseOutcome(quickPlayTargets.left);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        void chooseOutcome(quickPlayTargets.right);
+      } else if (event.key === "ArrowUp" && showDrawGesture && quickPlayTargets.draw) {
+        event.preventDefault();
+        void chooseOutcome(quickPlayTargets.draw);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isFinePointer, phase, quickPlayTargets, showDrawGesture]);
+
+  useEffect(() => {
+    if (!isFinePointer || phase !== "chosen") {
+      return;
+    }
+    const handler = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      const optionByKey: Record<string, (typeof INTENSITIES)[number] | undefined> = {
+        "1": INTENSITIES[0],
+        "2": INTENSITIES[1],
+        "3": INTENSITIES[2],
+      };
+      const option = optionByKey[event.key];
+      if (option) {
+        event.preventDefault();
+        void handleIntensityPick(option);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isFinePointer, phase]);
 
   function resetPhase() {
     setPhase("idle");
@@ -433,6 +496,19 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
             <span style={{ fontSize: "1.25rem" }}>{match.away.flag}</span>
           </motion.button>
         </div>
+      ) : null}
+      {isFinePointer && phase === "idle" ? (
+        <p
+          className="micro-copy"
+          style={{
+            textAlign: "center",
+            marginTop: 8,
+            color: "var(--text-tertiary)",
+            letterSpacing: ".06em",
+          }}
+        >
+          Atajos: <kbd>←</kbd>{showDrawGesture ? <> <kbd>↑</kbd></> : null} <kbd>→</kbd>
+        </p>
       ) : null}
     </section>
   );
