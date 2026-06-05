@@ -18,25 +18,33 @@ export function BottomNav() {
     return null;
   }
 
-  return (
-    <nav className="bottom-nav" aria-label="Navegacion principal">
-      {navItems.map((item) => {
-        const isActive = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
-        const Icon = item.icon;
+  const links = navItems.map((item) => {
+    const isActive = item.href === "/" ? pathname === item.href : pathname.startsWith(item.href);
+    const Icon = item.icon;
 
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`nav-link${isActive ? " active" : ""}`}
-          >
-            <span className="nav-icon" aria-hidden="true">
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.85} />
-            </span>
-            <span className="nav-label">{item.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`nav-link${isActive ? " active" : ""}`}
+      >
+        <span className="nav-icon" aria-hidden="true">
+          <Icon size={20} strokeWidth={isActive ? 2.5 : 1.85} />
+        </span>
+        <span className="nav-label">{item.label}</span>
+      </Link>
+    );
+  });
+
+  return (
+    <>
+      <nav className="bottom-nav bottom-nav-mobile" aria-label="Navegacion principal">
+        {links}
+      </nav>
+      <nav className="top-nav-desktop" aria-label="Navegacion principal">
+        <div className="top-nav-brand">Mundial Pool</div>
+        <div className="top-nav-links">{links}</div>
+      </nav>
+    </>
   );
 }

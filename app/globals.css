@@ -680,3 +680,118 @@ input,
     letter-spacing: 0.1em;
   }
 }
+
+:focus-visible {
+  outline: 2px solid rgba(216, 255, 86, 0.6);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+.button-primary:focus-visible,
+.button-secondary:focus-visible,
+.button-ghost:focus-visible,
+.nav-link:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .button-primary:hover {
+    filter: brightness(1.06);
+  }
+
+  .button-secondary:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .button-ghost:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .nav-link:hover {
+    color: #c8d1df;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .nav-link.active:hover {
+    color: var(--gold);
+    background: rgba(216, 255, 86, 0.13);
+  }
+}
+
+.top-nav-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --shell-width: 640px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --shell-width: 760px;
+    --bottom-nav-height: 0px;
+  }
+
+  .bottom-nav-mobile {
+    display: none;
+  }
+
+  .top-nav-desktop {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    width: 100%;
+    max-width: var(--shell-width);
+    margin: 0 auto;
+    padding: 12px 18px;
+    background: linear-gradient(180deg, rgba(7, 10, 14, 0.94) 0%, rgba(7, 10, 14, 0.82) 100%);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .top-nav-brand {
+    font-family: var(--font-display), sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.84rem;
+    color: var(--gold);
+  }
+
+  .top-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .top-nav-desktop .nav-link {
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 8px;
+    min-height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+  }
+
+  .top-nav-desktop .nav-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .top-nav-desktop .nav-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --shell-width: 880px;
+  }
+}
