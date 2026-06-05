@@ -137,6 +137,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       ),
     [effectiveMatch.revealedTickets],
   );
+  const liquidationRows = useMemo(() => {
+    const isSettled = effectiveMatch.marketStatus === "settled" || effectiveMatch.statusVariant === "settled";
+    if (!isSettled) return [];
+    return effectiveMatch.revealedTickets
+      .filter((ticket): ticket is typeof ticket & { netAmount: number } => typeof ticket.netAmount === "number")
+      .map((ticket) => ({ userName: ticket.userName, netAmount: ticket.netAmount }))
+      .sort((left, right) => right.netAmount - left.netAmount);
+  }, [effectiveMatch.marketStatus, effectiveMatch.statusVariant, effectiveMatch.revealedTickets]);
 
   function resetPhase() {
     if (saveResetTimeoutRef.current) {
@@ -740,9 +748,8 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           <div style={{ display: "grid", gap: 14 }}>
             {groupBuckets.map((bucket) => {
               const isWinning = resolvedOutcome === bucket.outcome.code;
-              const isSettled = effectiveMatch.marketStatus === "settled" || effectiveMatch.statusVariant === "settled";
-              const pickCount = effectiveMatch.pickCountByCode[bucket.outcome.code] ?? bucket.tickets.length;
               const isRevealed = effectiveMatch.marketStatus === "revealed" || effectiveMatch.marketStatus === "settled";
+              const totalOnOutcome = bucket.tickets.reduce((sum, ticket) => sum + ticket.amount, 0);
               const headerColor = !resolvedOutcome
                 ? "#EDE8D9"
                 : isWinning
@@ -755,51 +762,65 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     <strong style={{ color: headerColor, fontSize: "1rem", textTransform: "uppercase" }}>
                       {getOutcomeFlag(bucket.outcome.code, effectiveMatch)} {bucket.outcome.label}
                     </strong>
-                    <span className="micro-copy">{pickCount} picks</span>
+                    <span className="micro-copy">
+                      {totalOnOutcome > 0 ? `${formatCredits(totalOnOutcome)} cr` : "sin picks"}
+                    </span>
                   </div>
                   {isRevealed && bucket.tickets.length ? (
                     <div style={{ display: "grid", gap: 8 }}>
-                      {bucket.tickets.map((ticket) => {
-                        const netColor =
-                          ticket.netAmount == null
-                            ? undefined
-                            : ticket.netAmount > 0
-                              ? "var(--gold)"
-                              : ticket.netAmount < 0
-                                ? "var(--live)"
-                                : undefined;
-                        return (
-                          <div key={`${bucket.outcome.code}-${ticket.userName}`} className="split-row">
-                            <strong style={{ fontSize: ".92rem" }}>{ticket.userName}</strong>
-                            {isSettled && ticket.netAmount != null ? (
-                              <strong
-                                style={{
-                                  color: netColor,
-                                  fontFamily: "var(--font-accent)",
-                                  letterSpacing: "-0.04em",
-                                }}
-                              >
-                                {formatNetAmount(ticket.netAmount)}
-                              </strong>
-                            ) : (
-                              <strong
-                                style={{
-                                  color: isWinning ? "var(--gold)" : "var(--text-tertiary)",
-                                  fontFamily: "var(--font-accent)",
-                                  letterSpacing: "-0.04em",
-                                }}
-                              >
-                                {formatCredits(ticket.amount)}
-                              </strong>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {bucket.tickets.map((ticket, index) => (
+                        <div key={`${bucket.outcome.code}-${ticket.userName}-${index}`} className="split-row">
+                          <strong style={{ fontSize: ".92rem" }}>{ticket.userName}</strong>
+                          <strong
+                            style={{
+                              color: isWinning ? "var(--gold)" : "var(--text-tertiary)",
+                              fontFamily: "var(--font-accent)",
+                              letterSpacing: "-0.04em",
+                            }}
+                          >
+                            {formatCredits(ticket.amount)}
+                          </strong>
+                        </div>
+                      ))}
                     </div>
                   ) : null}
                 </article>
               );
             })}
+
+            {liquidationRows.length ? (
+              <section style={{ display: "grid", gap: 10, paddingTop: 4 }}>
+                <div className="split-row">
+                  <strong style={{ fontSize: "1rem", textTransform: "uppercase", color: "#EDE8D9" }}>Liquidación</strong>
+                  <span className="micro-copy">Neto por jugador</span>
+                </div>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {liquidationRows.map((row) => {
+                    const netColor =
+                      row.netAmount > 0
+                        ? "var(--gold)"
+                        : row.netAmount < 0
+                          ? "var(--live)"
+                          : "var(--text-tertiary)";
+                    return (
+                      <div key={`liquidation-${row.userName}`} className="split-row">
+                        <strong style={{ fontSize: ".92rem" }}>{row.userName}</strong>
+                        <strong
+                          style={{
+                            color: netColor,
+                            fontFamily: "var(--font-accent)",
+                            letterSpacing: "-0.04em",
+                          }}
+                        >
+                          {formatNetAmount(row.netAmount)}
+                        </strong>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+
             {totalPot > 0 ? (
               <div className="split-row" style={{ paddingTop: 4 }}>
                 <span className="muted-copy">Pozo</span>
@@ -833,22 +854,20 @@ function buildGroupBuckets(match: MatchViewModel) {
   }
 
   for (const ticket of match.revealedTickets) {
-    const dominant = [...ticket.allocations].sort((left, right) => right.amount - left.amount)[0];
-
-    if (!dominant) {
-      continue;
+    for (const allocation of ticket.allocations) {
+      if (allocation.amount <= 0) continue;
+      const bucket = grouped.get(allocation.code);
+      if (!bucket) continue;
+      bucket.tickets.push({
+        userName: ticket.userName,
+        amount: allocation.amount,
+        netAmount: ticket.netAmount,
+      });
     }
+  }
 
-    const bucket = grouped.get(dominant.code);
-    if (!bucket) {
-      continue;
-    }
-
-    bucket.tickets.push({
-      userName: ticket.userName,
-      amount: dominant.amount,
-      netAmount: ticket.netAmount,
-    });
+  for (const bucket of grouped.values()) {
+    bucket.tickets.sort((left, right) => right.amount - left.amount);
   }
 
   const winningOutcome = deriveResolvedOutcome(match);
