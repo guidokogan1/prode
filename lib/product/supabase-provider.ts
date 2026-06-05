@@ -12,7 +12,7 @@ import type {
   SaveTicketResult,
   SessionState,
 } from "@/lib/domain";
-import { deriveDummyMatchState, isDummyMatchId } from "@/lib/dummy-matches";
+import { deriveDummyMatchState, getDummyMatchDefinition, isDummyMatchId } from "@/lib/dummy-matches";
 import { formatNetAmount, MATCH_CREDIT, validateAllocations } from "@/lib/game";
 import { logPickEvent } from "@/lib/pick-events";
 import { getServerSessionState } from "@/lib/product/session-state";
@@ -572,7 +572,10 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
       if (!dummyStatus || row.status !== "open") {
         return row;
       }
-      if (dummyStatus === "live" || dummyStatus === "finished") {
+      if (dummyStatus === "finished") {
+        return { ...row, status: "settled" };
+      }
+      if (dummyStatus === "live") {
         return { ...row, status: "locked" };
       }
       return row;
@@ -612,9 +615,6 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
         const currentAllocations = currentTicket
           ? currentUserData.allocationsByTicketId.get(currentTicket.id) ?? []
           : [];
-        const settlement = currentTicket
-          ? currentUserData.settlementsByTicketId.get(currentTicket.id)
-          : undefined;
         const marketTickets = allTicketData.ticketsByMarketId.get(market.id) ?? [];
         const totalByOutcomeCode = new Map<string, number>();
 
@@ -677,6 +677,24 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
           };
         });
 
+        const computedNetByTicketId = computeDummyNetByTicketId({
+          matchId: row.id,
+          marketStatus: market.status,
+          homeCode: home.fifa_code,
+          awayCode: away.fifa_code,
+          marketTickets,
+          allocationsByTicketId: allTicketData.allocationsByTicketId,
+          outcomeById,
+          settlementsByTicketId: allTicketData.settlementsByTicketId,
+        });
+
+        const settlement = currentTicket
+          ? currentUserData.settlementsByTicketId.get(currentTicket.id) ??
+            (computedNetByTicketId.has(currentTicket.id)
+              ? { ticket_id: currentTicket.id, net_result_amount: computedNetByTicketId.get(currentTicket.id)! }
+              : undefined)
+          : undefined;
+
         const revealedTickets =
           includeReveals && (market.status === "revealed" || market.status === "settled")
             ? marketTickets.map((ticket) => ({
@@ -696,7 +714,9 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
                     };
                   })
                   .filter((item): item is NonNullable<typeof item> => item !== null),
-                netAmount: allTicketData.settlementsByTicketId.get(ticket.id)?.net_result_amount,
+                netAmount:
+                  allTicketData.settlementsByTicketId.get(ticket.id)?.net_result_amount ??
+                  computedNetByTicketId.get(ticket.id),
               }))
             : [];
 
@@ -1044,4 +1064,61 @@ function formatKickoffLabel(kickoffAt: string) {
   }).format(date);
 
   return `${day} ${month} · ${time}`;
+}
+
+function computeDummyNetByTicketId(params: {
+  matchId: string;
+  marketStatus: string;
+  homeCode: string;
+  awayCode: string;
+  marketTickets: TicketQueryRow[];
+  allocationsByTicketId: Map<string, AllocationQueryRow[]>;
+  outcomeById: Map<string, OutcomeQueryRow>;
+  settlementsByTicketId: Map<string, SettlementQueryRow>;
+}): Map<string, number> {
+  const result = new Map<string, number>();
+  if (params.marketStatus !== "settled" || !isDummyMatchId(params.matchId)) {
+    return result;
+  }
+  const definition = getDummyMatchDefinition(params.matchId);
+  if (!definition) {
+    return result;
+  }
+
+  const winningOutcomeCode =
+    definition.winnerCode === params.homeCode
+      ? "home"
+      : definition.winnerCode === params.awayCode
+        ? "away"
+        : "draw";
+
+  let totalPool = 0;
+  const winningStakeByTicket = new Map<string, number>();
+  for (const ticket of params.marketTickets) {
+    const ticketAllocations = params.allocationsByTicketId.get(ticket.id) ?? [];
+    let ticketWinning = 0;
+    for (const allocation of ticketAllocations) {
+      const outcome = params.outcomeById.get(allocation.market_outcome_id);
+      if (!outcome) continue;
+      totalPool += allocation.amount;
+      if (outcome.code === winningOutcomeCode) {
+        ticketWinning += allocation.amount;
+      }
+    }
+    winningStakeByTicket.set(ticket.id, ticketWinning);
+  }
+
+  const winningPool = Array.from(winningStakeByTicket.values()).reduce((sum, n) => sum + n, 0);
+  if (winningPool <= 0 || totalPool <= 0) {
+    return result;
+  }
+
+  for (const [ticketId, winningStake] of winningStakeByTicket) {
+    if (params.settlementsByTicketId.has(ticketId)) continue;
+    const grossReturn = totalPool * (winningStake / winningPool);
+    const netResult = grossReturn - MATCH_CREDIT;
+    result.set(ticketId, Math.round(netResult));
+  }
+
+  return result;
 }

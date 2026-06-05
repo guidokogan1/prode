@@ -43,7 +43,8 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
   if (resolvedOutcome) {
     const winningLabel = match.consensus.find((item) => item.code === resolvedOutcome)?.label ?? "Resultado";
     const settlementTone = getUserResultTone(match.userStateLabel);
-    const settlementNet = settlementTone !== "neutral" ? getUserNetLabel(match.userStateLabel) : null;
+    const rawNetLabel = settlementTone !== "neutral" ? getUserNetLabel(match.userStateLabel) : null;
+    const settlementNet = rawNetLabel ? rawNetLabel.replace(/^[-+]/, "") : null;
     const pickedWinner = leadingUserOutcome?.code === resolvedOutcome;
 
     let heroValue: string;
@@ -57,7 +58,7 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       secondaryStatusLabel = "Sin jugar";
       heroDescription = `Ganó ${winningLabel}.`;
     } else if (pickedWinner) {
-      heroValue = settlementNet ? `Ganaste ${settlementNet}` : "Ganaste";
+      heroValue = settlementNet ? `Ganaste +${settlementNet}` : "Ganaste";
       heroTone = "positive";
       secondaryStatusLabel = "Acertaste";
       heroDescription = `Fuiste con ${leadingUserOutcome.label}.`;
