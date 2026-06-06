@@ -70,10 +70,9 @@ export default async function HomePage() {
       className="page-shell"
       style={{
         display: "grid",
-        gridTemplateRows: "auto 1fr",
         gap: 16,
+        alignContent: "start",
         overflow: "hidden",
-        minHeight: "calc(100dvh - var(--bottom-nav-height) - var(--safe-bottom))",
       }}
     >
       <HomePageClient

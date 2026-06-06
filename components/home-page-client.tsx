@@ -24,17 +24,17 @@ type DaySectionProps = {
 
 function DaySection({ title, subtitle, matches }: DaySectionProps) {
   return (
-    <section style={{ display: "grid", gap: 12 }}>
+    <section style={{ display: "grid", gap: 10, alignContent: "start" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ display: "grid", gap: 4 }}>
+        <div style={{ display: "grid", gap: 2 }}>
           <h2 className="section-title">{title}</h2>
           {subtitle ? <span className="micro-copy">{subtitle}</span> : null}
         </div>
         <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-        <span className="pill">{matches.length} matches</span>
+        <span className="pill">{matches.length} {matches.length === 1 ? "partido" : "partidos"}</span>
       </div>
 
-      <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
         {matches.map((match) => (
           <MatchCard key={match.id} match={match} />
         ))}
@@ -53,12 +53,20 @@ export function HomePageClient({
 }: HomePageClientProps) {
   const [pendingPicks, setPendingPicks] = useState(initialSummary.pendingPicks);
 
+  const hasTodayMatches = todayMatches.length > 0;
+  const hasNextDayMatches = nextDayMatches.length > 0;
+
+  const eyebrow =
+    pendingPicks === 0 && !hasTodayMatches && hasNextDayMatches
+      ? "Próximos partidos"
+      : "Hoy en el pool";
+
   const headline =
     pendingPicks > 0
       ? `${pendingPicks} por jugar`
-      : todayMatches.length > 0
+      : hasTodayMatches
         ? "Hoy se juega"
-        : nextDayMatches.length > 0 && nextDayLabel
+        : hasNextDayMatches && nextDayLabel
           ? nextDayLabel
           : "Sin partidos por ahora";
 
@@ -69,7 +77,7 @@ export function HomePageClient({
       <section style={{ display: "grid", gap: 14 }}>
         <div className="split-row" style={{ alignItems: "start" }}>
           <div className="title-stack" style={{ gap: 6 }}>
-            <p className="eyebrow">Hoy en el pool</p>
+            <p className="eyebrow">{eyebrow}</p>
             <h1 className="display-title">{headline}</h1>
             {showStats ? (
               <p className="micro-copy" style={{ maxWidth: 220 }}>
@@ -116,28 +124,31 @@ export function HomePageClient({
         ) : null}
       </section>
 
-      <div style={{ display: "grid", gap: 20, minHeight: 0 }}>
+      <div style={{ display: "grid", gap: 18, alignContent: "start", minHeight: 0 }}>
         {needsChampionPick ? <ChampionHomeCard /> : null}
 
         {pendingPicks > 0 ? (
-          <>
-            <QuickPlayDeck
-              matches={featuredMatches}
-              onMatchSaved={() => {
-                setPendingPicks((current) => Math.max(0, current - 1));
-              }}
-              onPendingCountChange={(count) => {
-                setPendingPicks(count);
-              }}
-            />
-            {todayMatches.length > 0 ? (
-              <DaySection title="Partidos del día" subtitle={null} matches={todayMatches} />
-            ) : null}
-          </>
-        ) : todayMatches.length > 0 ? (
+          <QuickPlayDeck
+            matches={featuredMatches}
+            onMatchSaved={() => {
+              setPendingPicks((current) => Math.max(0, current - 1));
+            }}
+            onPendingCountChange={(count) => {
+              setPendingPicks(count);
+            }}
+          />
+        ) : null}
+
+        {hasTodayMatches ? (
           <DaySection title="Partidos del día" subtitle={null} matches={todayMatches} />
-        ) : nextDayMatches.length > 0 ? (
-          <DaySection title="Próximo día" subtitle={nextDayLabel} matches={nextDayMatches} />
+        ) : null}
+
+        {hasNextDayMatches ? (
+          <DaySection
+            title={hasTodayMatches ? "Próximos partidos" : "Próximo día"}
+            subtitle={nextDayLabel}
+            matches={nextDayMatches}
+          />
         ) : null}
       </div>
     </>
