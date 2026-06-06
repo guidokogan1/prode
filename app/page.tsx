@@ -63,6 +63,17 @@ export default async function HomePage() {
     ? new Date(nextDay + "T12:00:00Z").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" })
     : null;
 
+  const dayAfter = nextDay
+    ? futureMatches.find((match) => match.kickoffAt && toArtDateString(match.kickoffAt) > nextDay)?.kickoffAt ?? null
+    : null;
+  const dayAfterDate = dayAfter ? toArtDateString(dayAfter) : null;
+  const dayAfterMatches = dayAfterDate
+    ? futureMatches.filter((match) => match.kickoffAt && toArtDateString(match.kickoffAt) === dayAfterDate)
+    : [];
+  const dayAfterLabel = dayAfterDate
+    ? new Date(dayAfterDate + "T12:00:00Z").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" })
+    : null;
+
   const needsChampionPick = !isChampionPickLocked() && (!profile.championPick || profile.championPick === "Sin elegir");
 
   return (
@@ -81,6 +92,8 @@ export default async function HomePage() {
         todayMatches={todayMatches}
         nextDayMatches={nextDayMatches}
         nextDayLabel={nextDayLabel}
+        dayAfterMatches={dayAfterMatches}
+        dayAfterLabel={dayAfterLabel}
         needsChampionPick={needsChampionPick}
       />
     </main>

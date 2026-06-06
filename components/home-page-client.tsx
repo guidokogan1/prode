@@ -13,6 +13,8 @@ type HomePageClientProps = {
   todayMatches: MatchViewModel[];
   nextDayMatches: MatchViewModel[];
   nextDayLabel: string | null;
+  dayAfterMatches: MatchViewModel[];
+  dayAfterLabel: string | null;
   needsChampionPick: boolean;
 };
 
@@ -49,12 +51,15 @@ export function HomePageClient({
   todayMatches,
   nextDayMatches,
   nextDayLabel,
+  dayAfterMatches,
+  dayAfterLabel,
   needsChampionPick,
 }: HomePageClientProps) {
   const [pendingPicks, setPendingPicks] = useState(initialSummary.pendingPicks);
 
   const hasTodayMatches = todayMatches.length > 0;
   const hasNextDayMatches = nextDayMatches.length > 0;
+  const hasDayAfterMatches = dayAfterMatches.length > 0;
 
   const eyebrow =
     pendingPicks === 0 && !hasTodayMatches && hasNextDayMatches
@@ -148,6 +153,14 @@ export function HomePageClient({
             title={hasTodayMatches ? "Próximos partidos" : "Próximo día"}
             subtitle={nextDayLabel}
             matches={nextDayMatches}
+          />
+        ) : null}
+
+        {hasDayAfterMatches ? (
+          <DaySection
+            title="Día siguiente"
+            subtitle={dayAfterLabel}
+            matches={dayAfterMatches}
           />
         ) : null}
       </div>
