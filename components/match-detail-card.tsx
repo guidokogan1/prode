@@ -762,6 +762,14 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               const isWinning = resolvedOutcome === bucket.outcome.code;
               const isRevealed = effectiveMatch.marketStatus === "revealed" || effectiveMatch.marketStatus === "settled";
               const totalOnOutcome = bucket.tickets.reduce((sum, ticket) => sum + ticket.amount, 0);
+              const pickCount = effectiveMatch.pickCountByCode[bucket.outcome.code] ?? 0;
+              const summaryLabel = isRevealed
+                ? totalOnOutcome > 0
+                  ? `${formatCredits(totalOnOutcome)} cr`
+                  : "sin picks"
+                : pickCount > 0
+                  ? `${pickCount} ${pickCount === 1 ? "pick" : "picks"}`
+                  : "sin picks";
               const headerColor = !resolvedOutcome
                 ? "#EDE8D9"
                 : isWinning
@@ -775,7 +783,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                       {getOutcomeFlag(bucket.outcome.code, effectiveMatch)} {bucket.outcome.label}
                     </strong>
                     <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>
-                      {totalOnOutcome > 0 ? `${formatCredits(totalOnOutcome)} cr` : "sin picks"}
+                      {summaryLabel}
                     </span>
                   </div>
                   {isRevealed && bucket.tickets.length ? (
