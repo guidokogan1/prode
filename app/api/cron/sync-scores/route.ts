@@ -169,8 +169,8 @@ export async function GET(request: NextRequest) {
     updates.push({
       id: dbMatch.id,
       status: dbStatus,
-      home_score_ft: isFinal ? homeScore : dbMatch.home_score_ft,
-      away_score_ft: isFinal ? awayScore : dbMatch.away_score_ft,
+      home_score_ft: homeScore ?? dbMatch.home_score_ft,
+      away_score_ft: awayScore ?? dbMatch.away_score_ft,
       winner_team_id: winnerTeamId,
     });
   }
