@@ -3,75 +3,56 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const FD_TO_DB: Record<string, string> = {
+const ESPN_TO_DB: Record<string, string> = {
   RSA: "ZAF",
   HAI: "HTI",
   URY: "URU",
 };
 
-const FD_STAGE_TO_DB: Record<string, string> = {
-  GROUP_STAGE: "group",
-  LAST_32: "round_of_32",
-  LAST_16: "round_of_16",
-  QUARTER_FINALS: "quarter_final",
-  SEMI_FINALS: "semi_final",
-  THIRD_PLACE: "third_place",
-  FINAL: "final",
+const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
+
+type EspnCompetitor = {
+  homeAway: "home" | "away";
+  score: string | null;
+  team: { abbreviation: string | null };
 };
 
-const FD_COMPETITION = "WC";
-const FD_BASE = "https://api.football-data.org/v4";
-
-type FdMatch = {
-  id: number;
-  utcDate: string;
-  status: string;
-  stage: string;
-  homeTeam: { tla: string | null };
-  awayTeam: { tla: string | null };
-  score: {
-    fullTime: { home: number | null; away: number | null };
-    halfTime: { home: number | null; away: number | null };
-    winner: string | null;
+type EspnEvent = {
+  id: string;
+  date: string;
+  status: {
+    type: {
+      state: "pre" | "in" | "post";
+      completed: boolean;
+      name: string;
+    };
   };
+  competitions: { competitors: EspnCompetitor[] }[];
 };
 
-function normalizeTla(tla: string | null | undefined): string | null {
-  if (!tla) return null;
-  return FD_TO_DB[tla] ?? tla;
+function normalizeCode(code: string | null | undefined): string | null {
+  if (!code) return null;
+  return ESPN_TO_DB[code] ?? code;
 }
 
-function mapStatus(fdStatus: string): { dbStatus: string | null; isFinal: boolean } {
-  switch (fdStatus) {
-    case "FINISHED":
-    case "AWARDED":
-      return { dbStatus: "finished", isFinal: true };
-    case "IN_PLAY":
-    case "PAUSED":
-    case "EXTRA_TIME":
-    case "PENALTY_SHOOTOUT":
-    case "LIVE":
-      return { dbStatus: "live", isFinal: false };
-    case "POSTPONED":
-      return { dbStatus: "postponed", isFinal: false };
-    case "SUSPENDED":
-    case "CANCELLED":
-      return { dbStatus: "cancelled", isFinal: false };
-    default:
-      return { dbStatus: null, isFinal: false };
-  }
+function mapStatus(state: string, completed: boolean): { dbStatus: string | null; isFinal: boolean } {
+  if (state === "post" && completed) return { dbStatus: "finished", isFinal: true };
+  if (state === "in") return { dbStatus: "live", isFinal: false };
+  if (state === "pre") return { dbStatus: null, isFinal: false };
+  return { dbStatus: null, isFinal: false };
+}
+
+function parseScore(s: string | null | undefined): number | null {
+  if (s == null || s === "") return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
 }
 
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  const fdToken = process.env.FOOTBALL_DATA_TOKEN;
 
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ ok: false, reason: "No autorizado." }, { status: 401 });
-  }
-
-  if (!fdToken) {
-    return NextResponse.json({ ok: false, reason: "FOOTBALL_DATA_TOKEN no configurado." }, { status: 500 });
   }
 
   const supabase = getSupabaseServerClient();
@@ -79,29 +60,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, reason: "Supabase no configurado." }, { status: 500 });
   }
 
-  const fdResponse = await fetch(`${FD_BASE}/competitions/${FD_COMPETITION}/matches`, {
-    headers: { "X-Auth-Token": fdToken },
-    cache: "no-store",
-  });
-
-  if (!fdResponse.ok) {
-    return NextResponse.json({ ok: false, reason: `football-data ${fdResponse.status}` }, { status: 502 });
+  const espnResponse = await fetch(ESPN_BASE, { cache: "no-store" });
+  if (!espnResponse.ok) {
+    return NextResponse.json({ ok: false, reason: `ESPN ${espnResponse.status}` }, { status: 502 });
   }
 
-  const fdPayload = (await fdResponse.json()) as { matches?: FdMatch[] };
-  const fdMatches = fdPayload.matches ?? [];
+  const espnPayload = (await espnResponse.json()) as { events?: EspnEvent[] };
+  const espnEvents = espnPayload.events ?? [];
 
   const teamsQuery = await supabase.from("teams").select("id, fifa_code");
   if (teamsQuery.error || !teamsQuery.data) {
     return NextResponse.json({ ok: false, reason: "No se pudieron cargar teams." }, { status: 500 });
   }
   const teamByCode = new Map(teamsQuery.data.map((t) => [t.fifa_code, t.id]));
-
-  const stagesQuery = await supabase.from("tournament_stages").select("id, code");
-  if (stagesQuery.error || !stagesQuery.data) {
-    return NextResponse.json({ ok: false, reason: "No se pudieron cargar stages." }, { status: 500 });
-  }
-  const stageIdByCode = new Map(stagesQuery.data.map((s) => [s.code, s.id]));
 
   const dbMatchesQuery = await supabase
     .from("matches")
@@ -118,14 +89,31 @@ export async function GET(request: NextRequest) {
     dbByPair.set(key, list);
   }
 
-  const updates: { id: string; status: string | null; home_score_ft: number | null; away_score_ft: number | null; winner_team_id: string | null }[] = [];
-  const inserts: { fd: FdMatch; homeId: string; awayId: string; stageCode: string }[] = [];
+  const updates: {
+    id: string;
+    status: string | null;
+    home_score_ft: number | null;
+    away_score_ft: number | null;
+    winner_team_id: string | null;
+  }[] = [];
+  const kickoffByMatchId = new Map<string, string>();
   let skipped = 0;
   let alreadySettled = 0;
 
-  for (const fd of fdMatches) {
-    const homeCode = normalizeTla(fd.homeTeam.tla);
-    const awayCode = normalizeTla(fd.awayTeam.tla);
+  for (const ev of espnEvents) {
+    const comp = ev.competitions?.[0];
+    if (!comp) {
+      skipped += 1;
+      continue;
+    }
+    const home = comp.competitors.find((c) => c.homeAway === "home");
+    const away = comp.competitors.find((c) => c.homeAway === "away");
+    if (!home || !away) {
+      skipped += 1;
+      continue;
+    }
+    const homeCode = normalizeCode(home.team.abbreviation);
+    const awayCode = normalizeCode(away.team.abbreviation);
     if (!homeCode || !awayCode) {
       skipped += 1;
       continue;
@@ -138,29 +126,26 @@ export async function GET(request: NextRequest) {
     }
     const candidates = dbByPair.get(`${homeId}|${awayId}`);
     if (!candidates || !candidates.length) {
-      const stageCode = FD_STAGE_TO_DB[fd.stage as keyof typeof FD_STAGE_TO_DB];
-      if (stageCode && stageCode !== "group") {
-        inserts.push({ fd, homeId, awayId, stageCode });
-      } else {
-        skipped += 1;
-      }
+      skipped += 1;
       continue;
     }
-    const fdTime = new Date(fd.utcDate).getTime();
+    const espnTime = new Date(ev.date).getTime();
     const dbMatch = candidates.length === 1
       ? candidates[0]
       : candidates.reduce((best, cur) => {
-          const dBest = Math.abs(new Date(best.kickoff_at).getTime() - fdTime);
-          const dCur = Math.abs(new Date(cur.kickoff_at).getTime() - fdTime);
+          const dBest = Math.abs(new Date(best.kickoff_at).getTime() - espnTime);
+          const dCur = Math.abs(new Date(cur.kickoff_at).getTime() - espnTime);
           return dCur < dBest ? cur : best;
         });
     if (dbMatch.status === "settled" || (dbMatch.status === "finished" && dbMatch.home_score_ft != null)) {
       alreadySettled += 1;
       continue;
     }
-    const { dbStatus, isFinal } = mapStatus(fd.status);
-    const homeScore = fd.score.fullTime.home ?? fd.score.halfTime.home ?? null;
-    const awayScore = fd.score.fullTime.away ?? fd.score.halfTime.away ?? null;
+
+    const { dbStatus, isFinal } = mapStatus(ev.status.type.state, ev.status.type.completed);
+    const isLiveOrFinal = ev.status.type.state === "in" || ev.status.type.state === "post";
+    const homeScore = isLiveOrFinal ? parseScore(home.score) : null;
+    const awayScore = isLiveOrFinal ? parseScore(away.score) : null;
     let winnerTeamId: string | null = null;
     if (isFinal && homeScore != null && awayScore != null) {
       if (homeScore > awayScore) winnerTeamId = homeId;
@@ -173,61 +158,8 @@ export async function GET(request: NextRequest) {
       away_score_ft: awayScore ?? dbMatch.away_score_ft,
       winner_team_id: winnerTeamId,
     });
-  }
 
-  let insertedMatches = 0;
-  for (const ins of inserts) {
-    const stageId = stageIdByCode.get(ins.stageCode);
-    if (!stageId) continue;
-    const homeCode = normalizeTla(ins.fd.homeTeam.tla);
-    const awayCode = normalizeTla(ins.fd.awayTeam.tla);
-    const matchId = `${ins.stageCode}-${(homeCode ?? "").toLowerCase()}-${(awayCode ?? "").toLowerCase()}-${ins.fd.id}`;
-    const matchInsert = await supabase.from("matches").insert({
-      id: matchId,
-      external_id: String(ins.fd.id),
-      stage_id: stageId,
-      home_team_id: ins.homeId,
-      away_team_id: ins.awayId,
-      kickoff_at: ins.fd.utcDate,
-      status: "scheduled",
-    });
-    if (matchInsert.error) continue;
-
-    const marketInsert = await supabase
-      .from("match_markets")
-      .insert({
-        match_id: matchId,
-        market_type: "qualifies",
-        lock_at: ins.fd.utcDate,
-        status: "open",
-      })
-      .select("id")
-      .single<{ id: string }>();
-    if (marketInsert.error || !marketInsert.data) continue;
-
-    await supabase.from("market_outcomes").upsert(
-      [
-        { match_market_id: marketInsert.data.id, code: "home_qualifies", label: "Clasifica local", sort_order: 10 },
-        { match_market_id: marketInsert.data.id, code: "away_qualifies", label: "Clasifica visitante", sort_order: 20 },
-      ],
-      { onConflict: "match_market_id,code" },
-    );
-
-    insertedMatches += 1;
-  }
-
-  const kickoffByMatchId = new Map<string, string>();
-  for (const fd of fdMatches) {
-    const homeCode = normalizeTla(fd.homeTeam.tla);
-    const awayCode = normalizeTla(fd.awayTeam.tla);
-    if (!homeCode || !awayCode) continue;
-    const homeId = teamByCode.get(homeCode);
-    const awayId = teamByCode.get(awayCode);
-    if (!homeId || !awayId) continue;
-    const candidates = dbByPair.get(`${homeId}|${awayId}`);
-    if (candidates && candidates.length === 1) {
-      kickoffByMatchId.set(candidates[0].id, fd.utcDate);
-    }
+    kickoffByMatchId.set(dbMatch.id, ev.date);
   }
 
   let actuallyUpdated = 0;
@@ -244,29 +176,29 @@ export async function GET(request: NextRequest) {
 
   let kickoffSynced = 0;
   for (const m of dbMatchesQuery.data) {
-    const fdKickoff = kickoffByMatchId.get(m.id);
-    if (!fdKickoff) continue;
+    const espnKickoff = kickoffByMatchId.get(m.id);
+    if (!espnKickoff) continue;
     const current = new Date(m.kickoff_at).getTime();
-    const incoming = new Date(fdKickoff).getTime();
+    const incoming = new Date(espnKickoff).getTime();
     if (Math.abs(current - incoming) < 60_000) continue;
     const res = await supabase
       .from("matches")
-      .update({ kickoff_at: fdKickoff, updated_at: new Date().toISOString() })
+      .update({ kickoff_at: espnKickoff, updated_at: new Date().toISOString() })
       .eq("id", m.id);
     if (!res.error) {
-      await supabase.from("match_markets").update({ lock_at: fdKickoff }).eq("match_id", m.id);
+      await supabase.from("match_markets").update({ lock_at: espnKickoff }).eq("match_id", m.id);
       kickoffSynced += 1;
     }
   }
 
   return NextResponse.json({
     ok: true,
-    fdMatchesTotal: fdMatches.length,
+    source: "espn",
+    espnEventsTotal: espnEvents.length,
     matched: updates.length,
     skipped,
     alreadySettled,
     actuallyUpdated,
-    insertedMatches,
     kickoffSynced,
     updated: updates
       .filter((u) => u.status || u.home_score_ft != null)
