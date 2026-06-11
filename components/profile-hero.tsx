@@ -1,5 +1,6 @@
 import type { ProfileViewModel } from "@/lib/domain";
 import { formatNetAmount } from "@/lib/format";
+import { RulesHelpButton } from "@/components/rules-sheet";
 
 type ProfileHeroProps = {
   profile: ProfileViewModel;
@@ -10,16 +11,19 @@ type ProfileHeroProps = {
 export function ProfileHero({ profile, rankingPosition = null, isOverallWinner = false }: ProfileHeroProps) {
   return (
     <section style={{ display: "grid", gap: 16 }}>
-      <div className="title-stack" style={{ gap: 6, paddingTop: 8 }}>
-        {isOverallWinner ? (
-          <p className="eyebrow" style={{ color: "var(--gold)" }}>🏆 Campeón del prode</p>
-        ) : null}
-        <h1 className="display-title" style={{ color: isOverallWinner ? "var(--gold)" : undefined }}>
-          {profile.name}
-        </h1>
-        <p className="muted-copy">
-          {rankingPosition != null ? `Estás #${rankingPosition} · ` : ""}Tu resumen
-        </p>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingTop: 8 }}>
+        <div className="title-stack" style={{ gap: 6 }}>
+          {isOverallWinner ? (
+            <p className="eyebrow" style={{ color: "var(--gold)" }}>🏆 Campeón del prode</p>
+          ) : null}
+          <h1 className="display-title" style={{ color: isOverallWinner ? "var(--gold)" : undefined }}>
+            {profile.name}
+          </h1>
+          <p className="muted-copy">
+            {rankingPosition != null ? `Estás #${rankingPosition} · ` : ""}Tu resumen
+          </p>
+        </div>
+        <RulesHelpButton />
       </div>
 
       <div className="compact-grid-2">
