@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
   const dbMatchesQuery = await supabase
     .from("matches")
-    .select("id, kickoff_at, home_team_id, away_team_id, status, home_score_ft, away_score_ft");
+    .select("id, kickoff_at, home_team_id, away_team_id, status, home_score_90, away_score_90, home_score_ft, away_score_ft");
   if (dbMatchesQuery.error || !dbMatchesQuery.data) {
     return NextResponse.json({ ok: false, reason: "No se pudieron cargar matches." }, { status: 500 });
   }
@@ -92,6 +92,8 @@ export async function GET(request: NextRequest) {
   const updates: {
     id: string;
     status: string | null;
+    home_score_90: number | null;
+    away_score_90: number | null;
     home_score_ft: number | null;
     away_score_ft: number | null;
     winner_team_id: string | null;
@@ -154,8 +156,10 @@ export async function GET(request: NextRequest) {
     updates.push({
       id: dbMatch.id,
       status: dbStatus,
-      home_score_ft: homeScore ?? dbMatch.home_score_ft,
-      away_score_ft: awayScore ?? dbMatch.away_score_ft,
+      home_score_90: homeScore ?? dbMatch.home_score_90,
+      away_score_90: awayScore ?? dbMatch.away_score_90,
+      home_score_ft: isFinal ? homeScore ?? dbMatch.home_score_ft : dbMatch.home_score_ft,
+      away_score_ft: isFinal ? awayScore ?? dbMatch.away_score_ft : dbMatch.away_score_ft,
       winner_team_id: winnerTeamId,
     });
 
@@ -166,6 +170,8 @@ export async function GET(request: NextRequest) {
   for (const u of updates) {
     const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (u.status) updateData.status = u.status;
+    if (u.home_score_90 != null) updateData.home_score_90 = u.home_score_90;
+    if (u.away_score_90 != null) updateData.away_score_90 = u.away_score_90;
     if (u.home_score_ft != null) updateData.home_score_ft = u.home_score_ft;
     if (u.away_score_ft != null) updateData.away_score_ft = u.away_score_ft;
     if (u.winner_team_id) updateData.winner_team_id = u.winner_team_id;
@@ -201,7 +207,7 @@ export async function GET(request: NextRequest) {
     actuallyUpdated,
     kickoffSynced,
     updated: updates
-      .filter((u) => u.status || u.home_score_ft != null)
-      .map((u) => ({ id: u.id, status: u.status, score: `${u.home_score_ft ?? "-"}:${u.away_score_ft ?? "-"}` })),
+      .filter((u) => u.status || u.home_score_90 != null)
+      .map((u) => ({ id: u.id, status: u.status, score: `${u.home_score_90 ?? "-"}:${u.away_score_90 ?? "-"}` })),
   });
 }
