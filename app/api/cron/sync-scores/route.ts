@@ -15,6 +15,8 @@ type EspnCompetitor = {
   homeAway: "home" | "away";
   score: string | null;
   team: { abbreviation: string | null };
+  shootoutScore?: string | number | null;
+  shootoutGoals?: string | number | null;
 };
 
 type EspnEvent = {
@@ -24,28 +26,66 @@ type EspnEvent = {
     type: {
       state: "pre" | "in" | "post";
       completed: boolean;
-      name: string;
+      name?: string;
+      description?: string;
+      detail?: string;
+      shortDetail?: string;
     };
   };
   competitions: { competitors: EspnCompetitor[] }[];
 };
+
+type Phase =
+  | "scheduled"
+  | "regulation"
+  | "extra_time"
+  | "penalties"
+  | "finished_regulation"
+  | "finished_extra_time"
+  | "finished_penalties";
 
 function normalizeCode(code: string | null | undefined): string | null {
   if (!code) return null;
   return ESPN_TO_DB[code] ?? code;
 }
 
-function mapStatus(state: string, completed: boolean): { dbStatus: string | null; isFinal: boolean } {
-  if (state === "post" && completed) return { dbStatus: "finished", isFinal: true };
-  if (state === "in") return { dbStatus: "live", isFinal: false };
-  if (state === "pre") return { dbStatus: null, isFinal: false };
-  return { dbStatus: null, isFinal: false };
+function detectPhase(evStatus: EspnEvent["status"]): Phase {
+  const { state, completed, name, description, detail, shortDetail } = evStatus.type;
+  const text = `${name ?? ""} ${description ?? ""} ${detail ?? ""} ${shortDetail ?? ""}`.toLowerCase();
+  const isShootout = /pen|shoot/.test(text);
+  const isExtra = /extra|aet|\bet\b|overtime/.test(text);
+
+  if (state === "pre") return "scheduled";
+  if (state === "in") {
+    if (isShootout) return "penalties";
+    if (isExtra) return "extra_time";
+    return "regulation";
+  }
+  if (state === "post" && completed) {
+    if (isShootout) return "finished_penalties";
+    if (isExtra) return "finished_extra_time";
+    return "finished_regulation";
+  }
+  return "scheduled";
 }
 
-function parseScore(s: string | null | undefined): number | null {
+function parseScore(s: string | number | null | undefined): number | null {
   if (s == null || s === "") return null;
-  const n = Number(s);
+  const n = typeof s === "number" ? s : Number(s);
   return Number.isFinite(n) ? n : null;
+}
+
+function dbStatusFor(phase: Phase): string | null {
+  if (phase === "scheduled") return null;
+  if (phase.startsWith("finished")) return "finished";
+  return "live";
+}
+
+function winnerModeFor(phase: Phase): string | null {
+  if (phase === "finished_regulation") return "regulation";
+  if (phase === "finished_extra_time") return "extra_time";
+  if (phase === "finished_penalties") return "penalties";
+  return null;
 }
 
 export async function GET(request: NextRequest) {
@@ -76,7 +116,9 @@ export async function GET(request: NextRequest) {
 
   const dbMatchesQuery = await supabase
     .from("matches")
-    .select("id, kickoff_at, home_team_id, away_team_id, status, home_score_90, away_score_90, home_score_ft, away_score_ft");
+    .select(
+      "id, kickoff_at, home_team_id, away_team_id, status, home_score_90, away_score_90, home_score_ft, away_score_ft, winner_mode",
+    );
   if (dbMatchesQuery.error || !dbMatchesQuery.data) {
     return NextResponse.json({ ok: false, reason: "No se pudieron cargar matches." }, { status: 500 });
   }
@@ -89,15 +131,19 @@ export async function GET(request: NextRequest) {
     dbByPair.set(key, list);
   }
 
-  const updates: {
+  type Update = {
     id: string;
     status: string | null;
+    phase: Phase;
     home_score_90: number | null;
     away_score_90: number | null;
     home_score_ft: number | null;
     away_score_ft: number | null;
     winner_team_id: string | null;
-  }[] = [];
+    winner_mode: string | null;
+  };
+
+  const updates: Update[] = [];
   const kickoffByMatchId = new Map<string, string>();
   let skipped = 0;
   let alreadySettled = 0;
@@ -144,23 +190,60 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    const { dbStatus, isFinal } = mapStatus(ev.status.type.state, ev.status.type.completed);
-    const isLiveOrFinal = ev.status.type.state === "in" || ev.status.type.state === "post";
-    const homeScore = isLiveOrFinal ? parseScore(home.score) : null;
-    const awayScore = isLiveOrFinal ? parseScore(away.score) : null;
-    let winnerTeamId: string | null = null;
-    if (isFinal && homeScore != null && awayScore != null) {
-      if (homeScore > awayScore) winnerTeamId = homeId;
-      else if (awayScore > homeScore) winnerTeamId = awayId;
+    const phase = detectPhase(ev.status);
+    const runningHome = parseScore(home.score);
+    const runningAway = parseScore(away.score);
+
+    let next_home_90 = dbMatch.home_score_90;
+    let next_away_90 = dbMatch.away_score_90;
+    let next_home_ft = dbMatch.home_score_ft;
+    let next_away_ft = dbMatch.away_score_ft;
+
+    if (phase === "regulation") {
+      if (runningHome != null) next_home_90 = runningHome;
+      if (runningAway != null) next_away_90 = runningAway;
+    } else if (phase === "extra_time") {
+      if (runningHome != null) next_home_ft = runningHome;
+      if (runningAway != null) next_away_ft = runningAway;
+    } else if (phase === "finished_regulation") {
+      if (runningHome != null) {
+        next_home_90 = runningHome;
+        next_home_ft = runningHome;
+      }
+      if (runningAway != null) {
+        next_away_90 = runningAway;
+        next_away_ft = runningAway;
+      }
+    } else if (phase === "finished_extra_time" || phase === "finished_penalties") {
+      if (runningHome != null) next_home_ft = runningHome;
+      if (runningAway != null) next_away_ft = runningAway;
     }
+
+    let winnerTeamId: string | null = null;
+    if (phase === "finished_regulation" || phase === "finished_extra_time") {
+      if (next_home_ft != null && next_away_ft != null) {
+        if (next_home_ft > next_away_ft) winnerTeamId = homeId;
+        else if (next_away_ft > next_home_ft) winnerTeamId = awayId;
+      }
+    } else if (phase === "finished_penalties") {
+      const homePens = parseScore(home.shootoutScore ?? home.shootoutGoals ?? null);
+      const awayPens = parseScore(away.shootoutScore ?? away.shootoutGoals ?? null);
+      if (homePens != null && awayPens != null) {
+        if (homePens > awayPens) winnerTeamId = homeId;
+        else if (awayPens > homePens) winnerTeamId = awayId;
+      }
+    }
+
     updates.push({
       id: dbMatch.id,
-      status: dbStatus,
-      home_score_90: homeScore ?? dbMatch.home_score_90,
-      away_score_90: awayScore ?? dbMatch.away_score_90,
-      home_score_ft: isFinal ? homeScore ?? dbMatch.home_score_ft : dbMatch.home_score_ft,
-      away_score_ft: isFinal ? awayScore ?? dbMatch.away_score_ft : dbMatch.away_score_ft,
+      status: dbStatusFor(phase),
+      phase,
+      home_score_90: next_home_90,
+      away_score_90: next_away_90,
+      home_score_ft: next_home_ft,
+      away_score_ft: next_away_ft,
       winner_team_id: winnerTeamId,
+      winner_mode: winnerModeFor(phase),
     });
 
     kickoffByMatchId.set(dbMatch.id, ev.date);
@@ -175,6 +258,7 @@ export async function GET(request: NextRequest) {
     if (u.home_score_ft != null) updateData.home_score_ft = u.home_score_ft;
     if (u.away_score_ft != null) updateData.away_score_ft = u.away_score_ft;
     if (u.winner_team_id) updateData.winner_team_id = u.winner_team_id;
+    if (u.winner_mode) updateData.winner_mode = u.winner_mode;
     if (Object.keys(updateData).length === 1) continue;
     const res = await supabase.from("matches").update(updateData).eq("id", u.id);
     if (!res.error) actuallyUpdated += 1;
@@ -207,7 +291,14 @@ export async function GET(request: NextRequest) {
     actuallyUpdated,
     kickoffSynced,
     updated: updates
-      .filter((u) => u.status || u.home_score_90 != null)
-      .map((u) => ({ id: u.id, status: u.status, score: `${u.home_score_90 ?? "-"}:${u.away_score_90 ?? "-"}` })),
+      .filter((u) => u.status || u.home_score_90 != null || u.home_score_ft != null)
+      .map((u) => ({
+        id: u.id,
+        status: u.status,
+        phase: u.phase,
+        score90: `${u.home_score_90 ?? "-"}:${u.away_score_90 ?? "-"}`,
+        scoreFt: `${u.home_score_ft ?? "-"}:${u.away_score_ft ?? "-"}`,
+        winner_mode: u.winner_mode,
+      })),
   });
 }
