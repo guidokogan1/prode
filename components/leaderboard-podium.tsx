@@ -68,7 +68,7 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
                     color: actualRank === 0 ? "#09110b" : "#f8fbff",
                   }}
                 >
-                  {formatCompactCredits(Math.abs(item.netAmount))}
+                  {formatCompactCredits(item.grossAmount)}
                 </span>
               </div>
               <span style={{ fontFamily: "var(--font-body)", fontSize: ".8rem", fontWeight: 700, fontStyle: "normal", letterSpacing: "-0.01em", textAlign: "center", textTransform: "uppercase" }}>{item.name}</span>

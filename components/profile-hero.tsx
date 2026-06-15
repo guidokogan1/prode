@@ -1,5 +1,5 @@
 import type { ProfileViewModel } from "@/lib/domain";
-import { formatNetAmount } from "@/lib/format";
+import { formatGross } from "@/lib/format";
 import { RulesHelpButton } from "@/components/rules-sheet";
 
 type ProfileHeroProps = {
@@ -29,7 +29,7 @@ export function ProfileHero({ profile, rankingPosition = null, isOverallWinner =
       <div className="compact-grid-2">
         {[
           { label: "Aciertos", value: String(profile.positiveTickets), icon: "🎯" },
-          { label: "Mayor ganancia", value: formatNetAmount(profile.bestHitAmount), icon: "🔥" },
+          { label: "Mayor cobrado", value: formatGross(profile.bestHitGrossAmount), icon: "🔥" },
         ].map((item) => (
           <div
             key={item.label}

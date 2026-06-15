@@ -5,7 +5,7 @@ import { ChampionHomeCard } from "@/components/champion-home-card";
 import { MatchCard } from "@/components/match-card";
 import { QuickPlayDeck } from "@/components/quick-play-deck";
 import type { HomeSummary, MatchViewModel } from "@/lib/domain";
-import { formatNetAmount } from "@/lib/format";
+import { formatGross } from "@/lib/format";
 
 type HomePageClientProps = {
   initialSummary: HomeSummary;
@@ -86,7 +86,7 @@ export function HomePageClient({
             <h1 className="display-title">{headline}</h1>
             {showStats ? (
               <p className="micro-copy" style={{ maxWidth: 220 }}>
-                Live, pendientes y tu neto en una sola vista.
+                Live, pendientes y tu total en una sola vista.
               </p>
             ) : null}
           </div>
@@ -102,9 +102,9 @@ export function HomePageClient({
               alignContent: "start",
             }}
           >
-            <span className="micro-copy" style={{ textTransform: "uppercase", letterSpacing: ".08em" }}>Neto</span>
-            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.3rem", letterSpacing: "-0.04em", color: "var(--gold)" }}>
-              {formatNetAmount(initialSummary.yourNetAmount)}
+            <span className="micro-copy" style={{ textTransform: "uppercase", letterSpacing: ".08em" }}>Total</span>
+            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.3rem", letterSpacing: "-0.04em", color: initialSummary.yourGrossAmount > 0 ? "var(--gold)" : "var(--text-secondary)" }}>
+              {formatGross(initialSummary.yourGrossAmount)}
             </strong>
           </div>
         </div>

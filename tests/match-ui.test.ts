@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchViewModel } from "@/lib/domain";
-import { getMatchStateLabel, getMatchUrgencyBucket, getPickStateLabel, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome, getUserNetLabel, getUserResultPill, getUserResultTone, sortMatchesByUrgency } from "@/lib/match-ui";
+import { getMatchStateLabel, getMatchUrgencyBucket, getPickStateLabel, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome, getUserGrossLabel, getUserResultPill, getUserResultTone, sortMatchesByUrgency } from "@/lib/match-ui";
 
 function createMatch(overrides: Partial<MatchViewModel> = {}): MatchViewModel {
   return {
@@ -32,6 +32,7 @@ function createMatch(overrides: Partial<MatchViewModel> = {}): MatchViewModel {
     ],
     form: { home: "V V V E V", away: "E D V V D", homeGoals: 11, awayGoals: 7 },
     pickCountByCode: {},
+    poolByCode: {},
     revealedTickets: [],
     ...overrides,
   };
@@ -115,14 +116,14 @@ describe("match ui helpers", () => {
     ]);
   });
 
-  it("parses settled net labels for simple summaries", () => {
-    expect(getUserResultTone("Ganaste +2.400")).toBe("positive");
-    expect(getUserResultTone("Perdiste -3.800")).toBe("negative");
-    expect(getUserResultPill("Perdiste -3.800")).toBe("Perdiste");
-    expect(getUserResultPill("Resultado +6.154")).toBe("Ganaste");
-    expect(getUserNetLabel("Ganaste +2.400")).toBe("+2.400");
-    expect(getUserNetLabel("Perdiste -3.800")).toBe("-3.800");
-    expect(getUserNetLabel("Resultado +6.154")).toBe("+6.154");
+  it("parses settled gross labels", () => {
+    expect(getUserResultTone("Resultado $12.400")).toBe("positive");
+    expect(getUserResultTone("Resultado $0")).toBe("neutral");
+    expect(getUserResultTone("Tu jugada guardada")).toBe("neutral");
+    expect(getUserResultPill("Resultado $12.400")).toBe("Cobraste");
+    expect(getUserResultPill("Tu jugada guardada")).toBe("Final");
+    expect(getUserGrossLabel("Resultado $12.400")).toBe("$12.400");
+    expect(getUserGrossLabel("Resultado $0")).toBe("$0");
   });
 
   it("derives unified card states for editable, live and settled screens", () => {
@@ -175,7 +176,7 @@ describe("match ui helpers", () => {
             { code: "draw", label: "Empate", shortLabel: "X", amount: 2000, percentage: 20 },
             { code: "away", label: "Japon", shortLabel: "JPN", amount: 1000, percentage: 10 },
           ],
-          userStateLabel: "Ganaste +6.154",
+          userStateLabel: "Resultado $16.154",
         }),
         "hero",
       ),
@@ -184,7 +185,7 @@ describe("match ui helpers", () => {
       primaryStatusLabel: "Final",
       secondaryStatusLabel: "Acertaste",
       isInteractive: false,
-      heroValue: "Ganaste +6.154",
+      heroValue: "Cobraste $16.154",
       heroTone: "positive",
     });
   });

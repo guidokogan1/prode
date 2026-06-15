@@ -1,16 +1,25 @@
-import type { RankingEntry } from "@/lib/domain";
-import { formatNetAmount } from "@/lib/format";
+"use client";
+
+import { useState } from "react";
+import type { RankingEntry, RankingTimeline } from "@/lib/domain";
+import { formatGross } from "@/lib/format";
+import { RankingTimelineDrawer } from "@/components/ranking-timeline-drawer";
 
 type RankingListProps = {
   items: RankingEntry[];
+  timeline?: RankingTimeline | null;
 };
 
-export function RankingList({ items }: RankingListProps) {
+export function RankingList({ items, timeline }: RankingListProps) {
+  const [selected, setSelected] = useState<string | null>(null);
+
   return (
     <section style={{ display: "grid", gap: 10, fontFamily: "var(--font-body)" }}>
       {items.map((item) => (
-        <article
+        <button
           key={item.name}
+          type="button"
+          onClick={() => timeline ? setSelected(item.name) : undefined}
           className="surface-card-soft"
           style={{
             padding: "15px 16px",
@@ -21,6 +30,10 @@ export function RankingList({ items }: RankingListProps) {
             gap: 12,
             background: item.isCurrentUser ? "rgba(216,255,86,0.08)" : "rgba(255,255,255,0.045)",
             borderColor: item.isCurrentUser ? "rgba(216,255,86,0.24)" : "rgba(255,255,255,0.1)",
+            textAlign: "left",
+            cursor: timeline ? "pointer" : "default",
+            font: "inherit",
+            color: "inherit",
           }}
         >
           <span
@@ -65,17 +78,25 @@ export function RankingList({ items }: RankingListProps) {
               {item.name}
             </strong>
             <span className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", lineHeight: 1.45 }}>
-              {item.positiveTickets} positivas · mejor {formatNetAmount(item.bestHitAmount)}
+              {item.positiveTickets} {item.positiveTickets === 1 ? "acierto" : "aciertos"} · mejor {formatGross(item.bestHitGrossAmount)}
             </span>
           </div>
           <div style={{ textAlign: "right", flexShrink: 0, minWidth: 68 }}>
-            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.34rem", color: item.netAmount >= 0 ? "#EDE8D9" : "var(--live)", whiteSpace: "nowrap", letterSpacing: "-0.05em" }}>{formatNetAmount(item.netAmount)}</strong>
-            <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", letterSpacing: ".08em", textTransform: "uppercase" }}>
-              {item.isCurrentUser ? "vos" : "neto"}
+            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.34rem", color: item.grossAmount > 0 ? "#EDE8D9" : "var(--text-secondary)", whiteSpace: "nowrap", letterSpacing: "-0.05em" }}>{formatGross(item.grossAmount)}</strong>
+            <div className="micro-copy" style={{ fontFamily: "var(--font-body)", fontStyle: "normal", lineHeight: 1.45 }}>
+              {item.isCurrentUser ? "vos" : "total"}
             </div>
           </div>
-        </article>
+        </button>
       ))}
+
+      {timeline ? (
+        <RankingTimelineDrawer
+          timeline={timeline}
+          selectedUserName={selected}
+          onClose={() => setSelected(null)}
+        />
+      ) : null}
     </section>
   );
 }

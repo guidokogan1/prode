@@ -7,6 +7,7 @@ import type {
   ProductProvider,
   ProfileViewModel,
   RankingEntry,
+  RankingTimeline,
   SaveTicketPayload,
   SaveTicketResult,
   SessionState,
@@ -76,6 +77,18 @@ export class DemoProductProvider implements ProductProvider {
   async getHistory(): Promise<HistoryEntry[]> {
     const session = await this.getSessionState();
     return getFallbackHistory(session.demoPersonaSlug);
+  }
+
+  async getRankingTimeline(): Promise<RankingTimeline> {
+    const ranking = getFallbackRanking();
+    const matchLabels = ["arg-jpn", "bra-mex", "esp-uru", "jor-ger", "mar-sen", "usa-ned"];
+    const entries = ranking.map((entry, idx) => {
+      const final = entry.grossAmount;
+      const steps = matchLabels.length;
+      const points = Array.from({ length: steps }, (_, i) => Math.round((final * (i + 1)) / steps + idx * 50));
+      return { userName: entry.name, isCurrentUser: !!entry.isCurrentUser, points };
+    });
+    return { matchLabels, entries };
   }
 
   async submitTicket(payload: SaveTicketPayload): Promise<SaveTicketResult> {

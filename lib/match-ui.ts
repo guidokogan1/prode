@@ -3,14 +3,14 @@ import { parseCredits } from "@/lib/format";
 
 export function formatCompactCredits(value: number) {
   if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1)}M`;
+    return `$${(value / 1_000_000).toFixed(1)}M`;
   }
 
   if (value >= 1_000) {
-    return `${Math.round(value / 1_000)}k`;
+    return `$${Math.round(value / 1_000)}k`;
   }
 
-  return String(value);
+  return `$${value}`;
 }
 
 export function getOutcomeColor(code: MatchOutcomeCode) {
@@ -54,37 +54,20 @@ export function getOutcomeHint(code: MatchOutcomeCode, marketType: MatchViewMode
 }
 
 export function getUserResultTone(label: string) {
-  if (label.startsWith("Ganaste") || label.startsWith("Resultado +")) {
-    return "positive";
+  if (!label.startsWith("Resultado")) {
+    return "neutral";
   }
-
-  if (label.startsWith("Perdiste") || label.startsWith("Resultado -")) {
-    return "negative";
-  }
-
-  return "neutral";
+  const value = getUserGrossLabel(label);
+  return value === "$0" ? "neutral" : "positive";
 }
 
 export function getUserResultPill(label: string) {
-  if (label.startsWith("Ganaste") || label.startsWith("Resultado +")) {
-    return "Ganaste";
-  }
-
-  if (label.startsWith("Perdiste") || label.startsWith("Resultado -")) {
-    return "Perdiste";
-  }
-
-  return "Final";
+  return label.startsWith("Resultado") ? "Cobraste" : "Final";
 }
 
-export function getUserNetLabel(label: string) {
-  const cleaned = label
-    .replace(/^Ganaste\s*/u, "")
-    .replace(/^Perdiste\s*/u, "")
-    .replace(/^Resultado\s*/u, "")
-    .trim();
-
-  return cleaned || "0";
+export function getUserGrossLabel(label: string) {
+  const cleaned = label.replace(/^Resultado\s*/u, "").trim();
+  return cleaned || "$0";
 }
 
 export function getLeadingOutcome(match: MatchViewModel) {

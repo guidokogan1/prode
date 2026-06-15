@@ -13,9 +13,8 @@ export function ChampionFinaleCard({ tournament, userPick }: ChampionFinaleCardP
     userPick != null && userPick.toLowerCase() === tournament.winnerTeam.name.toLowerCase();
   const hasPick = userPick != null;
 
-  const tone = pickedWinner ? "positive" : hasPick ? "negative" : "neutral";
-  const accent =
-    tone === "positive" ? "var(--gold)" : tone === "negative" ? "var(--live)" : "var(--text-secondary)";
+  const tone = pickedWinner ? "positive" : "neutral";
+  const accent = tone === "positive" ? "var(--gold)" : "var(--text-secondary)";
   const headline = pickedWinner ? "Acertaste el campeón" : hasPick ? "No entró el campeón" : "Sin pick";
 
   return (

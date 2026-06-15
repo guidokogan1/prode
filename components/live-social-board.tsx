@@ -1,5 +1,5 @@
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { formatCredits, formatNetAmount } from "@/lib/format";
+import { formatCredits, formatGross } from "@/lib/format";
 import { deriveResolvedOutcome, formatCompactCredits, getOutcomeColor, getOutcomeFlag } from "@/lib/match-ui";
 
 type LiveSocialBoardProps = {
@@ -17,6 +17,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
         amount: number;
         amountLabel: string;
         netAmount?: number;
+        grossAmount?: number;
       }[];
     }
   >();
@@ -42,6 +43,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
       amount: dominant.amount,
       amountLabel: formatCredits(dominant.amount),
       netAmount: ticket.netAmount,
+      grossAmount: ticket.grossAmount ?? (typeof ticket.netAmount === "number" ? ticket.netAmount + 10000 : undefined),
     });
   }
 
@@ -135,7 +137,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
                       </span>
                       <div style={{ display: "grid", gap: 2 }}>
                         <span style={{ fontFamily: "var(--font-body)", fontSize: ".92rem", fontStyle: "normal", fontWeight: 700 }}>{ticket.userName}</span>
-                        {ticket.netAmount != null ? <span className="micro-copy">{formatNetAmount(ticket.netAmount)}</span> : null}
+                        {ticket.grossAmount != null ? <span className="micro-copy">{formatGross(ticket.grossAmount)}</span> : null}
                       </div>
                     </div>
                     <strong style={{ color: isWinning ? getOutcomeColor(group.outcome.code) : "#97AD99", fontFamily: "var(--font-accent)", fontSize: ".98rem", letterSpacing: "-0.04em" }}>
@@ -153,7 +155,7 @@ export function LiveSocialBoard({ match }: LiveSocialBoardProps) {
 
       <div className="surface-card-soft soft-panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(212,166,75,0.07)", borderColor: "rgba(212,166,75,0.18)" }}>
         <span className="muted-copy">Pozo</span>
-        <strong style={{ color: "#D8B56A", fontFamily: "var(--font-accent)", fontSize: "1.28rem", letterSpacing: "-0.05em" }}>{formatCompactCredits(totalPot)} cr</strong>
+        <strong style={{ color: "#D8B56A", fontFamily: "var(--font-accent)", fontSize: "1.28rem", letterSpacing: "-0.05em" }}>{formatCompactCredits(totalPot)}</strong>
       </div>
     </section>
   );

@@ -1,12 +1,13 @@
 import { LeaderboardPodium } from "@/components/leaderboard-podium";
 import { RankingList } from "@/components/ranking-list";
 import { ShareByIdButton } from "@/components/share-by-id-button";
-import { formatNetAmount } from "@/lib/format";
+import { formatGross } from "@/lib/format";
 import { getRanking } from "@/lib/repositories/ranking";
+import { getRankingTimeline } from "@/lib/repositories/timeline";
 import { getTournamentFinalState } from "@/lib/repositories/tournament";
 
 export default async function RankingPage() {
-  const [ranking, tournament] = await Promise.all([getRanking(), getTournamentFinalState()]);
+  const [ranking, tournament, timeline] = await Promise.all([getRanking(), getTournamentFinalState(), getRankingTimeline()]);
   const currentUser = ranking.find((item) => item.isCurrentUser) ?? null;
   const leader = ranking[0] ?? null;
   const finished = tournament.finished;
@@ -52,7 +53,7 @@ export default async function RankingPage() {
             <span className="micro-copy">Tu puesto</span>
             <div className="split-row">
               <strong style={{ fontSize: "1.05rem", textTransform: "uppercase" }}>#{currentUser.position} {currentUser.name}</strong>
-              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.05em", color: "var(--gold)" }}>{formatNetAmount(currentUser.netAmount)}</strong>
+              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.05em", color: currentUser.grossAmount > 0 ? "var(--gold)" : "var(--text-secondary)" }}>{formatGross(currentUser.grossAmount)}</strong>
             </div>
           </section>
         ) : null}
@@ -61,7 +62,7 @@ export default async function RankingPage() {
             <span className="micro-copy">Líder</span>
             <div className="split-row">
               <strong style={{ fontSize: "1.05rem", textTransform: "uppercase" }}>#{leader.position} {leader.name}</strong>
-              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.05em", color: "var(--gold)" }}>{formatNetAmount(leader.netAmount)}</strong>
+              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.05em", color: leader.grossAmount > 0 ? "var(--gold)" : "var(--text-secondary)" }}>{formatGross(leader.grossAmount)}</strong>
             </div>
           </section>
         ) : null}
@@ -74,7 +75,7 @@ export default async function RankingPage() {
           <h2 className="section-title">General</h2>
           <span className="pill">{ranking.length}</span>
         </div>
-        <RankingList items={ranking} />
+        <RankingList items={ranking} timeline={timeline} />
       </section>
     </main>
   );

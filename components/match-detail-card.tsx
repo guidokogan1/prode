@@ -9,7 +9,7 @@ import { ShareImageButton } from "@/components/share-image-button";
 import { VoteFace } from "@/components/vote-face";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { formatCredits, formatNetAmount } from "@/lib/format";
+import { formatCredits, formatGross } from "@/lib/format";
 import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
 import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 import {
@@ -144,9 +144,40 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     if (!isSettled) return [];
     return effectiveMatch.revealedTickets
       .filter((ticket): ticket is typeof ticket & { netAmount: number } => typeof ticket.netAmount === "number")
-      .map((ticket) => ({ userName: ticket.userName, netAmount: ticket.netAmount }))
-      .sort((left, right) => right.netAmount - left.netAmount);
+      .map((ticket) => ({
+        userName: ticket.userName,
+        netAmount: ticket.netAmount,
+        grossAmount: ticket.grossAmount ?? ticket.netAmount + 10000,
+      }))
+      .sort((left, right) => right.grossAmount - left.grossAmount);
   }, [effectiveMatch.marketStatus, effectiveMatch.statusVariant, effectiveMatch.revealedTickets]);
+
+  const settlementBreakdown = useMemo(() => {
+    const isSettled = effectiveMatch.marketStatus === "settled" || effectiveMatch.statusVariant === "settled";
+    if (!isSettled || !resolvedOutcome || totalPot <= 0) return null;
+
+    const userAllocations = effectiveMatch.allocation.filter((item) => item.amount > 0);
+    const winningBucket = groupBuckets.find((bucket) => bucket.outcome.code === resolvedOutcome);
+    const winningLabel = winningBucket?.outcome.label ?? "el ganador";
+    const winningPool = winningBucket?.tickets.reduce((sum, t) => sum + t.amount, 0) ?? 0;
+    const userStakeOnWinner = userAllocations.find((item) => item.code === resolvedOutcome)?.amount ?? 0;
+    const userDominant = [...userAllocations].sort((a, b) => b.amount - a.amount)[0];
+    const dominantHit = userDominant?.code === resolvedOutcome;
+    const userGross = winningPool > 0 ? totalPot * (userStakeOnWinner / winningPool) : 0;
+    const userSharePct = winningPool > 0 ? (userStakeOnWinner / winningPool) * 100 : 0;
+
+    return {
+      hasPlayed: userAllocations.length > 0,
+      winningLabel,
+      winningPool,
+      userStakeOnWinner,
+      userDominantLabel: userDominant?.label ?? null,
+      dominantHit,
+      userGross,
+      userSharePct,
+      totalPot,
+    };
+  }, [effectiveMatch.marketStatus, effectiveMatch.statusVariant, effectiveMatch.allocation, resolvedOutcome, groupBuckets, totalPot]);
 
   function resetPhase() {
     if (saveResetTimeoutRef.current) {
@@ -762,14 +793,16 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               const isWinning = resolvedOutcome === bucket.outcome.code;
               const isRevealed = effectiveMatch.marketStatus === "revealed" || effectiveMatch.marketStatus === "settled";
               const totalOnOutcome = bucket.tickets.reduce((sum, ticket) => sum + ticket.amount, 0);
-              const pickCount = effectiveMatch.pickCountByCode[bucket.outcome.code] ?? 0;
+              const poolForOutcome = effectiveMatch.poolByCode[bucket.outcome.code] ?? 0;
+              const totalPoolPreLock = Object.values(effectiveMatch.poolByCode).reduce<number>((sum, value) => sum + (value ?? 0), 0);
+              const oddsMultiplier = poolForOutcome > 0 ? totalPoolPreLock / poolForOutcome : 0;
               const summaryLabel = isRevealed
                 ? totalOnOutcome > 0
-                  ? `${formatCredits(totalOnOutcome)} cr`
-                  : "sin picks"
-                : pickCount > 0
-                  ? `${pickCount} ${pickCount === 1 ? "pick" : "picks"}`
-                  : "sin picks";
+                  ? formatCredits(totalOnOutcome)
+                  : "sin apuestas"
+                : oddsMultiplier > 0
+                  ? `paga x${oddsMultiplier.toFixed(2)}`
+                  : "sin apuestas";
               const headerColor = !resolvedOutcome
                 ? "#EDE8D9"
                 : isWinning
@@ -812,27 +845,22 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               <section style={{ display: "grid", gap: 12, paddingTop: 12 }}>
                 <div className="split-row" style={{ gap: 16 }}>
                   <strong style={{ fontSize: "1rem", textTransform: "uppercase", color: "#EDE8D9" }}>Liquidación</strong>
-                  <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>Neto por jugador</span>
+                  <span className="micro-copy" style={{ whiteSpace: "nowrap" }}>Cobrado por jugador</span>
                 </div>
                 <div style={{ display: "grid", gap: 8 }}>
                   {liquidationRows.map((row) => {
-                    const netColor =
-                      row.netAmount > 0
-                        ? "var(--gold)"
-                        : row.netAmount < 0
-                          ? "var(--live)"
-                          : "var(--text-tertiary)";
+                    const grossColor = row.grossAmount > 0 ? "var(--gold)" : "var(--text-tertiary)";
                     return (
                       <div key={`liquidation-${row.userName}`} className="split-row">
                         <strong style={{ fontSize: ".92rem" }}>{row.userName}</strong>
                         <strong
                           style={{
-                            color: netColor,
+                            color: grossColor,
                             fontFamily: "var(--font-accent)",
                             letterSpacing: "-0.04em",
                           }}
                         >
-                          {formatNetAmount(row.netAmount)}
+                          {formatGross(row.grossAmount)}
                         </strong>
                       </div>
                     );
@@ -841,11 +869,49 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               </section>
             ) : null}
 
+            {settlementBreakdown ? (
+              <section
+                className="surface-card-soft"
+                style={{
+                  marginTop: 4,
+                  padding: "14px 16px",
+                  borderRadius: 12,
+                  background: "rgba(255,255,255,0.03)",
+                  display: "grid",
+                  gap: 8,
+                }}
+              >
+                <strong style={{ fontSize: ".95rem", textTransform: "uppercase" }}>Cómo se calcula tu cobro</strong>
+                {!settlementBreakdown.hasPlayed ? (
+                  <p className="muted-copy" style={{ margin: 0 }}>
+                    No jugaste este partido. Por eso cobraste {formatGross(0)}.
+                  </p>
+                ) : settlementBreakdown.userStakeOnWinner === 0 ? (
+                  <p className="muted-copy" style={{ margin: 0, lineHeight: 1.55 }}>
+                    Fuiste con <strong>{settlementBreakdown.userDominantLabel}</strong>. Ganó <strong>{settlementBreakdown.winningLabel}</strong>. No pusiste nada al ganador, por eso cobraste {formatGross(0)}.
+                  </p>
+                ) : (
+                  <p className="muted-copy" style={{ margin: 0, lineHeight: 1.55 }}>
+                    {settlementBreakdown.dominantHit ? (
+                      <>
+                        Pusiste <strong>{formatGross(settlementBreakdown.userStakeOnWinner)}</strong> a <strong>{settlementBreakdown.winningLabel}</strong>.
+                      </>
+                    ) : (
+                      <>
+                        Tu pick principal era <strong>{settlementBreakdown.userDominantLabel}</strong>, pero pusiste <strong>{formatGross(settlementBreakdown.userStakeOnWinner)}</strong> a <strong>{settlementBreakdown.winningLabel}</strong>, que ganó.
+                      </>
+                    )}
+                    {" "}El pozo de {settlementBreakdown.winningLabel} fue <strong>{formatGross(settlementBreakdown.winningPool)}</strong>, así que tu parte es <strong>{Math.round(settlementBreakdown.userSharePct)}%</strong>. El pozo total fue <strong>{formatGross(settlementBreakdown.totalPot)}</strong>, por eso cobraste <strong style={{ color: "var(--gold)" }}>{formatGross(settlementBreakdown.userGross)}</strong>.
+                  </p>
+                )}
+              </section>
+            ) : null}
+
             {totalPot > 0 ? (
               <div className="split-row" style={{ paddingTop: 14, marginTop: 4, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                 <span className="muted-copy">Pozo</span>
                 <strong style={{ color: "var(--gold)", fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.05em" }}>
-                  {formatCompactCredits(totalPot)} cr
+                  {formatCompactCredits(totalPot)}
                 </strong>
               </div>
             ) : null}

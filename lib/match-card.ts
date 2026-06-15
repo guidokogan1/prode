@@ -6,8 +6,7 @@ import {
   getMatchActionLabel,
   getOutcomeHint,
   getPickStateLabel,
-  getUserNetLabel,
-  getUserResultTone,
+  getUserGrossLabel,
 } from "@/lib/match-ui";
 
 export type MatchCardMode = "editable-empty" | "editable-saved" | "live" | "settled";
@@ -42,13 +41,11 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
 
   if (resolvedOutcome) {
     const winningLabel = match.consensus.find((item) => item.code === resolvedOutcome)?.label ?? "Resultado";
-    const settlementTone = getUserResultTone(match.userStateLabel);
-    const rawNetLabel = settlementTone !== "neutral" ? getUserNetLabel(match.userStateLabel) : null;
-    const settlementNet = rawNetLabel ? rawNetLabel.replace(/^[-+]/, "") : null;
+    const grossLabel = match.userStateLabel.startsWith("Resultado") ? getUserGrossLabel(match.userStateLabel) : null;
     const pickedWinner = leadingUserOutcome?.code === resolvedOutcome;
 
     let heroValue: string;
-    let heroTone: "positive" | "negative" | "neutral";
+    let heroTone: "positive" | "neutral";
     let secondaryStatusLabel: string;
     let heroDescription: string;
 
@@ -58,13 +55,13 @@ export function getMatchCardState(match: MatchViewModel, density: MatchCardDensi
       secondaryStatusLabel = "Sin jugar";
       heroDescription = `Ganó ${winningLabel}.`;
     } else if (pickedWinner) {
-      heroValue = settlementNet ? `Ganaste +${settlementNet}` : "Ganaste";
-      heroTone = "positive";
+      heroValue = grossLabel ? `Cobraste ${grossLabel}` : "Cobraste";
+      heroTone = grossLabel === "$0" ? "neutral" : "positive";
       secondaryStatusLabel = "Acertaste";
       heroDescription = `Fuiste con ${leadingUserOutcome.label}.`;
     } else {
-      heroValue = settlementNet ? `Perdiste ${settlementNet}` : "Perdiste";
-      heroTone = "negative";
+      heroValue = grossLabel ? `Cobraste ${grossLabel}` : "Cobraste $0";
+      heroTone = grossLabel === "$0" || !grossLabel ? "neutral" : "positive";
       secondaryStatusLabel = "No entró";
       heroDescription = `Fuiste con ${leadingUserOutcome.label}. Ganó ${winningLabel}.`;
     }

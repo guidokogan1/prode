@@ -31,6 +31,7 @@ export default async function HomePage() {
           <WinnerCelebrationOverlay
             userName={profile.name}
             netAmount={currentUser.netAmount}
+            grossAmount={currentUser.grossAmount}
             winnerTeamName={tournamentState.winnerTeam.name}
             winnerTeamFlag={tournamentState.winnerTeam.flag}
             storageKey={`prode-winner-celebrated:${tournamentState.settledAt ?? "default"}`}

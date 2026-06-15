@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShareByIdButton } from "@/components/share-by-id-button";
-import { formatNetAmount } from "@/lib/format";
+import { formatGross } from "@/lib/format";
 import type { RankingEntry } from "@/lib/domain";
 import type { TournamentFinalState } from "@/lib/repositories/tournament";
 
@@ -74,7 +74,7 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
             <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", color: "var(--gold)" }}>
               {currentUserName}
             </strong>
-            <span className="micro-copy">Salís primero con {formatNetAmount(userInRanking?.netAmount ?? 0)}</span>
+            <span className="micro-copy">Salís primero con {formatGross(userInRanking?.grossAmount ?? 0)}</span>
           </div>
         ) : userInRanking ? (
           <div
@@ -91,7 +91,7 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
           >
             <p className="eyebrow">Tu lugar</p>
             <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>#{userInRanking.position}</strong>
-            <span className="micro-copy">{formatNetAmount(userInRanking.netAmount)}</span>
+            <span className="micro-copy">{formatGross(userInRanking.grossAmount)}</span>
             {userPickedWinner ? (
               <span className="micro-copy" style={{ color: "var(--gold)" }}>Acertaste el campeón</span>
             ) : null}
@@ -141,10 +141,10 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
                   fontFamily: "var(--font-accent)",
                   fontSize: "1.05rem",
                   letterSpacing: "-0.04em",
-                  color: entry.netAmount > 0 ? "var(--gold)" : entry.netAmount < 0 ? "var(--live)" : undefined,
+                  color: entry.grossAmount > 0 ? "var(--gold)" : "var(--text-secondary)",
                 }}
               >
-                {formatNetAmount(entry.netAmount)}
+                {formatGross(entry.grossAmount)}
               </strong>
             </div>
           ))}
@@ -157,7 +157,7 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
           fileName="prode-mundial-final.jpg"
           shareText={
             userIsLeader
-              ? `Salí campeón del prode con ${formatNetAmount(userInRanking?.netAmount ?? 0)} 🏆`
+              ? `Salí campeón del prode con ${formatGross(userInRanking?.grossAmount ?? 0)} 🏆`
               : "Así terminó el prode del Mundial"
           }
           label="Compartir resultado"

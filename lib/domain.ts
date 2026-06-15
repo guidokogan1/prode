@@ -27,6 +27,7 @@ export type RevealedTicketViewModel = {
   userName: string;
   allocations: Pick<OutcomeViewModel, "code" | "label" | "shortLabel" | "amount">[];
   netAmount?: number;
+  grossAmount?: number;
 };
 
 export type MatchViewModel = {
@@ -64,6 +65,7 @@ export type MatchViewModel = {
     awayGoals: number;
   };
   pickCountByCode: Partial<Record<MatchOutcomeCode, number>>;
+  poolByCode: Partial<Record<MatchOutcomeCode, number>>;
   revealedTickets: RevealedTicketViewModel[];
 };
 
@@ -71,8 +73,10 @@ export type RankingEntry = {
   position: number;
   name: string;
   netAmount: number;
+  grossAmount: number;
   positiveTickets: number;
   bestHitAmount: number;
+  bestHitGrossAmount: number;
   isCurrentUser?: boolean;
 };
 
@@ -82,6 +86,7 @@ export type HistoryEntry = {
   stage: string;
   description: string;
   netAmount: number;
+  grossAmount: number;
   allocations: {
     label: string;
     amount: number;
@@ -91,8 +96,10 @@ export type HistoryEntry = {
 export type ProfileViewModel = {
   name: string;
   netAmount: number;
+  grossAmount: number;
   positiveTickets: number;
   bestHitAmount: number;
+  bestHitGrossAmount: number;
   championPick: string | null;
   isCurrentUser?: boolean;
 };
@@ -102,6 +109,7 @@ export type HomeSummary = {
   pendingPicks: number;
   settledToday: number;
   yourNetAmount: number;
+  yourGrossAmount: number;
 };
 
 export type MatchStageGroup = {
@@ -135,6 +143,17 @@ export type SaveTicketResult =
       reason: string;
     };
 
+export type RankingTimelineEntry = {
+  userName: string;
+  isCurrentUser: boolean;
+  points: number[];
+};
+
+export type RankingTimeline = {
+  matchLabels: string[];
+  entries: RankingTimelineEntry[];
+};
+
 export type ProductProvider = {
   mode: AppMode;
   getSessionState(): Promise<SessionState>;
@@ -146,5 +165,6 @@ export type ProductProvider = {
   getRanking(): Promise<RankingEntry[]>;
   getProfile(): Promise<ProfileViewModel>;
   getHistory(): Promise<HistoryEntry[]>;
+  getRankingTimeline(): Promise<RankingTimeline>;
   submitTicket(payload: SaveTicketPayload): Promise<SaveTicketResult>;
 };

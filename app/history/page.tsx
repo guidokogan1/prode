@@ -1,5 +1,5 @@
 import { getHistory } from "@/lib/repositories/history";
-import { formatCredits, formatNetAmount } from "@/lib/format";
+import { formatCredits, formatGross } from "@/lib/format";
 
 export default async function HistoryPage() {
   const history = await getHistory();
@@ -31,8 +31,8 @@ export default async function HistoryPage() {
             style={{
               padding: 14,
               borderRadius: 14,
-              background: item.netAmount >= 0 ? "rgba(216,255,86,0.05)" : "rgba(255,85,71,0.05)",
-              borderColor: item.netAmount >= 0 ? "rgba(216,255,86,0.16)" : "rgba(255,85,71,0.18)",
+              background: item.grossAmount > 0 ? "rgba(216,255,86,0.05)" : "rgba(255,255,255,0.03)",
+              borderColor: item.grossAmount > 0 ? "rgba(216,255,86,0.16)" : "rgba(255,255,255,0.08)",
               display: "grid",
               gap: 10,
             }}
@@ -42,8 +42,8 @@ export default async function HistoryPage() {
                 <strong>{item.title}</strong>
                 <span className="micro-copy">{item.stage}</span>
               </div>
-              <span className={item.netAmount >= 0 ? "money-positive" : "money-negative"} style={{ fontFamily: "var(--font-display)", fontSize: "1.08rem", letterSpacing: "-0.02em" }}>
-                {formatNetAmount(item.netAmount)}
+              <span className={item.grossAmount > 0 ? "money-positive" : "money-negative"} style={{ fontFamily: "var(--font-display)", fontSize: "1.08rem", letterSpacing: "-0.02em" }}>
+                {formatGross(item.grossAmount)}
               </span>
             </div>
 

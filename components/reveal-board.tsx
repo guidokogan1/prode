@@ -3,7 +3,7 @@
 import { useContext, useMemo } from "react";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
-import { formatCredits, formatNetAmount } from "@/lib/format";
+import { formatCredits, formatGross } from "@/lib/format";
 
 type RevealBoardProps = {
   tickets: MatchViewModel["revealedTickets"];
@@ -79,7 +79,7 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
     <div className="reveal-board reveal-board-groups">
       <div className="reveal-pot-card">
         <span className="eyebrow">Pozo de esta ronda</span>
-        <strong>{formatCredits(totalPot)} créditos</strong>
+        <strong>{formatCredits(totalPot)}</strong>
         <span className="subtle">Así está cayendo el grupo ahora mismo.</span>
       </div>
 
@@ -116,8 +116,8 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
                       </div>
                     </div>
                     {ticket.netAmount != null ? (
-                      <strong className={ticket.netAmount < 0 ? "money-negative" : "money-positive"}>
-                        {formatNetAmount(ticket.netAmount)}
+                      <strong className={(ticket.grossAmount ?? ticket.netAmount + 10000) > 0 ? "money-positive" : "money-negative"}>
+                        {formatGross(ticket.grossAmount ?? ticket.netAmount + 10000)}
                       </strong>
                     ) : (
                       <span className="pill">En juego</span>

@@ -13,7 +13,9 @@ import type {
   SessionState,
 } from "@/lib/domain";
 import { deriveDummyMatchState, getDummyMatchDefinition, isDummyMatchId } from "@/lib/dummy-matches";
-import { formatNetAmount, MATCH_CREDIT, validateAllocations } from "@/lib/game";
+import { MATCH_CREDIT, validateAllocations } from "@/lib/game";
+import { formatGross } from "@/lib/format";
+import { CHAMPION_CREDIT } from "@/lib/champion";
 import { logPickEvent } from "@/lib/pick-events";
 import { getServerSessionState } from "@/lib/product/session-state";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -104,19 +106,24 @@ export class SupabaseProductProvider implements ProductProvider {
     ]);
 
     let yourNetAmount = 0;
+    let yourGrossAmount = 0;
 
     if (session.userId) {
-      const leaderboardQuery = await supabase
-        .from("leaderboard_snapshots")
-        .select("total_net_amount")
-        .eq("user_id", session.userId)
-        .order("as_of", { ascending: false })
-        .limit(1)
-        .maybeSingle<{ total_net_amount: number }>();
+      const [leaderboardQuery, grossAggregates] = await Promise.all([
+        supabase
+          .from("leaderboard_snapshots")
+          .select("total_net_amount")
+          .eq("user_id", session.userId)
+          .order("as_of", { ascending: false })
+          .limit(1)
+          .maybeSingle<{ total_net_amount: number }>(),
+        loadGrossAggregates(supabase, [session.userId]),
+      ]);
 
       if (!leaderboardQuery.error && leaderboardQuery.data) {
         yourNetAmount = leaderboardQuery.data.total_net_amount;
       }
+      yourGrossAmount = grossAggregates.get(session.userId)?.totalGross ?? 0;
     }
 
     return {
@@ -124,6 +131,7 @@ export class SupabaseProductProvider implements ProductProvider {
       pendingPicks: matches.filter((match) => match.userStateLabel === "Te falta jugar").length,
       settledToday: settledTodayQuery.count ?? 0,
       yourNetAmount,
+      yourGrossAmount,
     };
   }
 
@@ -198,11 +206,12 @@ export class SupabaseProductProvider implements ProductProvider {
     const session = await this.getSessionState();
     const query = await supabase
       .from("leaderboard_snapshots")
-      .select("rank_position, total_net_amount, positive_tickets_count, best_single_net_amount, user:users(display_name)")
+      .select("rank_position, user_id, total_net_amount, positive_tickets_count, best_single_net_amount, user:users(display_name)")
       .order("rank_position", { ascending: true })
       .returns<
         {
           rank_position: number;
+          user_id: string;
           total_net_amount: number;
           positive_tickets_count: number;
           best_single_net_amount: number | null;
@@ -211,14 +220,20 @@ export class SupabaseProductProvider implements ProductProvider {
       >();
 
     if (!query.error && query.data?.length) {
-      return query.data.map((item) => ({
-        position: item.rank_position,
-        name: item.user?.display_name ?? "Jugador",
-        netAmount: item.total_net_amount,
-        positiveTickets: item.positive_tickets_count,
-        bestHitAmount: item.best_single_net_amount ?? 0,
-        isCurrentUser: session.displayName === item.user?.display_name,
-      }));
+      const grossByUser = await loadGrossAggregates(supabase, query.data.map((item) => item.user_id));
+      return query.data.map((item) => {
+        const gross = grossByUser.get(item.user_id);
+        return {
+          position: item.rank_position,
+          name: item.user?.display_name ?? "Jugador",
+          netAmount: item.total_net_amount,
+          grossAmount: gross?.totalGross ?? 0,
+          positiveTickets: gross?.hitsCount ?? 0,
+          bestHitAmount: item.best_single_net_amount ?? 0,
+          bestHitGrossAmount: gross?.bestHitGross ?? 0,
+          isCurrentUser: session.displayName === item.user?.display_name,
+        };
+      });
     }
 
     const usersQuery = await supabase
@@ -236,8 +251,10 @@ export class SupabaseProductProvider implements ProductProvider {
       position: idx + 1,
       name: row.display_name,
       netAmount: 0,
+      grossAmount: 0,
       positiveTickets: 0,
       bestHitAmount: 0,
+      bestHitGrossAmount: 0,
       isCurrentUser: session.displayName === row.display_name,
     }));
   }
@@ -250,13 +267,15 @@ export class SupabaseProductProvider implements ProductProvider {
       return {
         name: "Sin entrar",
         netAmount: 0,
+        grossAmount: 0,
         positiveTickets: 0,
         bestHitAmount: 0,
+        bestHitGrossAmount: 0,
         championPick: "Sin elegir",
       };
     }
 
-    const [userQuery, leaderboardQuery, championQuery] = await Promise.all([
+    const [userQuery, leaderboardQuery, championQuery, grossAggregates] = await Promise.all([
       supabase.from("users").select("display_name").eq("id", session.userId).maybeSingle<{ display_name: string }>(),
       supabase
         .from("leaderboard_snapshots")
@@ -270,13 +289,17 @@ export class SupabaseProductProvider implements ProductProvider {
         .select("team:teams(name)")
         .eq("user_id", session.userId)
         .maybeSingle<{ team: { name: string } | null }>(),
+      loadGrossAggregates(supabase, [session.userId]),
     ]);
 
+    const gross = grossAggregates.get(session.userId);
     return {
       name: userQuery.data?.display_name ?? session.displayName ?? "Jugador",
       netAmount: leaderboardQuery.data?.total_net_amount ?? 0,
-      positiveTickets: leaderboardQuery.data?.positive_tickets_count ?? 0,
+      grossAmount: gross?.totalGross ?? 0,
+      positiveTickets: gross?.hitsCount ?? 0,
       bestHitAmount: leaderboardQuery.data?.best_single_net_amount ?? 0,
+      bestHitGrossAmount: gross?.bestHitGross ?? 0,
       championPick: championQuery.data?.team?.name ?? "Sin elegir",
       isCurrentUser: true,
     };
@@ -314,10 +337,13 @@ export class SupabaseProductProvider implements ProductProvider {
         title: `${home?.name ?? "Equipo A"} vs ${away?.name ?? "Equipo B"}`,
         stage: stage?.name ?? "Partido",
         description:
-          row.net_result_amount >= 0
+          row.net_result_amount > 0
             ? "Jugada liquidada en positivo."
-            : "Jugada liquidada por debajo de la base.",
+            : row.net_result_amount === 0
+              ? "Recuperaste tu apuesta."
+              : "Cobraste menos de lo apostado.",
         netAmount: row.net_result_amount,
+        grossAmount: row.net_result_amount + MATCH_CREDIT,
         allocations: (row.allocations ?? []).map(
           (allocation: { amount: number; outcome: { label: string }[] | { label: string } | null }) => {
             const outcome = Array.isArray(allocation.outcome) ? allocation.outcome[0] : allocation.outcome;
@@ -329,6 +355,88 @@ export class SupabaseProductProvider implements ProductProvider {
         ),
       };
     });
+  }
+
+  async getRankingTimeline(): Promise<import("@/lib/domain").RankingTimeline> {
+    const supabase = getSupabaseOrThrow();
+    const session = await this.getSessionState();
+
+    const settlementsQuery = await supabase
+      .from("settlements")
+      .select(
+        "net_result_amount, settled_at, ticket:tickets!inner(user_id, user:users!inner(display_name), market:match_markets!inner(match:matches!inner(id, kickoff_at, home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name))))",
+      )
+      .order("settled_at", { ascending: true })
+      .returns<
+        {
+          net_result_amount: number;
+          settled_at: string;
+          ticket: {
+            user_id: string;
+            user: { display_name: string } | { display_name: string }[] | null;
+            market: {
+              match:
+                | { id: string; kickoff_at: string; home: { name: string } | { name: string }[] | null; away: { name: string } | { name: string }[] | null }
+                | { id: string; kickoff_at: string; home: { name: string } | { name: string }[] | null; away: { name: string } | { name: string }[] | null }[]
+                | null;
+            } | null;
+          } | null;
+        }[]
+      >();
+
+    const rows = settlementsQuery.data ?? [];
+
+    const matchMeta = new Map<string, { kickoffAt: string; label: string }>();
+    const userGrossByMatch = new Map<string, Map<string, number>>();
+    const userNames = new Map<string, string>();
+
+    for (const row of rows) {
+      const ticket = row.ticket;
+      if (!ticket) continue;
+      const userObj = Array.isArray(ticket.user) ? ticket.user[0] : ticket.user;
+      const userName = userObj?.display_name;
+      if (!userName) continue;
+      userNames.set(ticket.user_id, userName);
+
+      const matchObj = Array.isArray(ticket.market?.match) ? ticket.market?.match[0] : ticket.market?.match;
+      if (!matchObj?.id) continue;
+      const home = Array.isArray(matchObj.home) ? matchObj.home[0] : matchObj.home;
+      const away = Array.isArray(matchObj.away) ? matchObj.away[0] : matchObj.away;
+      const label = `${home?.name?.slice(0, 3) ?? "—"} vs ${away?.name?.slice(0, 3) ?? "—"}`;
+      matchMeta.set(matchObj.id, { kickoffAt: matchObj.kickoff_at, label });
+
+      const grossThis = row.net_result_amount + MATCH_CREDIT;
+      let userBucket = userGrossByMatch.get(ticket.user_id);
+      if (!userBucket) {
+        userBucket = new Map();
+        userGrossByMatch.set(ticket.user_id, userBucket);
+      }
+      userBucket.set(matchObj.id, (userBucket.get(matchObj.id) ?? 0) + grossThis);
+    }
+
+    const orderedMatches = Array.from(matchMeta.entries())
+      .sort(([, a], [, b]) => a.kickoffAt.localeCompare(b.kickoffAt))
+      .map(([id, meta]) => ({ id, label: meta.label }));
+
+    const matchLabels = orderedMatches.map((m) => m.label);
+
+    const entries: import("@/lib/domain").RankingTimelineEntry[] = Array.from(userNames.entries()).map(([userId, userName]) => {
+      const userBucket = userGrossByMatch.get(userId) ?? new Map();
+      let cumulative = 0;
+      const points = orderedMatches.map((m) => {
+        cumulative += userBucket.get(m.id) ?? 0;
+        return cumulative;
+      });
+      return {
+        userName,
+        isCurrentUser: session.userId === userId,
+        points,
+      };
+    });
+
+    entries.sort((a, b) => (b.points[b.points.length - 1] ?? 0) - (a.points[a.points.length - 1] ?? 0));
+
+    return { matchLabels, entries };
   }
 
   async submitTicket(payload: SaveTicketPayload): Promise<SaveTicketResult> {
@@ -631,12 +739,18 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
         }
 
         const pickCountByCode: Partial<Record<MatchOutcomeCode, number>> = {};
+        const poolByCode: Partial<Record<MatchOutcomeCode, number>> = {};
         for (const ticket of marketTickets) {
           const allocations = allTicketData.allocationsByTicketId.get(ticket.id) ?? [];
           let dominantAllocation: (typeof allocations)[number] | null = null;
           for (const allocation of allocations) {
             if (!dominantAllocation || allocation.amount > dominantAllocation.amount) {
               dominantAllocation = allocation;
+            }
+            const outcome = outcomeById.get(allocation.market_outcome_id);
+            if (outcome && allocation.amount > 0) {
+              const code = normalizeOutcomeCode(outcome.code, market.market_type);
+              poolByCode[code] = (poolByCode[code] ?? 0) + allocation.amount;
             }
           }
           if (!dominantAllocation) continue;
@@ -717,6 +831,12 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
                 netAmount:
                   allTicketData.settlementsByTicketId.get(ticket.id)?.net_result_amount ??
                   computedNetByTicketId.get(ticket.id),
+                grossAmount: (() => {
+                  const net =
+                    allTicketData.settlementsByTicketId.get(ticket.id)?.net_result_amount ??
+                    computedNetByTicketId.get(ticket.id);
+                  return typeof net === "number" ? net + MATCH_CREDIT : undefined;
+                })(),
               }))
             : [];
 
@@ -760,6 +880,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
               awayGoals: 0,
             },
             pickCountByCode,
+            poolByCode,
             revealedTickets,
           },
           stageSortOrder: stage.sort_order,
@@ -792,6 +913,96 @@ type LoadMatchOptions = {
   matchId?: string;
   includeReveals?: boolean;
 };
+
+type GrossAggregate = { totalGross: number; bestHitGross: number; hitsCount: number };
+
+type SettlementRow = {
+  net_result_amount: number;
+  winning_outcome_code: string;
+  ticket:
+    | {
+        user_id: string;
+        allocations:
+          | { amount: number; outcome: { code: string } | { code: string }[] | null }[]
+          | null;
+      }
+    | {
+        user_id: string;
+        allocations:
+          | { amount: number; outcome: { code: string } | { code: string }[] | null }[]
+          | null;
+      }[]
+    | null;
+};
+
+async function loadGrossAggregates(
+  supabase: ReturnType<typeof getSupabaseOrThrow>,
+  userIds: string[],
+): Promise<Map<string, GrossAggregate>> {
+  const result = new Map<string, GrossAggregate>();
+  if (userIds.length === 0) return result;
+
+  const [settlementsQuery, championQuery] = await Promise.all([
+    supabase
+      .from("settlements")
+      .select("net_result_amount, winning_outcome_code, ticket:tickets!inner(user_id, allocations:ticket_allocations(amount, outcome:market_outcomes(code)))")
+      .in("ticket.user_id", userIds)
+      .returns<SettlementRow[]>(),
+    supabase
+      .from("champion_picks")
+      .select("user_id, gross_return_amount, net_result_amount, team_id, market:champion_market(winner_team_id)")
+      .in("user_id", userIds)
+      .not("settled_at", "is", null)
+      .returns<{
+        user_id: string;
+        gross_return_amount: number | null;
+        net_result_amount: number | null;
+        team_id: string;
+        market: { winner_team_id: string | null } | { winner_team_id: string | null }[] | null;
+      }[]>(),
+  ]);
+
+  const bumpTotals = (userId: string, gross: number) => {
+    const cur = result.get(userId) ?? { totalGross: 0, bestHitGross: 0, hitsCount: 0 };
+    cur.totalGross += gross;
+    cur.bestHitGross = Math.max(cur.bestHitGross, gross);
+    result.set(userId, cur);
+  };
+
+  const bumpHit = (userId: string) => {
+    const cur = result.get(userId) ?? { totalGross: 0, bestHitGross: 0, hitsCount: 0 };
+    cur.hitsCount += 1;
+    result.set(userId, cur);
+  };
+
+  for (const row of settlementsQuery.data ?? []) {
+    const ticket = Array.isArray(row.ticket) ? row.ticket[0] : row.ticket;
+    const userId = ticket?.user_id;
+    if (!userId) continue;
+
+    bumpTotals(userId, row.net_result_amount + MATCH_CREDIT);
+
+    const dominant = (ticket.allocations ?? [])
+      .filter((a) => a.amount > 0)
+      .sort((a, b) => b.amount - a.amount)[0];
+    if (!dominant) continue;
+    const outcome = Array.isArray(dominant.outcome) ? dominant.outcome[0] : dominant.outcome;
+    if (outcome?.code && outcome.code === row.winning_outcome_code) {
+      bumpHit(userId);
+    }
+  }
+
+  for (const champ of championQuery.data ?? []) {
+    const gross = champ.gross_return_amount ?? (champ.net_result_amount != null ? champ.net_result_amount + CHAMPION_CREDIT : 0);
+    bumpTotals(champ.user_id, gross);
+    const market = Array.isArray(champ.market) ? champ.market[0] : champ.market;
+    if (market?.winner_team_id && market.winner_team_id === champ.team_id) {
+      bumpHit(champ.user_id);
+    }
+  }
+
+  return result;
+}
 
 async function loadCurrentUserMap(supabase: ReturnType<typeof getSupabaseOrThrow>, userId: string | undefined, marketIds: string[]) {
   if (!userId || marketIds.length === 0) {
@@ -998,7 +1209,7 @@ function deriveUserStateLabel(
   settlement: SettlementQueryRow | undefined,
 ) {
   if (settlement) {
-    return `Resultado ${formatNetAmount(settlement.net_result_amount)}`;
+    return `Resultado ${formatGross(settlement.net_result_amount + MATCH_CREDIT)}`;
   }
 
   if (!ticket) {

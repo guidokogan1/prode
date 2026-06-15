@@ -101,6 +101,41 @@ describe("read repositories", () => {
                     }),
                   };
                 },
+                in() {
+                  const notChain = {
+                    returns() {
+                      return notChain;
+                    },
+                    then(onFulfilled: (value: { data: unknown[]; error: null }) => unknown) {
+                      return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+                    },
+                  };
+                  return {
+                    not() {
+                      return notChain;
+                    },
+                  };
+                },
+              };
+            },
+          };
+        }
+
+        if (table === "settlements") {
+          const inChain = {
+            returns() {
+              return inChain;
+            },
+            then(onFulfilled: (value: { data: unknown[]; error: null }) => unknown) {
+              return Promise.resolve({ data: [], error: null }).then(onFulfilled);
+            },
+          };
+          return {
+            select() {
+              return {
+                in() {
+                  return inChain;
+                },
               };
             },
           };
@@ -117,8 +152,10 @@ describe("read repositories", () => {
     expect(profile).toEqual({
       name: "Mari",
       netAmount: 5523,
+      grossAmount: expect.any(Number),
       positiveTickets: 17,
       bestHitAmount: 9800,
+      bestHitGrossAmount: expect.any(Number),
       championPick: "Brasil",
       isCurrentUser: true,
     });
@@ -207,6 +244,7 @@ describe("read repositories", () => {
         stage: "Fase de grupos",
         description: "Jugada liquidada en positivo.",
         netAmount: 2200,
+        grossAmount: 12200,
         allocations: [
           { label: "Argentina", amount: 7000 },
           { label: "Empate", amount: 3000 },
@@ -338,7 +376,7 @@ describe("read repositories", () => {
     const match = await getMatchById("arg-jpn");
 
     expect(match?.isEditable).toBe(false);
-    expect(match?.userStateLabel).toBe("Resultado +6.154");
+    expect(match?.userStateLabel).toBe("Resultado $16.154");
     expect(match?.allocation[0]?.amount).toBe(7000);
     expect(match?.revealedTickets[0]).toEqual({
       userName: "Guido",
@@ -348,6 +386,7 @@ describe("read repositories", () => {
         { code: "away", label: "Japon", shortLabel: "Japon", amount: 1000 },
       ],
       netAmount: 6154,
+      grossAmount: 16154,
     });
   });
 });

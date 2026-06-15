@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
-import { formatNetAmount } from "@/lib/format";
+import { formatGross } from "@/lib/format";
 
 type WinnerCelebrationOverlayProps = {
   userName: string;
   netAmount: number;
+  grossAmount: number;
   winnerTeamName: string;
   winnerTeamFlag: string;
   storageKey: string;
@@ -17,7 +18,8 @@ const CONFETTI_SLOTS = Array.from({ length: 18 });
 
 export function WinnerCelebrationOverlay({
   userName,
-  netAmount,
+  netAmount: _netAmount,
+  grossAmount,
   winnerTeamName,
   winnerTeamFlag,
   storageKey,
@@ -129,7 +131,7 @@ export function WinnerCelebrationOverlay({
                 {userName}
               </h2>
               <p className="muted-copy">
-                Neto final {formatNetAmount(netAmount)} · Campeón {winnerTeamFlag} {winnerTeamName}
+                Total final {formatGross(grossAmount)} · Campeón {winnerTeamFlag} {winnerTeamName}
               </p>
             </div>
 

@@ -1,6 +1,6 @@
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
-import { deriveResolvedOutcome, getLeadingOutcome, getOutcomeColor, getOutcomeFlag, getUserNetLabel, getUserResultPill, getUserResultTone } from "@/lib/match-ui";
+import { deriveResolvedOutcome, getLeadingOutcome, getOutcomeColor, getOutcomeFlag, getUserGrossLabel, getUserResultPill, getUserResultTone } from "@/lib/match-ui";
 
 type MatchSettledSummaryProps = {
   match: MatchViewModel;
@@ -11,7 +11,7 @@ export function MatchSettledSummary({ match }: MatchSettledSummaryProps) {
   const winningOutcome = resolvedOutcome ? match.consensus.find((item) => item.code === resolvedOutcome) ?? null : null;
   const leadingAllocation = getLeadingOutcome(match);
   const resultTone = getUserResultTone(match.userStateLabel);
-  const netLabel = getUserNetLabel(match.userStateLabel);
+  const grossLabel = getUserGrossLabel(match.userStateLabel);
   const moneyLabel = getUserResultPill(match.userStateLabel);
 
   if (!resolvedOutcome || !winningOutcome) {
@@ -19,13 +19,13 @@ export function MatchSettledSummary({ match }: MatchSettledSummaryProps) {
   }
 
   const pickedWinner = leadingAllocation?.code === resolvedOutcome;
-  const toneColor = resultTone === "negative" ? "#FF8B84" : resultTone === "positive" ? "#7EDC96" : "#D8B56A";
+  const toneColor = resultTone === "positive" ? "#D8FF56" : "#9098A6";
   const pickPill = !leadingAllocation ? "Sin jugar" : pickedWinner ? "Acertaste" : "No entró";
   const detail =
     !leadingAllocation
       ? `No jugaste este partido. Ganó ${winningOutcome.label}.`
       : pickedWinner
-        ? `Fuiste con ${leadingAllocation.label}. Acertaste el lado, pero este partido cerró ${netLabel}.`
+        ? `Fuiste con ${leadingAllocation.label}. Cobraste ${grossLabel}.`
         : `Fuiste con ${leadingAllocation.label}, pero ganó ${winningOutcome.label}.`;
 
   return (
@@ -42,7 +42,7 @@ export function MatchSettledSummary({ match }: MatchSettledSummaryProps) {
       <div className="split-row" style={{ alignItems: "start", flexWrap: "wrap" }}>
         <div className="title-stack">
           <p className="eyebrow">Liquidado</p>
-          <h1 className="display-title">{netLabel}</h1>
+          <h1 className="display-title" style={{ color: toneColor }}>COBRASTE {grossLabel}</h1>
           <p className="muted-copy">{detail}</p>
         </div>
         <span className="pill">{pickPill}</span>
@@ -59,7 +59,7 @@ export function MatchSettledSummary({ match }: MatchSettledSummaryProps) {
               color: toneColor,
             }}
           >
-            {moneyLabel} {netLabel}
+            {moneyLabel} {grossLabel}
           </strong>
         </div>
 
