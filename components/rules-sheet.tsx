@@ -200,7 +200,7 @@ function SheetOverlay({ open, onClose }: { open: boolean; onClose: () => void })
               </RulesSection>
 
               <RulesSection title="Apuesta al campeón">
-                <p>Antes del partido inaugural elegís quién pensás que sale campeón. Cada uno pone <strong>$5.000</strong>, que arman un pozo aparte. Cuando termina el Mundial, ese pozo se reparte entre los que acertaron — mientras menos sean, más se llevan.</p>
+                <p>Antes del partido inaugural elegís quién pensás que sale campeón. Cada uno pone <strong>$10.000</strong>, que arman un pozo aparte. Cuando termina el Mundial, ese pozo se reparte entre los que acertaron — mientras menos sean, más se llevan.</p>
                 <p>Lo que cobres al campeón <strong>se suma a tu total</strong> de la misma tabla del ranking. Es un partido extra que se juega al principio y se cobra al final.</p>
               </RulesSection>
 
