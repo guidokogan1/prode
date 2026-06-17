@@ -117,18 +117,20 @@ export async function GET(request: NextRequest) {
   const dbMatchesQuery = await supabase
     .from("matches")
     .select(
-      "id, kickoff_at, home_team_id, away_team_id, status, home_score_90, away_score_90, home_score_ft, away_score_ft, winner_mode",
+      "id, external_id, kickoff_at, home_team_id, away_team_id, status, home_score_90, away_score_90, home_score_ft, away_score_ft, winner_mode",
     );
   if (dbMatchesQuery.error || !dbMatchesQuery.data) {
     return NextResponse.json({ ok: false, reason: "No se pudieron cargar matches." }, { status: 500 });
   }
 
-  const dbByPair = new Map<string, (typeof dbMatchesQuery.data)[number][]>();
+  const dbByExternalId = new Map<string, (typeof dbMatchesQuery.data)[number]>();
+  const dbByUnorderedPair = new Map<string, (typeof dbMatchesQuery.data)[number][]>();
   for (const m of dbMatchesQuery.data) {
-    const key = `${m.home_team_id}|${m.away_team_id}`;
-    const list = dbByPair.get(key) ?? [];
+    if (m.external_id) dbByExternalId.set(m.external_id, m);
+    const key = [m.home_team_id, m.away_team_id].sort().join("|");
+    const list = dbByUnorderedPair.get(key) ?? [];
     list.push(m);
-    dbByPair.set(key, list);
+    dbByUnorderedPair.set(key, list);
   }
 
   type Update = {
@@ -172,19 +174,22 @@ export async function GET(request: NextRequest) {
       skipped += 1;
       continue;
     }
-    const candidates = dbByPair.get(`${homeId}|${awayId}`);
-    if (!candidates || !candidates.length) {
-      skipped += 1;
-      continue;
-    }
     const espnTime = new Date(ev.date).getTime();
-    const dbMatch = candidates.length === 1
-      ? candidates[0]
-      : candidates.reduce((best, cur) => {
-          const dBest = Math.abs(new Date(best.kickoff_at).getTime() - espnTime);
-          const dCur = Math.abs(new Date(cur.kickoff_at).getTime() - espnTime);
-          return dCur < dBest ? cur : best;
-        });
+    let dbMatch = dbByExternalId.get(ev.id) ?? null;
+    if (!dbMatch) {
+      const candidates = dbByUnorderedPair.get([homeId, awayId].sort().join("|"));
+      if (!candidates || !candidates.length) {
+        skipped += 1;
+        continue;
+      }
+      dbMatch = candidates.length === 1
+        ? candidates[0]
+        : candidates.reduce((best, cur) => {
+            const dBest = Math.abs(new Date(best.kickoff_at).getTime() - espnTime);
+            const dCur = Math.abs(new Date(cur.kickoff_at).getTime() - espnTime);
+            return dCur < dBest ? cur : best;
+          });
+    }
     if (dbMatch.status === "settled" || (dbMatch.status === "finished" && dbMatch.home_score_ft != null)) {
       alreadySettled += 1;
       continue;

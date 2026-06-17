@@ -221,10 +221,9 @@ export class SupabaseProductProvider implements ProductProvider {
 
     if (!query.error && query.data?.length) {
       const grossByUser = await loadGrossAggregates(supabase, query.data.map((item) => item.user_id));
-      return query.data.map((item) => {
+      const merged = query.data.map((item) => {
         const gross = grossByUser.get(item.user_id);
         return {
-          position: item.rank_position,
           name: item.user?.display_name ?? "Jugador",
           netAmount: item.total_net_amount,
           grossAmount: gross?.totalGross ?? 0,
@@ -234,6 +233,12 @@ export class SupabaseProductProvider implements ProductProvider {
           isCurrentUser: session.displayName === item.user?.display_name,
         };
       });
+      merged.sort((a, b) => {
+        if (b.grossAmount !== a.grossAmount) return b.grossAmount - a.grossAmount;
+        if (b.positiveTickets !== a.positiveTickets) return b.positiveTickets - a.positiveTickets;
+        return b.bestHitGrossAmount - a.bestHitGrossAmount;
+      });
+      return merged.map((row, idx) => ({ position: idx + 1, ...row }));
     }
 
     const usersQuery = await supabase
