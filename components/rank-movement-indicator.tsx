@@ -27,7 +27,7 @@ export function RankMovementIndicator({ movement }: RankMovementIndicatorProps) 
 
   const isUp = movement > 0;
   const steps = Math.abs(movement);
-  const color = isUp ? "var(--gold)" : "#ff8c84";
+  const color = isUp ? "var(--gold)" : "#ff5547";
 
   return (
     <span

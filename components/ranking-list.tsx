@@ -28,9 +28,9 @@ export function RankingList({ items, timeline, movements }: RankingListProps) {
             padding: "15px 16px",
             borderRadius: 16,
             display: "grid",
-            gridTemplateColumns: "34px 38px minmax(0, 1fr) auto",
+            gridTemplateColumns: "40px 38px minmax(0, 1fr) auto",
             alignItems: "center",
-            gap: 10,
+            gap: 9,
             background: item.isCurrentUser ? "rgba(216,255,86,0.08)" : "rgba(255,255,255,0.045)",
             borderColor: item.isCurrentUser ? "rgba(216,255,86,0.24)" : "rgba(255,255,255,0.1)",
             textAlign: "left",
@@ -41,14 +41,14 @@ export function RankingList({ items, timeline, movements }: RankingListProps) {
         >
           <span
             style={{
-              width: 34,
+              width: 40,
               flexShrink: 0,
               display: "flex",
               alignItems: "center",
-              gap: 2,
+              gap: 5,
             }}
           >
-            <span style={{ width: 12, display: "flex", justifyContent: "flex-end" }}>
+            <span style={{ width: 17, display: "flex", justifyContent: "flex-end" }}>
               <RankMovementIndicator movement={movements?.[item.name] ?? null} />
             </span>
             <span
