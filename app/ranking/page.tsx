@@ -5,9 +5,13 @@ import { formatGross } from "@/lib/format";
 import { getRanking } from "@/lib/repositories/ranking";
 import { getRankingTimeline } from "@/lib/repositories/timeline";
 import { getTournamentFinalState } from "@/lib/repositories/tournament";
+import { computeRankMovement } from "@/lib/rank-movement";
+
+export const dynamic = "force-dynamic";
 
 export default async function RankingPage() {
   const [ranking, tournament, timeline] = await Promise.all([getRanking(), getTournamentFinalState(), getRankingTimeline()]);
+  const movements = computeRankMovement(ranking, timeline);
   const currentUser = ranking.find((item) => item.isCurrentUser) ?? null;
   const leader = ranking[0] ?? null;
   const finished = tournament.finished;
@@ -75,7 +79,7 @@ export default async function RankingPage() {
           <h2 className="section-title">General</h2>
           <span className="pill">{ranking.length}</span>
         </div>
-        <RankingList items={ranking} timeline={timeline} />
+        <RankingList items={ranking} timeline={timeline} movements={movements} />
       </section>
     </main>
   );

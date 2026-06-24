@@ -4,13 +4,16 @@ import { useState } from "react";
 import type { RankingEntry, RankingTimeline } from "@/lib/domain";
 import { formatGross } from "@/lib/format";
 import { RankingTimelineDrawer } from "@/components/ranking-timeline-drawer";
+import { RankMovementIndicator } from "@/components/rank-movement-indicator";
+import type { RankMovement } from "@/lib/rank-movement";
 
 type RankingListProps = {
   items: RankingEntry[];
   timeline?: RankingTimeline | null;
+  movements?: Record<string, RankMovement>;
 };
 
-export function RankingList({ items, timeline }: RankingListProps) {
+export function RankingList({ items, timeline, movements }: RankingListProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
@@ -25,7 +28,7 @@ export function RankingList({ items, timeline }: RankingListProps) {
             padding: "15px 16px",
             borderRadius: 16,
             display: "grid",
-            gridTemplateColumns: "24px 38px minmax(0, 1fr) auto",
+            gridTemplateColumns: "46px 38px minmax(0, 1fr) auto",
             alignItems: "center",
             gap: 12,
             background: item.isCurrentUser ? "rgba(216,255,86,0.08)" : "rgba(255,255,255,0.045)",
@@ -38,15 +41,25 @@ export function RankingList({ items, timeline }: RankingListProps) {
         >
           <span
             style={{
-              width: 24,
+              width: 46,
               flexShrink: 0,
-              textAlign: "center",
-              fontFamily: "var(--font-accent)",
-              fontWeight: 800,
-              color: item.position <= 3 ? ["var(--gold)", "#d6d8dd", "#ff8f57"][item.position - 1] : "var(--text-secondary)",
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
             }}
           >
-            {item.position}
+            <span style={{ width: 16, display: "flex", justifyContent: "flex-end" }}>
+              <RankMovementIndicator movement={movements?.[item.name] ?? null} />
+            </span>
+            <span
+              style={{
+                fontFamily: "var(--font-accent)",
+                fontWeight: 800,
+                color: item.position <= 3 ? ["var(--gold)", "#d6d8dd", "#ff8f57"][item.position - 1] : "var(--text-secondary)",
+              }}
+            >
+              {item.position}
+            </span>
           </span>
           <span
             style={{
