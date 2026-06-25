@@ -92,18 +92,6 @@ export async function settleMatchMarket(matchId: string) {
     };
   }
 
-  const deleteExisting = await supabase.from("settlements").delete().in(
-    "ticket_id",
-    [...new Set(allocationsQuery.data.map((row) => row.ticket_id))],
-  );
-
-  if (deleteExisting.error) {
-    return {
-      ok: false as const,
-      reason: "No se pudieron limpiar settlements previos.",
-    };
-  }
-
   const settlements = settlementResult.rows.map((row) => ({
     ticket_id: row.ticketId,
     winning_outcome_code: market.winning_outcome_code!,
@@ -115,9 +103,11 @@ export async function settleMatchMarket(matchId: string) {
     settled_at: new Date().toISOString(),
   }));
 
-  const insertSettlements = await supabase.from("settlements").insert(settlements);
+  const upsertSettlements = await supabase
+    .from("settlements")
+    .upsert(settlements, { onConflict: "ticket_id" });
 
-  if (insertSettlements.error) {
+  if (upsertSettlements.error) {
     return {
       ok: false as const,
       reason: "No se pudieron guardar los settlements.",
