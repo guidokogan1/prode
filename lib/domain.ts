@@ -77,6 +77,7 @@ export type RankingEntry = {
   positiveTickets: number;
   bestHitAmount: number;
   bestHitGrossAmount: number;
+  movement?: number | null;
   isCurrentUser?: boolean;
 };
 

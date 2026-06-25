@@ -163,7 +163,7 @@ export async function recomputeLeaderboardSnapshots() {
     };
   }
 
-  const [rankingQuery, championQuery] = await Promise.all([
+  const [rankingQuery, championQuery, existingSnapshotsQuery] = await Promise.all([
     supabase
       .from("settlements")
       .select("net_result_amount, ticket:tickets(user_id, user:users(display_name))")
@@ -187,6 +187,17 @@ export async function recomputeLeaderboardSnapshots() {
           net_result_amount: number | null;
           user_id: string;
           user: { display_name: string } | null;
+        }[]
+      >(),
+    supabase
+      .from("leaderboard_snapshots")
+      .select("user_id, rank_position, previous_rank_position, total_net_amount")
+      .returns<
+        {
+          user_id: string;
+          rank_position: number;
+          previous_rank_position: number | null;
+          total_net_amount: number;
         }[]
       >(),
   ]);
@@ -224,21 +235,57 @@ export async function recomputeLeaderboardSnapshots() {
 
   const sorted = computeLeaderboard([...matchRows, ...championRows]);
 
-  await supabase.from("leaderboard_snapshots").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  const displayOrdered = [...sorted].sort((left, right) => {
+    if (right.totalGrossAmount !== left.totalGrossAmount) {
+      return right.totalGrossAmount - left.totalGrossAmount;
+    }
+    if (right.positiveTicketsCount !== left.positiveTicketsCount) {
+      return right.positiveTicketsCount - left.positiveTicketsCount;
+    }
+    if (right.bestSingleGrossAmount !== left.bestSingleGrossAmount) {
+      return right.bestSingleGrossAmount - left.bestSingleGrossAmount;
+    }
+    return left.userId.localeCompare(right.userId);
+  });
 
-  if (sorted.length) {
-    const insertSnapshots = await supabase.from("leaderboard_snapshots").insert(
-      sorted.map((row, index) => ({
-        user_id: row.userId,
-        as_of: new Date().toISOString(),
-        rank_position: index + 1,
-        total_net_amount: Number(row.totalNetAmount.toFixed(2)),
-        positive_tickets_count: row.positiveTicketsCount,
-        best_single_net_amount: row.bestSingleNetAmount,
-      })),
-    );
+  const existingByUser = new Map(
+    (existingSnapshotsQuery.data ?? []).map((row) => [row.user_id, row]),
+  );
 
-    if (insertSnapshots.error) {
+  const standingsChanged =
+    displayOrdered.length !== existingByUser.size ||
+    displayOrdered.some((row, index) => {
+      const existing = existingByUser.get(row.userId);
+      return (
+        !existing ||
+        existing.rank_position !== index + 1 ||
+        Number(existing.total_net_amount) !== Number(row.totalNetAmount.toFixed(2))
+      );
+    });
+
+  const snapshotRows = displayOrdered.map((row, index) => {
+    const existing = existingByUser.get(row.userId);
+    const previousRankPosition = standingsChanged
+      ? existing?.rank_position ?? null
+      : existing?.previous_rank_position ?? null;
+
+    return {
+      user_id: row.userId,
+      as_of: new Date().toISOString(),
+      rank_position: index + 1,
+      previous_rank_position: previousRankPosition,
+      total_net_amount: Number(row.totalNetAmount.toFixed(2)),
+      positive_tickets_count: row.positiveTicketsCount,
+      best_single_net_amount: row.bestSingleNetAmount,
+    };
+  });
+
+  if (snapshotRows.length) {
+    const upsertSnapshots = await supabase
+      .from("leaderboard_snapshots")
+      .upsert(snapshotRows, { onConflict: "user_id" });
+
+    if (upsertSnapshots.error) {
       return {
         ok: false as const,
         reason: "No se pudieron guardar snapshots del ranking.",
@@ -248,8 +295,8 @@ export async function recomputeLeaderboardSnapshots() {
 
   return {
     ok: true as const,
-    preview: sorted.map((row) => ({
-      position: row.position,
+    preview: displayOrdered.map((row, index) => ({
+      position: index + 1,
       name: row.name,
       netLabel: row.netLabel,
     })),

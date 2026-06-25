@@ -21,7 +21,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(homeUrl);
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  if (!isPublicPath) {
+    response.headers.set("Cache-Control", "private, no-store, must-revalidate");
+  }
+  return response;
 }
 
 export const config = {

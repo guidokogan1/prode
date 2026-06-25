@@ -79,12 +79,22 @@ function makeSupabaseMock(config: {
 
       if (table === "ticket_allocations") {
         return {
+          upsert: async () => ({ error: config.insertError ?? null }),
           delete() {
             return {
-              eq: async () => ({ error: config.deleteError ?? null }),
+              eq() {
+                return {
+                  not: async () => ({ error: config.deleteError ?? null }),
+                };
+              },
             };
           },
-          insert: async () => ({ error: config.insertError ?? null }),
+        };
+      }
+
+      if (table === "pick_events") {
+        return {
+          insert: async () => ({ error: null }),
         };
       }
 

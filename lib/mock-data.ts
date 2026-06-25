@@ -55,12 +55,12 @@ const demoPersonas: DemoPersona[] = [
 ];
 
 const ranking: RankingEntry[] = [
-  { position: 1, name: "Mari", netAmount: 5523, grossAmount: 205523, positiveTickets: 17, bestHitAmount: 9800, bestHitGrossAmount: 19800 },
-  { position: 2, name: "Bato", netAmount: -2017, grossAmount: 197983, positiveTickets: 15, bestHitAmount: 6154, bestHitGrossAmount: 16154 },
-  { position: 3, name: "Pepo", netAmount: -3151, grossAmount: 196849, positiveTickets: 14, bestHitAmount: 7020, bestHitGrossAmount: 17020 },
-  { position: 4, name: "Juli", netAmount: -5280, grossAmount: 194720, positiveTickets: 12, bestHitAmount: 11300, bestHitGrossAmount: 21300 },
-  { position: 5, name: "Cami", netAmount: -7299, grossAmount: 192701, positiveTickets: 10, bestHitAmount: 5440, bestHitGrossAmount: 15440 },
-  { position: 6, name: "Guido", netAmount: 0, grossAmount: 0, positiveTickets: 0, bestHitAmount: 0, bestHitGrossAmount: 0 },
+  { position: 1, name: "Mari", netAmount: 5523, grossAmount: 205523, positiveTickets: 17, bestHitAmount: 9800, bestHitGrossAmount: 19800, movement: 1 },
+  { position: 2, name: "Bato", netAmount: -2017, grossAmount: 197983, positiveTickets: 15, bestHitAmount: 6154, bestHitGrossAmount: 16154, movement: -1 },
+  { position: 3, name: "Pepo", netAmount: -3151, grossAmount: 196849, positiveTickets: 14, bestHitAmount: 7020, bestHitGrossAmount: 17020, movement: 0 },
+  { position: 4, name: "Juli", netAmount: -5280, grossAmount: 194720, positiveTickets: 12, bestHitAmount: 11300, bestHitGrossAmount: 21300, movement: 2 },
+  { position: 5, name: "Cami", netAmount: -7299, grossAmount: 192701, positiveTickets: 10, bestHitAmount: 5440, bestHitGrossAmount: 15440, movement: -2 },
+  { position: 6, name: "Guido", netAmount: 0, grossAmount: 0, positiveTickets: 0, bestHitAmount: 0, bestHitGrossAmount: 0, movement: null },
 ];
 
 const personaProfiles: Record<DemoPersonaSlug, ProfileViewModel> = {

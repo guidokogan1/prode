@@ -1,7 +1,5 @@
-import type { RankMovement } from "@/lib/rank-movement";
-
 type RankMovementIndicatorProps = {
-  movement: RankMovement;
+  movement: number | null;
 };
 
 export function RankMovementIndicator({ movement }: RankMovementIndicatorProps) {
