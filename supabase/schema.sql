@@ -73,7 +73,8 @@ create table if not exists match_markets (
   winning_outcome_code text,
   status text not null,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (match_id)
 );
 
 create table if not exists market_outcomes (
@@ -141,9 +142,11 @@ create table if not exists leaderboard_snapshots (
   user_id uuid not null references users(id) on delete cascade,
   as_of timestamptz not null default now(),
   rank_position int not null,
+  previous_rank_position int,
   total_net_amount numeric(12,2) not null,
   positive_tickets_count int not null default 0,
-  best_single_net_amount numeric(12,2)
+  best_single_net_amount numeric(12,2),
+  unique (user_id)
 );
 
 grant usage on schema app_private to service_role;

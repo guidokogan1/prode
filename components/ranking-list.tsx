@@ -5,15 +5,13 @@ import type { RankingEntry, RankingTimeline } from "@/lib/domain";
 import { formatGross } from "@/lib/format";
 import { RankingTimelineDrawer } from "@/components/ranking-timeline-drawer";
 import { RankMovementIndicator } from "@/components/rank-movement-indicator";
-import type { RankMovement } from "@/lib/rank-movement";
 
 type RankingListProps = {
   items: RankingEntry[];
   timeline?: RankingTimeline | null;
-  movements?: Record<string, RankMovement>;
 };
 
-export function RankingList({ items, timeline, movements }: RankingListProps) {
+export function RankingList({ items, timeline }: RankingListProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
   return (
@@ -49,7 +47,7 @@ export function RankingList({ items, timeline, movements }: RankingListProps) {
             }}
           >
             <span style={{ width: 17, display: "flex", justifyContent: "flex-end" }}>
-              <RankMovementIndicator movement={movements?.[item.name] ?? null} />
+              <RankMovementIndicator movement={item.movement ?? null} />
             </span>
             <span
               style={{

@@ -206,11 +206,13 @@ export class SupabaseProductProvider implements ProductProvider {
     const session = await this.getSessionState();
     const query = await supabase
       .from("leaderboard_snapshots")
-      .select("rank_position, user_id, total_net_amount, positive_tickets_count, best_single_net_amount, user:users(display_name)")
+      .select("rank_position, previous_rank_position, as_of, user_id, total_net_amount, positive_tickets_count, best_single_net_amount, user:users(display_name)")
       .order("rank_position", { ascending: true })
       .returns<
         {
           rank_position: number;
+          previous_rank_position: number | null;
+          as_of: string;
           user_id: string;
           total_net_amount: number;
           positive_tickets_count: number;
@@ -220,8 +222,17 @@ export class SupabaseProductProvider implements ProductProvider {
       >();
 
     if (!query.error && query.data?.length) {
-      const grossByUser = await loadGrossAggregates(supabase, query.data.map((item) => item.user_id));
-      const merged = query.data.map((item) => {
+      const latestByUser = new Map<string, (typeof query.data)[number]>();
+      for (const row of query.data) {
+        const existing = latestByUser.get(row.user_id);
+        if (!existing || row.as_of > existing.as_of) {
+          latestByUser.set(row.user_id, row);
+        }
+      }
+      const uniqueRows = [...latestByUser.values()];
+
+      const grossByUser = await loadGrossAggregates(supabase, uniqueRows.map((item) => item.user_id));
+      const merged = uniqueRows.map((item) => {
         const gross = grossByUser.get(item.user_id);
         return {
           name: item.user?.display_name ?? "Jugador",
@@ -230,15 +241,21 @@ export class SupabaseProductProvider implements ProductProvider {
           positiveTickets: gross?.hitsCount ?? 0,
           bestHitAmount: item.best_single_net_amount ?? 0,
           bestHitGrossAmount: gross?.bestHitGross ?? 0,
+          previousRankPosition: item.previous_rank_position,
           isCurrentUser: session.displayName === item.user?.display_name,
         };
       });
       merged.sort((a, b) => {
         if (b.grossAmount !== a.grossAmount) return b.grossAmount - a.grossAmount;
         if (b.positiveTickets !== a.positiveTickets) return b.positiveTickets - a.positiveTickets;
-        return b.bestHitGrossAmount - a.bestHitGrossAmount;
+        if (b.bestHitGrossAmount !== a.bestHitGrossAmount) return b.bestHitGrossAmount - a.bestHitGrossAmount;
+        return a.name.localeCompare(b.name);
       });
-      return merged.map((row, idx) => ({ position: idx + 1, ...row }));
+      return merged.map(({ previousRankPosition, ...row }, idx) => ({
+        position: idx + 1,
+        movement: previousRankPosition == null ? null : previousRankPosition - (idx + 1),
+        ...row,
+      }));
     }
 
     const usersQuery = await supabase
@@ -597,21 +614,28 @@ export class SupabaseProductProvider implements ProductProvider {
       amount: row.amount,
     }));
 
-    const deleteExisting = await supabase.from("ticket_allocations").delete().eq("ticket_id", ticketId);
-    if (deleteExisting.error) {
-      return {
-        ok: false,
-        state: "sync_error",
-        reason: "No se pudo actualizar la jugada existente.",
-      };
-    }
-
-    const insertAllocations = await supabase.from("ticket_allocations").insert(allocationRows);
-    if (insertAllocations.error) {
+    const upsertAllocations = await supabase
+      .from("ticket_allocations")
+      .upsert(allocationRows, { onConflict: "ticket_id,market_outcome_id" });
+    if (upsertAllocations.error) {
       return {
         ok: false,
         state: "sync_error",
         reason: "No se pudieron guardar los montos de la jugada.",
+      };
+    }
+
+    const keptOutcomeIds = allocationRows.map((row) => row.market_outcome_id);
+    const pruneStale = await supabase
+      .from("ticket_allocations")
+      .delete()
+      .eq("ticket_id", ticketId)
+      .not("market_outcome_id", "in", `(${keptOutcomeIds.join(",")})`);
+    if (pruneStale.error) {
+      return {
+        ok: false,
+        state: "sync_error",
+        reason: "No se pudo actualizar la jugada existente.",
       };
     }
 
@@ -708,7 +732,22 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
       loadAllTicketData(supabase, marketIds, includeReveals),
     ]);
 
-    const marketsByMatchId = new Map(marketRows.map((row) => [row.match_id, row]));
+    const marketsByMatchId = new Map<string, (typeof marketRows)[number]>();
+    for (const row of marketRows) {
+      const incumbent = marketsByMatchId.get(row.match_id);
+      if (!incumbent) {
+        marketsByMatchId.set(row.match_id, row);
+        continue;
+      }
+      const score = (marketId: string) =>
+        (currentUserData.ticketsByMarketId.has(marketId) ? 1_000_000 : 0) +
+        (allTicketData.ticketsByMarketId.get(marketId)?.length ?? 0);
+      const incumbentScore = score(incumbent.id);
+      const candidateScore = score(row.id);
+      if (candidateScore > incumbentScore || (candidateScore === incumbentScore && row.id < incumbent.id)) {
+        marketsByMatchId.set(row.match_id, row);
+      }
+    }
     const outcomesByMarketId = groupBy(outcomesQuery.data ?? [], (item) => item.match_market_id);
 
     const mapped = matchRows
