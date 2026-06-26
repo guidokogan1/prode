@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { OutcomePayouts } from "@/components/outcome-payouts";
 import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
+import { VoteFace } from "@/components/vote-face";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
 import { creditForMarketType } from "@/lib/game";
@@ -115,23 +116,36 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
           errorMessage={saveState === "error" ? saveMessage : null}
         />
       ) : (
-        <div className="surface-card" style={{ padding: 20, display: "grid", gap: 16, justifyItems: "center", textAlign: "center" }}>
-          <p className="eyebrow">Esta es tu jugada</p>
-          <div style={{ width: "100%", height: 14, borderRadius: 8, overflow: "hidden", display: "flex" }}>
-            <div style={{ width: `${homePct}%`, background: homeFill }} />
-            <div style={{ width: `${100 - homePct}%`, background: awayFill }} />
-          </div>
-          <div className="split-row" style={{ width: "100%" }}>
-            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.3rem", color: homeText }}>{match.home.flag} {formatCredits(homeAmount)}</strong>
-            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.3rem", color: awayText }}>{formatCredits(awayAmount)} {match.away.flag}</strong>
-          </div>
-          {match.isEditable ? (
-            <button type="button" className="button-secondary" style={{ width: "100%", justifyContent: "center", minHeight: 46 }} onClick={() => setEditing(true)}>
-              Cambiar jugada
-            </button>
-          ) : (
-            <span className="micro-copy">Este partido ya cerró.</span>
-          )}
+        <div className="surface-card">
+          <VoteFace
+            match={match}
+            showDrawGesture={false}
+            centerMode="vs"
+            topRightLabel={match.statusLabel}
+            footerSlot={
+              <div style={{ display: "grid", gap: 12 }}>
+                <div className="split-row">
+                  <span className="eyebrow">Tu jugada</span>
+                  <span className="micro-copy">{match.isEditable ? "Editable" : "Cerrada"}</span>
+                </div>
+                <div style={{ display: "flex", height: 10, borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ width: `${homePct}%`, background: homeFill }} />
+                  <div style={{ width: `${100 - homePct}%`, background: awayFill }} />
+                </div>
+                <div className="split-row">
+                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.5rem", letterSpacing: "-0.02em", color: homeText, fontVariantNumeric: "tabular-nums" }}>{match.home.flag} {formatCredits(homeAmount)}</strong>
+                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.5rem", letterSpacing: "-0.02em", color: awayText, fontVariantNumeric: "tabular-nums" }}>{formatCredits(awayAmount)} {match.away.flag}</strong>
+                </div>
+                {match.isEditable ? (
+                  <button type="button" className="button-secondary" style={{ width: "100%", justifyContent: "center", minHeight: 46, marginTop: 4 }} onClick={() => setEditing(true)}>
+                    Cambiar jugada
+                  </button>
+                ) : (
+                  <span className="micro-copy" style={{ textAlign: "center" }}>Este partido ya cerró.</span>
+                )}
+              </div>
+            }
+          />
         </div>
       )}
 
