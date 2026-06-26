@@ -24,7 +24,23 @@ export function computeMarketSettlements(
     .reduce((sum, row) => sum + row.amount, 0);
 
   if (winningPool <= 0) {
-    throw new Error("No hay credito apostado al outcome ganador.");
+    const refundedTicketIds: string[] = [];
+    for (const row of allocations) {
+      if (!refundedTicketIds.includes(row.ticketId)) {
+        refundedTicketIds.push(row.ticketId);
+      }
+    }
+
+    return {
+      totalPool,
+      winningPool,
+      rows: refundedTicketIds.map((ticketId) => ({
+        ticketId,
+        winningBetAmount: 0,
+        grossReturnAmount: MATCH_CREDIT,
+        netResultAmount: 0,
+      })),
+    };
   }
 
   const winningStakeByTicket = new Map<string, number>();
