@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { GitFork } from "lucide-react";
 import { isDummyMatchId } from "@/lib/dummy-matches";
 import { MatchCard } from "@/components/match-card";
 import { getMatchActionPriority } from "@/lib/match-ui";
@@ -17,9 +19,14 @@ export default async function MatchesPage() {
             <h1 className="display-title">Partidos</h1>
             <p className="muted-copy">Seguí cada cruce.</p>
           </div>
-          <span className="status-pill status-pill-live" style={{ whiteSpace: "nowrap", minWidth: 88, justifyContent: "center", flexShrink: 0, marginTop: 4 }}>
-            {summary.liveMatches} live
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginTop: 4 }}>
+            <span className="status-pill status-pill-live" style={{ whiteSpace: "nowrap", minWidth: 88, justifyContent: "center" }}>
+              {summary.liveMatches} live
+            </span>
+            <Link href="/cruces" className="matches-cruces-btn" aria-label="Posiciones y cruces">
+              <GitFork size={19} strokeWidth={2} style={{ transform: "rotate(90deg)" }} />
+            </Link>
+          </div>
         </div>
       </section>
 
