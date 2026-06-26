@@ -242,27 +242,18 @@ export async function recomputeLeaderboardSnapshots() {
     (existingSnapshotsQuery.data ?? []).map((row) => [row.user_id, row]),
   );
 
-  const standingsChanged =
-    displayOrdered.length !== existingByUser.size ||
-    displayOrdered.some((row, index) => {
-      const existing = existingByUser.get(row.userId);
-      return (
-        !existing ||
-        existing.rank_position !== index + 1 ||
-        Number(existing.total_net_amount) !== Number(row.totalNetAmount.toFixed(2))
-      );
-    });
-
   const snapshotRows = displayOrdered.map((row, index) => {
     const existing = existingByUser.get(row.userId);
-    const previousRankPosition = standingsChanged
-      ? existing?.rank_position ?? null
+    const newRankPosition = index + 1;
+    const userMoved = existing != null && existing.rank_position !== newRankPosition;
+    const previousRankPosition = userMoved
+      ? existing.rank_position
       : existing?.previous_rank_position ?? null;
 
     return {
       user_id: row.userId,
       as_of: new Date().toISOString(),
-      rank_position: index + 1,
+      rank_position: newRankPosition,
       previous_rank_position: previousRankPosition,
       total_net_amount: Number(row.totalNetAmount.toFixed(2)),
       positive_tickets_count: row.positiveTicketsCount,
