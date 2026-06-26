@@ -1,4 +1,4 @@
-import { formatNetAmount, settleTicket } from "@/lib/game";
+import { creditForMarketType, formatNetAmount, settleTicket } from "@/lib/game";
 import { getFallbackRanking } from "@/lib/mock-data";
 import { computeLeaderboard, computeMarketSettlements } from "@/lib/settlement-engine";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -7,6 +7,7 @@ type MarketRow = {
   id: string;
   winning_outcome_code: string | null;
   status: string;
+  market_type: string;
 };
 
 type AllocationRow = {
@@ -42,7 +43,7 @@ export async function settleMatchMarket(matchId: string) {
 
   const marketQuery = await supabase
     .from("match_markets")
-    .select("id, winning_outcome_code, status")
+    .select("id, winning_outcome_code, status, market_type")
     .eq("match_id", matchId)
     .maybeSingle<MarketRow>();
 
@@ -84,6 +85,7 @@ export async function settleMatchMarket(matchId: string) {
         amount: row.amount,
       })),
       market.winning_outcome_code,
+      creditForMarketType(market.market_type),
     );
   } catch (error) {
     return {
@@ -156,10 +158,11 @@ export async function recomputeLeaderboardSnapshots() {
   const [rankingQuery, championQuery, existingSnapshotsQuery] = await Promise.all([
     supabase
       .from("settlements")
-      .select("net_result_amount, ticket:tickets(user_id, user:users(display_name))")
+      .select("net_result_amount, gross_return_amount, ticket:tickets(user_id, user:users(display_name))")
       .returns<
         {
           net_result_amount: number;
+          gross_return_amount: number;
           ticket: {
             user_id: string;
             user: {
@@ -208,6 +211,7 @@ export async function recomputeLeaderboardSnapshots() {
         userId,
         displayName,
         netResultAmount: row.net_result_amount,
+        stakeAmount: row.gross_return_amount != null ? row.gross_return_amount - row.net_result_amount : undefined,
       };
     })
     .filter((row): row is NonNullable<typeof row> => row !== null);

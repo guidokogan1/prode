@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { MatchDetailCard } from "@/components/match-detail-card";
+import { QualifiesSliderCard } from "@/components/qualifies-slider-card";
 import { getMatchById } from "@/lib/repositories/matches";
 
 type MatchPageProps = {
@@ -16,7 +17,7 @@ export default async function MatchPage({ params }: MatchPageProps) {
 
   return (
     <main className="page-shell page-scroll section-stack-lg">
-      <MatchDetailCard match={match} />
+      {match.marketType === "qualifies" ? <QualifiesSliderCard match={match} /> : <MatchDetailCard match={match} />}
     </main>
   );
 }

@@ -1,7 +1,12 @@
 import { formatNetAmount as formatNetAmountValue } from "@/lib/format";
 
 export const MATCH_CREDIT = 10_000;
+export const KNOCKOUT_CREDIT = 15_000;
 export const OUTCOME_CAP = MATCH_CREDIT;
+
+export function creditForMarketType(marketType?: string | null) {
+  return marketType === "qualifies" ? KNOCKOUT_CREDIT : MATCH_CREDIT;
+}
 
 export type IntensityPreset = "soft" | "medium" | "hard";
 
@@ -10,17 +15,17 @@ export type AllocationInput = {
   amount: number;
 };
 
-export function buildFocusedAllocation(outcomeCodes: string[], selectedOutcomeCode: string) {
-  return buildPresetAllocation(outcomeCodes, selectedOutcomeCode, "hard");
+export function buildFocusedAllocation(outcomeCodes: string[], selectedOutcomeCode: string, credit: number = MATCH_CREDIT) {
+  return buildPresetAllocation(outcomeCodes, selectedOutcomeCode, "hard", credit);
 }
 
-export function buildBalancedAllocation(outcomeCodes: string[]) {
+export function buildBalancedAllocation(outcomeCodes: string[], credit: number = MATCH_CREDIT) {
   if (outcomeCodes.length < 2) {
     throw new Error("Se necesitan al menos 2 outcomes");
   }
 
-  const baseAmount = Math.floor(MATCH_CREDIT / outcomeCodes.length);
-  let carry = MATCH_CREDIT - baseAmount * outcomeCodes.length;
+  const baseAmount = Math.floor(credit / outcomeCodes.length);
+  let carry = credit - baseAmount * outcomeCodes.length;
 
   return outcomeCodes.map((outcomeCode) => {
     const amount = baseAmount + (carry > 0 ? 1 : 0);
@@ -33,6 +38,7 @@ export function buildWeightedAllocation(
   outcomeCodes: string[],
   selectedOutcomeCode: string,
   focusedAmount: number,
+  credit: number = MATCH_CREDIT,
 ) {
   if (!outcomeCodes.includes(selectedOutcomeCode)) {
     throw new Error("selectedOutcomeCode invalido");
@@ -42,11 +48,11 @@ export function buildWeightedAllocation(
     throw new Error("Se necesitan al menos 2 outcomes");
   }
 
-  if (focusedAmount < 0 || focusedAmount > OUTCOME_CAP) {
+  if (focusedAmount < 0 || focusedAmount > credit) {
     throw new Error("focusedAmount invalido");
   }
 
-  const remainder = MATCH_CREDIT - focusedAmount;
+  const remainder = credit - focusedAmount;
   const otherCodes = outcomeCodes.filter((code) => code !== selectedOutcomeCode);
   const baseOtherAmount = Math.floor(remainder / otherCodes.length);
   let carry = remainder - baseOtherAmount * otherCodes.length;
@@ -73,6 +79,7 @@ export function buildPresetAllocation(
   outcomeCodes: string[],
   selectedOutcomeCode: string,
   intensity: IntensityPreset,
+  credit: number = MATCH_CREDIT,
 ) {
   if (!outcomeCodes.includes(selectedOutcomeCode)) {
     throw new Error("selectedOutcomeCode invalido");
@@ -82,9 +89,12 @@ export function buildPresetAllocation(
     throw new Error("Se necesitan al menos 2 outcomes");
   }
 
+  const scale = credit / MATCH_CREDIT;
+  const sc = (amount: number) => Math.round((amount * scale) / 1000) * 1000;
+
   if (outcomeCodes.length === 2) {
-    const selectedAmount = intensity === "soft" ? 6000 : intensity === "medium" ? 8000 : 10000;
-    const otherAmount = MATCH_CREDIT - selectedAmount;
+    const selectedAmount = sc(intensity === "soft" ? 6000 : intensity === "medium" ? 8000 : 10000);
+    const otherAmount = credit - selectedAmount;
 
     return outcomeCodes.map((outcomeCode) => ({
       outcomeCode,
@@ -102,8 +112,8 @@ export function buildPresetAllocation(
     const otherSideCode = outcomeCodes.find((code) => code !== selectedOutcomeCode && code !== drawCode) ?? null;
 
     if (selectedOutcomeCode === drawCode) {
-      const drawAmount = intensity === "soft" ? 4000 : intensity === "medium" ? 6000 : 8000;
-      const sideAmount = intensity === "soft" ? 3000 : intensity === "medium" ? 2000 : 1000;
+      const drawAmount = sc(intensity === "soft" ? 4000 : intensity === "medium" ? 6000 : 8000);
+      const sideAmount = (credit - drawAmount) / 2;
 
       return outcomeCodes.map((outcomeCode) => ({
         outcomeCode,
@@ -115,9 +125,9 @@ export function buildPresetAllocation(
       throw new Error("No se pudo resolver el outcome opuesto");
     }
 
-    const selectedAmount = intensity === "soft" ? 5000 : intensity === "medium" ? 7000 : 9000;
-    const drawAmount = intensity === "soft" ? 3000 : intensity === "medium" ? 3000 : 1000;
-    const otherAmount = MATCH_CREDIT - selectedAmount - drawAmount;
+    const selectedAmount = sc(intensity === "soft" ? 5000 : intensity === "medium" ? 7000 : 9000);
+    const drawAmount = sc(intensity === "soft" ? 3000 : intensity === "medium" ? 3000 : 1000);
+    const otherAmount = credit - selectedAmount - drawAmount;
 
     return outcomeCodes.map((outcomeCode) => {
       if (outcomeCode === selectedOutcomeCode) {
@@ -132,8 +142,8 @@ export function buildPresetAllocation(
     });
   }
 
-  const focusedAmount = intensity === "soft" ? 6000 : intensity === "medium" ? 8000 : 10000;
-  return buildWeightedAllocation(outcomeCodes, selectedOutcomeCode, focusedAmount);
+  const focusedAmount = sc(intensity === "soft" ? 6000 : intensity === "medium" ? 8000 : 10000);
+  return buildWeightedAllocation(outcomeCodes, selectedOutcomeCode, focusedAmount, credit);
 }
 
 export type SettlementBreakdown = {
@@ -148,13 +158,13 @@ export function sumAllocations(allocations: AllocationInput[]) {
   return allocations.reduce((total, allocation) => total + allocation.amount, 0);
 }
 
-export function validateAllocations(allocations: AllocationInput[]) {
+export function validateAllocations(allocations: AllocationInput[], credit: number = MATCH_CREDIT) {
   const total = sumAllocations(allocations);
 
-  if (total !== MATCH_CREDIT) {
+  if (total !== credit) {
     return {
       ok: false,
-      reason: `La jugada debe sumar ${MATCH_CREDIT}.`,
+      reason: `La jugada debe sumar ${credit}.`,
     };
   }
 
@@ -167,12 +177,12 @@ export function validateAllocations(allocations: AllocationInput[]) {
     };
   }
 
-  const exceedsCap = allocations.some((allocation) => allocation.amount > OUTCOME_CAP);
+  const exceedsCap = allocations.some((allocation) => allocation.amount > credit);
 
   if (exceedsCap) {
     return {
       ok: false,
-      reason: `Ningun outcome puede superar ${OUTCOME_CAP}.`,
+      reason: `Ningun outcome puede superar ${credit}.`,
     };
   }
 
@@ -186,8 +196,9 @@ export function settleTicket(params: {
   totalPool: number;
   winningPool: number;
   winningStake: number;
+  credit?: number;
 }): SettlementBreakdown {
-  const { totalPool, winningPool, winningStake } = params;
+  const { totalPool, winningPool, winningStake, credit = MATCH_CREDIT } = params;
 
   if (winningPool <= 0) {
     throw new Error("winningPool debe ser mayor a cero");
@@ -198,7 +209,7 @@ export function settleTicket(params: {
   }
 
   const grossReturn = totalPool * (winningStake / winningPool);
-  const netResult = grossReturn - MATCH_CREDIT;
+  const netResult = grossReturn - credit;
 
   return {
     totalPool,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ingestDefinedKnockouts } from "@/lib/repositories/knockout-ingest";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -286,9 +287,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const ingest = await ingestDefinedKnockouts();
+
   return NextResponse.json({
     ok: true,
     source: "espn",
+    ingest,
     espnEventsTotal: espnEvents.length,
     matched: updates.length,
     skipped,

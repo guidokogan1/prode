@@ -10,7 +10,7 @@ import { VoteFace } from "@/components/vote-face";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { formatCredits, formatGross } from "@/lib/format";
-import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
+import { buildPresetAllocation, creditForMarketType, type IntensityPreset } from "@/lib/game";
 import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 import {
   deriveResolvedOutcome,
@@ -236,6 +236,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       effectiveMatch.allocation.map((item) => item.code),
       chosenOutcome,
       option.id,
+      creditForMarketType(effectiveMatch.marketType),
     ).map((item) => ({
       code: item.outcomeCode as MatchViewModel["allocation"][number]["code"],
       label: effectiveMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,

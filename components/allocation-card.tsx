@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { SessionContext } from "@/components/session-provider";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
-import { buildBalancedAllocation, buildPresetAllocation, MATCH_CREDIT, OUTCOME_CAP, sumAllocations, validateAllocations } from "@/lib/game";
+import { buildBalancedAllocation, buildPresetAllocation, creditForMarketType, sumAllocations, validateAllocations } from "@/lib/game";
 import { getOutcomeColor, getPickStateLabel } from "@/lib/match-ui";
 import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 
@@ -22,6 +22,7 @@ const QUICK_INTENSITIES = [
 export function AllocationCard({ match }: AllocationCardProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
+  const credit = creditForMarketType(match.marketType);
   const allocationScope = buildAllocationScope(session);
   const initialAllocations = useMemo(
     () =>
@@ -75,15 +76,15 @@ export function AllocationCard({ match }: AllocationCardProps) {
   }, [allocationScope, initialAllocations, match]);
 
   const total = sumAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })));
-  const remaining = MATCH_CREDIT - total;
-  const validation = validateAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })));
+  const remaining = credit - total;
+  const validation = validateAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })), credit);
   const leadingAllocation = [...allocations].sort((left, right) => right.amount - left.amount)[0] ?? null;
   const remainingTone = remaining === 0 ? "#3D9B5F" : remaining > 0 ? "#D4A64B" : "#E8413A";
   const remainingLabel = remaining === 0 ? "Listo" : remaining > 0 ? `Faltan ${formatCredits(remaining)}` : `Sobran ${formatCredits(Math.abs(remaining))}`;
 
   function updateAmount(index: number, rawValue: string) {
     const nextAmount = Number(rawValue);
-    const safeAmount = Number.isFinite(nextAmount) ? Math.max(0, Math.min(OUTCOME_CAP, nextAmount)) : 0;
+    const safeAmount = Number.isFinite(nextAmount) ? Math.max(0, Math.min(credit, nextAmount)) : 0;
 
     setAllocations((current) =>
       current.map((item, itemIndex) => (itemIndex === index ? { ...item, amount: safeAmount } : item)),
@@ -97,6 +98,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       allocations.map((item) => item.code),
       code,
       intensity,
+      credit,
     );
 
     setAllocations(
@@ -112,7 +114,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
   }
 
   function applyBalancedAllocation() {
-    const preset = buildBalancedAllocation(allocations.map((item) => item.label));
+    const preset = buildBalancedAllocation(allocations.map((item) => item.label), credit);
 
     setAllocations(
       preset.map((item, index) => ({
@@ -210,7 +212,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
       <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
         <div style={{ display: "grid", gap: 4 }}>
           <p className="eyebrow">Tu jugada</p>
-          <h2 className="section-title">{match.isEditable ? "Repartí 10.000" : "Tu reparto"}</h2>
+          <h2 className="section-title">{match.isEditable ? `Repartí ${formatCredits(credit)}` : "Tu reparto"}</h2>
         </div>
         {match.isEditable ? <span className="pill">{getPickStateLabel(match)}</span> : null}
       </div>
@@ -221,7 +223,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
               <div style={{ display: "grid", gap: 4 }}>
                 <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.24rem", letterSpacing: "-0.04em" }}>
-                  {formatCredits(total)} / {formatCredits(MATCH_CREDIT)}
+                  {formatCredits(total)} / {formatCredits(credit)}
                 </strong>
                 <span className="micro-copy" style={{ color: remainingTone }}>{remainingLabel}</span>
               </div>
@@ -234,7 +236,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
               <button className="button-secondary" style={{ minHeight: 36, borderRadius: 999, padding: "0 12px", fontSize: ".74rem" }} onClick={applyBalancedAllocation} type="button">
                 Balanceado
               </button>
-              <span className="micro-copy" style={{ alignSelf: "center" }}>Máx. {formatCredits(OUTCOME_CAP)}</span>
+              <span className="micro-copy" style={{ alignSelf: "center" }}>Máx. {formatCredits(credit)}</span>
             </div>
             {allocations.map((item, index) => (
               <article
@@ -249,7 +251,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", marginBottom: 10 }}>
                   <div style={{ display: "grid", gap: 4 }}>
                     <strong>{item.label}</strong>
-                    <span className="micro-copy">{leadingAllocation?.label === item.label && item.amount > 0 ? "principal" : `tope ${formatCredits(OUTCOME_CAP)}`}</span>
+                    <span className="micro-copy">{leadingAllocation?.label === item.label && item.amount > 0 ? "principal" : `tope ${formatCredits(credit)}`}</span>
                   </div>
                   <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.18rem", letterSpacing: "-0.04em" }}>
                     {formatCredits(item.amount)}
@@ -273,7 +275,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 <input
                   type="range"
                   min="0"
-                  max={String(OUTCOME_CAP)}
+                  max={String(credit)}
                   step="500"
                   value={item.amount}
                   onChange={(event) => updateAmount(index, event.target.value)}
@@ -282,7 +284,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
                 />
 
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
-                  <span className="micro-copy">{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
+                  <span className="micro-copy">{Math.round((item.amount / credit) * 100)}%</span>
                   <span className="micro-copy">step de 500</span>
                 </div>
               </article>
@@ -320,7 +322,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
             >
               <div style={{ display: "grid", gap: 4 }}>
                 <strong>{item.label}</strong>
-                <span className="micro-copy">{Math.round((item.amount / MATCH_CREDIT) * 100)}%</span>
+                <span className="micro-copy">{Math.round((item.amount / credit) * 100)}%</span>
               </div>
               <strong style={{ color: getOutcomeColor(item.code), fontFamily: "var(--font-accent)", fontSize: "1.14rem", letterSpacing: "-0.04em" }}>{formatCredits(item.amount)}</strong>
             </div>

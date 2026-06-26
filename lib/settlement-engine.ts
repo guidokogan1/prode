@@ -17,6 +17,7 @@ export type ComputedSettlementRow = {
 export function computeMarketSettlements(
   allocations: SettlementInputRow[],
   winningOutcomeCode: string,
+  credit: number = MATCH_CREDIT,
 ) {
   const totalPool = allocations.reduce((sum, row) => sum + row.amount, 0);
   const winningPool = allocations
@@ -37,7 +38,7 @@ export function computeMarketSettlements(
       rows: refundedTicketIds.map((ticketId) => ({
         ticketId,
         winningBetAmount: 0,
-        grossReturnAmount: MATCH_CREDIT,
+        grossReturnAmount: credit,
         netResultAmount: 0,
       })),
     };
@@ -61,6 +62,7 @@ export function computeMarketSettlements(
       totalPool,
       winningPool,
       winningStake,
+      credit,
     });
 
     return {

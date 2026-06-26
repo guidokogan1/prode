@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 
 type VoteFaceProps = {
@@ -11,9 +12,10 @@ type VoteFaceProps = {
     draw: MatchOutcomeCode | null;
   };
   onSelectOutcome?: (code: MatchOutcomeCode) => void;
+  footerSlot?: ReactNode;
 };
 
-export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLabel, outcomeTargets, onSelectOutcome }: VoteFaceProps) {
+export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLabel, outcomeTargets, onSelectOutcome, footerSlot }: VoteFaceProps) {
   const handlePressStart = (event: React.PointerEvent<HTMLButtonElement>) => {
     event.stopPropagation();
   };
@@ -113,28 +115,32 @@ export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLa
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr",
-          alignItems: "center",
-          gap: 8,
-          paddingTop: 10,
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 6 }}>
-          {leftControl}
-        </div>
-        {showDrawGesture ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-            {drawControl}
+      {footerSlot ? (
+        <div style={{ paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.08)" }}>{footerSlot}</div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto 1fr",
+            alignItems: "center",
+            gap: 8,
+            paddingTop: 10,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 6 }}>
+            {leftControl}
           </div>
-        ) : drawControl}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
-          {rightControl}
+          {showDrawGesture ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              {drawControl}
+            </div>
+          ) : drawControl}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
+            {rightControl}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

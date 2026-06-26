@@ -13,7 +13,7 @@ import type {
   SessionState,
 } from "@/lib/domain";
 import { deriveDummyMatchState, getDummyMatchDefinition, isDummyMatchId } from "@/lib/dummy-matches";
-import { MATCH_CREDIT, validateAllocations } from "@/lib/game";
+import { MATCH_CREDIT, creditForMarketType, validateAllocations } from "@/lib/game";
 import { formatGross } from "@/lib/format";
 import { CHAMPION_CREDIT } from "@/lib/champion";
 import { logPickEvent } from "@/lib/pick-events";
@@ -80,6 +80,7 @@ type AllocationQueryRow = {
 type SettlementQueryRow = {
   ticket_id: string;
   net_result_amount: number;
+  gross_return_amount: number;
 };
 type UserQueryRow = {
   id: string;
@@ -338,7 +339,7 @@ export class SupabaseProductProvider implements ProductProvider {
     const query = await supabase
       .from("settlements")
       .select(
-        "ticket_id, net_result_amount, ticket:tickets(match_market_id), market:match_markets!inner(match_id), match:matches!inner(id, stage:tournament_stages(name), home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name)), allocations:ticket_allocations(amount, outcome:market_outcomes(label))",
+        "ticket_id, net_result_amount, gross_return_amount, ticket:tickets(match_market_id), market:match_markets!inner(match_id), match:matches!inner(id, stage:tournament_stages(name), home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name)), allocations:ticket_allocations(amount, outcome:market_outcomes(label))",
       )
       .eq("ticket.user_id", session.userId)
       .order("settled_at", { ascending: false })
@@ -365,7 +366,7 @@ export class SupabaseProductProvider implements ProductProvider {
               ? "Recuperaste tu apuesta."
               : "Cobraste menos de lo apostado.",
         netAmount: row.net_result_amount,
-        grossAmount: row.net_result_amount + MATCH_CREDIT,
+        grossAmount: row.gross_return_amount ?? row.net_result_amount + MATCH_CREDIT,
         allocations: (row.allocations ?? []).map(
           (allocation: { amount: number; outcome: { label: string }[] | { label: string } | null }) => {
             const outcome = Array.isArray(allocation.outcome) ? allocation.outcome[0] : allocation.outcome;
@@ -386,12 +387,13 @@ export class SupabaseProductProvider implements ProductProvider {
     const settlementsQuery = await supabase
       .from("settlements")
       .select(
-        "net_result_amount, settled_at, ticket:tickets!inner(user_id, user:users!inner(display_name), market:match_markets!inner(match:matches!inner(id, kickoff_at, home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name))))",
+        "net_result_amount, gross_return_amount, settled_at, ticket:tickets!inner(user_id, user:users!inner(display_name), market:match_markets!inner(match:matches!inner(id, kickoff_at, home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name))))",
       )
       .order("settled_at", { ascending: true })
       .returns<
         {
           net_result_amount: number;
+          gross_return_amount: number;
           settled_at: string;
           ticket: {
             user_id: string;
@@ -427,7 +429,7 @@ export class SupabaseProductProvider implements ProductProvider {
       const label = `${home?.name?.slice(0, 3) ?? "—"} vs ${away?.name?.slice(0, 3) ?? "—"}`;
       matchMeta.set(matchObj.id, { kickoffAt: matchObj.kickoff_at, label });
 
-      const grossThis = row.net_result_amount + MATCH_CREDIT;
+      const grossThis = row.gross_return_amount ?? row.net_result_amount + MATCH_CREDIT;
       let userBucket = userGrossByMatch.get(ticket.user_id);
       if (!userBucket) {
         userBucket = new Map();
@@ -464,20 +466,6 @@ export class SupabaseProductProvider implements ProductProvider {
   async submitTicket(payload: SaveTicketPayload): Promise<SaveTicketResult> {
     const supabase = getSupabaseOrThrow();
     const session = await this.getSessionState();
-    const validation = validateAllocations(
-      payload.allocations.map((allocation) => ({
-        outcomeCode: allocation.label,
-        amount: allocation.amount,
-      })),
-    );
-
-    if (!validation.ok) {
-      return {
-        ok: false,
-        state: "sync_error",
-        reason: validation.reason ?? "Jugada inválida.",
-      };
-    }
 
     if (!session.userId) {
       return {
@@ -503,11 +491,28 @@ export class SupabaseProductProvider implements ProductProvider {
 
     const market = marketQuery.data;
     const marketId = market.id;
+    const credit = creditForMarketType(market.market_type);
     if (market.status !== "open") {
       return {
         ok: false,
         state: "sync_error",
         reason: "Este mercado ya cerró y no admite cambios.",
+      };
+    }
+
+    const validation = validateAllocations(
+      payload.allocations.map((allocation) => ({
+        outcomeCode: allocation.label,
+        amount: allocation.amount,
+      })),
+      credit,
+    );
+
+    if (!validation.ok) {
+      return {
+        ok: false,
+        state: "sync_error",
+        reason: validation.reason ?? "Jugada inválida.",
       };
     }
 
@@ -583,7 +588,7 @@ export class SupabaseProductProvider implements ProductProvider {
         {
           user_id: session.userId,
           match_market_id: marketId,
-          credit_total: MATCH_CREDIT,
+          credit_total: credit,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id,match_market_id" },
@@ -821,7 +826,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
             label: getOutcomeDisplayLabel(outcome.code, home.name, away.name, market.market_type),
             shortLabel: getOutcomeShortLabel(outcome.code, home.name, away.name, market.market_type),
             amount,
-            percentage: Math.round((amount / MATCH_CREDIT) * 100),
+            percentage: Math.round((amount / creditForMarketType(market.market_type)) * 100),
           };
         });
 
@@ -849,7 +854,11 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
         const settlement = currentTicket
           ? currentUserData.settlementsByTicketId.get(currentTicket.id) ??
             (computedNetByTicketId.has(currentTicket.id)
-              ? { ticket_id: currentTicket.id, net_result_amount: computedNetByTicketId.get(currentTicket.id)! }
+              ? {
+                  ticket_id: currentTicket.id,
+                  net_result_amount: computedNetByTicketId.get(currentTicket.id)!,
+                  gross_return_amount: computedNetByTicketId.get(currentTicket.id)! + creditForMarketType(market.market_type),
+                }
               : undefined)
           : undefined;
 
@@ -876,10 +885,10 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
                   allTicketData.settlementsByTicketId.get(ticket.id)?.net_result_amount ??
                   computedNetByTicketId.get(ticket.id),
                 grossAmount: (() => {
-                  const net =
-                    allTicketData.settlementsByTicketId.get(ticket.id)?.net_result_amount ??
-                    computedNetByTicketId.get(ticket.id);
-                  return typeof net === "number" ? net + MATCH_CREDIT : undefined;
+                  const settlement = allTicketData.settlementsByTicketId.get(ticket.id);
+                  if (settlement) return settlement.gross_return_amount;
+                  const net = computedNetByTicketId.get(ticket.id);
+                  return typeof net === "number" ? net + creditForMarketType(market.market_type) : undefined;
                 })(),
               }))
             : [];
@@ -962,6 +971,7 @@ type GrossAggregate = { totalGross: number; bestHitGross: number; hitsCount: num
 
 type SettlementRow = {
   net_result_amount: number;
+  gross_return_amount: number;
   winning_outcome_code: string;
   ticket:
     | {
@@ -989,7 +999,7 @@ async function loadGrossAggregates(
   const [settlementsQuery, championQuery] = await Promise.all([
     supabase
       .from("settlements")
-      .select("net_result_amount, winning_outcome_code, ticket:tickets!inner(user_id, allocations:ticket_allocations(amount, outcome:market_outcomes(code)))")
+      .select("net_result_amount, gross_return_amount, winning_outcome_code, ticket:tickets!inner(user_id, allocations:ticket_allocations(amount, outcome:market_outcomes(code)))")
       .in("ticket.user_id", userIds)
       .returns<SettlementRow[]>(),
     supabase
@@ -1024,7 +1034,7 @@ async function loadGrossAggregates(
     const userId = ticket?.user_id;
     if (!userId) continue;
 
-    bumpTotals(userId, row.net_result_amount + MATCH_CREDIT);
+    bumpTotals(userId, row.gross_return_amount ?? row.net_result_amount + MATCH_CREDIT);
 
     const dominant = (ticket.allocations ?? [])
       .filter((a) => a.amount > 0)
@@ -1078,7 +1088,7 @@ async function loadCurrentUserMap(supabase: ReturnType<typeof getSupabaseOrThrow
     ticketIds.length
       ? supabase
           .from("settlements")
-          .select("ticket_id, net_result_amount")
+          .select("ticket_id, net_result_amount, gross_return_amount")
           .in("ticket_id", ticketIds)
           .returns<SettlementQueryRow[]>()
       : Promise.resolve({ data: [] as SettlementQueryRow[] }),
@@ -1126,7 +1136,7 @@ async function loadAllTicketData(
     ticketIds.length
       ? supabase
           .from("settlements")
-          .select("ticket_id, net_result_amount")
+          .select("ticket_id, net_result_amount, gross_return_amount")
           .in("ticket_id", ticketIds)
           .returns<SettlementQueryRow[]>()
       : Promise.resolve({ data: [] as SettlementQueryRow[] }),
@@ -1253,7 +1263,7 @@ function deriveUserStateLabel(
   settlement: SettlementQueryRow | undefined,
 ) {
   if (settlement) {
-    return `Resultado ${formatGross(settlement.net_result_amount + MATCH_CREDIT)}`;
+    return `Resultado ${formatGross(settlement.gross_return_amount)}`;
   }
 
   if (!ticket) {
