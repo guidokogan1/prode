@@ -559,6 +559,7 @@ function buildPendingGroupMatches(): RawMatchViewModel[] {
   return pendingGroupFixtures.map((fixture) => ({
     id: fixture.id,
     stage: "Fase de grupos",
+    stageSortOrder: 1,
     groupLabel: fixture.groupLabel,
     venue: fixture.venue,
     kickoffLabel: fixture.kickoffLabel,
@@ -778,6 +779,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "arg-jpn",
       stage: "Fase de grupos",
+      stageSortOrder: 1,
       groupLabel: "Grupo A",
       venue: "Monterrey",
       kickoffLabel: "11 Jun · 22:00",
@@ -801,6 +803,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "bra-mex",
       stage: "Fase de grupos",
+      stageSortOrder: 1,
       groupLabel: "Grupo B",
       venue: "Los Angeles",
       kickoffLabel: "12 Jun · 19:30",
@@ -849,6 +852,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "jor-ger",
       stage: "Octavos de final",
+      stageSortOrder: 14,
       venue: "Miami",
       kickoffLabel: "30 Jun · 21:00",
       status: "finished",
@@ -889,6 +893,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "esp-uru",
       stage: "Cuartos de final",
+      stageSortOrder: 15,
       venue: "Dallas",
       kickoffLabel: "4 Jul · 18:00",
       status: "scheduled",
@@ -910,6 +915,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "mar-sen",
       stage: "Fase de grupos",
+      stageSortOrder: 1,
       groupLabel: "Grupo C",
       venue: "Vancouver",
       kickoffLabel: "13 Jun · 16:00",
@@ -933,6 +939,7 @@ function createMatchSet(persona: DemoPersonaSlug): MatchViewModel[] {
     {
       id: "usa-ned",
       stage: "Octavos de final",
+      stageSortOrder: 14,
       venue: "Houston",
       kickoffLabel: "29 Jun · 20:00",
       status: "finished",

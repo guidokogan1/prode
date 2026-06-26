@@ -7,6 +7,7 @@ function createMatch(overrides: Partial<MatchViewModel> = {}): MatchViewModel {
   return {
     id: "arg-jpn",
     stage: "Fase de grupos",
+    stageSortOrder: 1,
     venue: "Monterrey",
     kickoffLabel: "11 Jun · 22:00",
     status: "scheduled",

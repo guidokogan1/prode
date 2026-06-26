@@ -1,11 +1,11 @@
 "use client";
 
-import { useContext, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { OutcomePayouts } from "@/components/outcome-payouts";
+import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
-import { VoteFace } from "@/components/vote-face";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
 import { creditForMarketType } from "@/lib/game";
@@ -30,8 +30,6 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
   const [editing, setEditing] = useState(match.isEditable && !hasPick);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const barRef = useRef<HTMLDivElement>(null);
-  const draggingRef = useRef(false);
 
   const awayAmount = credit - homeAmount;
   const homePct = Math.round((homeAmount / credit) * 100);
@@ -45,12 +43,8 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
   const homeText = homeIsPick ? PICK : GRAY_TEXT;
   const awayText = homeIsPick ? GRAY_TEXT : PICK;
 
-  function setFromClientX(clientX: number) {
-    const bar = barRef.current;
-    if (!bar) return;
-    const rect = bar.getBoundingClientRect();
-    const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    setHomeAmount(snap(fraction * credit));
+  function handleAmountChange(amount: number) {
+    setHomeAmount(amount);
     if (saveState !== "idle") {
       setSaveState("idle");
       setSaveMessage(null);
@@ -100,81 +94,6 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
     }
   }
 
-  const sliderFooter = (
-    <div style={{ display: "grid", gap: 16 }}>
-      <div className="split-row" style={{ alignItems: "flex-start" }}>
-        <div style={{ display: "grid", gap: 2 }}>
-          <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.9rem", lineHeight: 0.9, letterSpacing: "-0.02em", color: homeText, transition: "color .2s", fontVariantNumeric: "tabular-nums" }}>{formatCredits(homeAmount)}</strong>
-          <span className="micro-copy">{homePct}%</span>
-        </div>
-        <div style={{ display: "grid", gap: 2, textAlign: "right", justifyItems: "end" }}>
-          <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.9rem", lineHeight: 0.9, letterSpacing: "-0.02em", color: awayText, transition: "color .2s", fontVariantNumeric: "tabular-nums" }}>{formatCredits(awayAmount)}</strong>
-          <span className="micro-copy">{100 - homePct}%</span>
-        </div>
-      </div>
-
-      <div
-        className="qbar"
-        ref={barRef}
-        onPointerDown={(event) => {
-          if (!match.isEditable) return;
-          draggingRef.current = true;
-          try {
-            barRef.current?.setPointerCapture(event.pointerId);
-          } catch {}
-          setFromClientX(event.clientX);
-        }}
-        onPointerMove={(event) => {
-          if (!draggingRef.current) return;
-          event.preventDefault();
-          setFromClientX(event.clientX);
-        }}
-        onPointerUp={() => {
-          draggingRef.current = false;
-        }}
-        onPointerCancel={() => {
-          draggingRef.current = false;
-        }}
-        role="slider"
-        aria-valuemin={0}
-        aria-valuemax={credit}
-        aria-valuenow={homeAmount}
-        aria-label={`Reparto entre ${match.home.name} y ${match.away.name}`}
-      >
-        <div className="qbar-fill" style={{ width: `${homePct}%`, background: homeFill }} />
-        <div className="qbar-fill" style={{ width: `${100 - homePct}%`, background: awayFill }} />
-        <div className="qbar-knob" style={{ left: `${homePct}%` }}>
-          <i />
-          <i />
-        </div>
-      </div>
-
-      <div style={{ display: "flex", gap: 10 }}>
-        <button
-          type="button"
-          className="button-secondary"
-          style={{ flex: 1, gap: 8 }}
-          onClick={() => setHomeAmount((current) => snap(current + STEP))}
-        >
-          <span style={{ fontSize: "1.1rem" }}>{match.home.flag}</span> +1.000
-        </button>
-        <button
-          type="button"
-          className="button-secondary"
-          style={{ flex: 1, gap: 8 }}
-          onClick={() => setHomeAmount((current) => snap(current - STEP))}
-        >
-          +1.000 <span style={{ fontSize: "1.1rem" }}>{match.away.flag}</span>
-        </button>
-      </div>
-
-      <button type="button" className="button-primary" style={{ width: "100%" }} onClick={() => void confirm()} disabled={saveState === "saving"}>
-        {saveState === "saving" ? "Guardando…" : "Confirmar jugada"}
-      </button>
-      {saveState === "error" && saveMessage ? <span className="micro-copy" style={{ color: "var(--live)" }}>{saveMessage}</span> : null}
-    </div>
-  );
-
   return (
     <section className="section-stack-lg">
       <div style={{ paddingInline: 4 }}>
@@ -185,9 +104,16 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
       </div>
 
       {editing ? (
-        <div className="surface-card">
-          <VoteFace match={match} showDrawGesture={false} centerMode="vs" topRightLabel={match.statusLabel} footerSlot={sliderFooter} />
-        </div>
+        <QualifiesVoteCard
+          match={match}
+          credit={credit}
+          homeAmount={homeAmount}
+          onHomeAmountChange={handleAmountChange}
+          onConfirm={() => void confirm()}
+          topRightLabel={match.statusLabel}
+          saving={saveState === "saving"}
+          errorMessage={saveState === "error" ? saveMessage : null}
+        />
       ) : (
         <div className="surface-card" style={{ padding: 20, display: "grid", gap: 16, justifyItems: "center", textAlign: "center" }}>
           <p className="eyebrow">Esta es tu jugada</p>

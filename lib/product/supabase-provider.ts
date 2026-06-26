@@ -151,9 +151,10 @@ export class SupabaseProductProvider implements ProductProvider {
 
   async listMatchesByStage(): Promise<MatchStageGroup[]> {
     const matches = await this.loadMatchViewModels();
-    const groups = new Map<string, MatchStageGroup & { sortOrder: number; kickoffAt: string; kickoffByMatchId: Map<string, string> }>();
+    const groups = new Map<string, MatchStageGroup & { sortOrder: number; isKnockout: boolean; kickoffAt: string; kickoffByMatchId: Map<string, string> }>();
 
     for (const item of matches) {
+      const isKnockout = !item.match.groupLabel;
       const key = item.match.groupLabel
         ? `group:${item.match.groupLabel}`
         : `stage:${item.match.stage}`;
@@ -165,6 +166,7 @@ export class SupabaseProductProvider implements ProductProvider {
           label,
           matches: [],
           sortOrder: item.stageSortOrder,
+          isKnockout,
           kickoffAt: item.kickoffAt,
           kickoffByMatchId: new Map(),
         });
@@ -175,10 +177,13 @@ export class SupabaseProductProvider implements ProductProvider {
       group.kickoffByMatchId.set(item.match.id, item.kickoffAt);
     }
 
+    const sectionRank = (group: { isKnockout: boolean; sortOrder: number }) =>
+      group.isKnockout ? -group.sortOrder : 1000 + group.sortOrder;
+
     return Array.from(groups.values())
       .sort((left, right) => {
-        if (left.sortOrder !== right.sortOrder) {
-          return left.sortOrder - right.sortOrder;
+        if (sectionRank(left) !== sectionRank(right)) {
+          return sectionRank(left) - sectionRank(right);
         }
 
         if (left.label !== right.label) {
@@ -187,7 +192,7 @@ export class SupabaseProductProvider implements ProductProvider {
 
         return left.kickoffAt.localeCompare(right.kickoffAt);
       })
-      .map(({ sortOrder: _sortOrder, kickoffAt: _kickoffAt, kickoffByMatchId, ...group }) => ({
+      .map(({ sortOrder: _sortOrder, isKnockout: _isKnockout, kickoffAt: _kickoffAt, kickoffByMatchId, ...group }) => ({
         ...group,
         matches: group.matches.slice().sort((a, b) => {
           const ka = kickoffByMatchId.get(a.id) ?? "";
@@ -897,6 +902,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
           match: {
             id: row.id,
             stage: stage.name,
+            stageSortOrder: stage.sort_order,
             groupLabel: getWorldCupGroupLabel(home.fifa_code, away.fifa_code, stage.code),
             venue: row.venue_city ?? row.venue_name ?? "Sede",
             kickoffAt: row.kickoff_at,
@@ -1171,6 +1177,11 @@ function normalizeMarketStatus(status: string): MatchViewModel["marketStatus"] {
   return "open";
 }
 
+function stagePriorityRank(match: MatchViewModel) {
+  const isKnockout = !match.groupLabel;
+  return isKnockout ? -match.stageSortOrder : 1000 + match.stageSortOrder;
+}
+
 function sortMatchesForHome(left: MatchViewModel, right: MatchViewModel) {
   const score = (match: MatchViewModel) => {
     if (match.statusVariant === "live") {
@@ -1185,7 +1196,7 @@ function sortMatchesForHome(left: MatchViewModel, right: MatchViewModel) {
     return 3;
   };
 
-  return score(left) - score(right);
+  return score(left) - score(right) || stagePriorityRank(left) - stagePriorityRank(right);
 }
 
 function firstRow<T>(value: T | T[] | null | undefined): T | null {

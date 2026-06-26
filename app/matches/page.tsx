@@ -69,12 +69,12 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
     }));
 
   const knockoutOrder = [
-    "Dieciseisavos",
-    "Octavos de final",
-    "Cuartos de final",
-    "Semifinales",
-    "Tercer puesto",
     "Final",
+    "Tercer puesto",
+    "Semifinales",
+    "Cuartos de final",
+    "Octavos de final",
+    "Dieciseisavos",
   ];
 
   const knockoutGroups = knockoutOrder
@@ -85,7 +85,7 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
     }))
     .filter((group) => group.matches.length > 0);
 
-  return [...groupStageGroups, ...knockoutGroups].map((group) => ({
+  return [...knockoutGroups, ...groupStageGroups].map((group) => ({
     ...group,
     pendingCount: group.matches.filter((match) => getMatchActionPriority(match) === 0).length,
     matches: group.matches

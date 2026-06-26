@@ -5,10 +5,11 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles, Zap } from "lucide-react";
+import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
+import { buildPresetAllocation, creditForMarketType, type IntensityPreset } from "@/lib/game";
 import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 import { getOutcomeColor, getOutcomeFlag, getOutcomeHint, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
 
@@ -74,6 +75,9 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
   const [isFinePointer, setIsFinePointer] = useState(false);
   const nextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isChoosingRef = useRef(false);
+  const [qualifiesHome, setQualifiesHome] = useState(0);
+  const [qualifiesSaving, setQualifiesSaving] = useState(false);
+  const [qualifiesError, setQualifiesError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) {
@@ -129,6 +133,71 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
     () => buildProjectedKnockout(effectiveMatches, allocationScope),
     [allocationScope, effectiveMatches],
   );
+
+  useEffect(() => {
+    if (!match || match.marketType !== "qualifies") {
+      return;
+    }
+    const credit = creditForMarketType(match.marketType);
+    const homeOutcome = match.allocation.find((item) => item.code === "home_qualifies") ?? match.allocation[0];
+    const total = match.allocation.reduce((sum, item) => sum + item.amount, 0);
+    const initial = total > 0 ? homeOutcome?.amount ?? credit / 2 : credit / 2;
+    setQualifiesHome(Math.max(0, Math.min(credit, Math.round(initial / 1000) * 1000)));
+    setQualifiesError(null);
+    setQualifiesSaving(false);
+  }, [match?.id]);
+
+  async function confirmQualifies() {
+    if (!match) {
+      return;
+    }
+    const credit = creditForMarketType(match.marketType);
+    const homeOutcome = match.allocation.find((item) => item.code === "home_qualifies") ?? match.allocation[0];
+    const awayOutcome = match.allocation.find((item) => item.code === "away_qualifies") ?? match.allocation[1];
+    if (!homeOutcome || !awayOutcome) {
+      return;
+    }
+    const payload = [
+      { code: homeOutcome.code, label: homeOutcome.label, amount: qualifiesHome },
+      { code: awayOutcome.code, label: awayOutcome.label, amount: credit - qualifiesHome },
+    ];
+
+    setQualifiesSaving(true);
+    setQualifiesError(null);
+    saveStoredAllocation(allocationScope, match.id, { allocations: payload, savedAt: new Date().toISOString(), status: "draft" });
+
+    let savedStatus: "saved_remote" | "saved_local" | "sync_error" = "saved_local";
+    try {
+      const response = await fetch("/api/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ matchId: match.id, allocations: payload }),
+      });
+      const result = (await response.json()) as { ok: boolean; reason?: string; state?: string };
+      if (!response.ok || !result.ok) {
+        saveStoredAllocation(allocationScope, match.id, { allocations: payload, savedAt: new Date().toISOString(), status: "sync_error" });
+        setQualifiesError(result.reason ?? "No se pudo guardar la jugada.");
+        setQualifiesSaving(false);
+        return;
+      }
+      savedStatus = result.state === "saved_remote" ? "saved_remote" : "saved_local";
+    } catch {
+      savedStatus = "sync_error";
+    }
+
+    saveStoredAllocation(allocationScope, match.id, { allocations: payload, savedAt: new Date().toISOString(), status: savedStatus });
+    setJustSavedIds((prev) => {
+      const next = new Set(prev);
+      next.add(match.id);
+      return next;
+    });
+    onMatchSaved?.(match.id);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event(ALLOCATION_EVENT));
+    }
+    setQualifiesSaving(false);
+    moveNext();
+  }
 
   const resetPhase = () => {
     setPhase("idle");
@@ -417,6 +486,25 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
           </motion.div>
         ) : (() => {
           const activeMatch = match!;
+
+          if (activeMatch.marketType === "qualifies") {
+            return (
+              <QualifiesVoteCard
+                match={activeMatch}
+                credit={creditForMarketType(activeMatch.marketType)}
+                homeAmount={qualifiesHome}
+                onHomeAmountChange={(amount) => {
+                  setQualifiesHome(amount);
+                  if (qualifiesError) setQualifiesError(null);
+                }}
+                onConfirm={() => void confirmQualifies()}
+                topRightLabel={activeMatch.kickoffLabel}
+                saving={qualifiesSaving}
+                errorMessage={qualifiesError}
+              />
+            );
+          }
+
           const activeQuickPlayTargets = quickPlayTargets!;
 
           return (
@@ -512,7 +600,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       <div style={{ position: "absolute", left: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
                           <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>{activeMatch.home.flag}</span>
                         <span style={{ color: "var(--gold)", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
-                          {activeMatch.marketType === "qualifies" ? "clasifica" : "gana"}
+                          {"gana"}
                         </span>
                       </div>
                     </motion.div>
@@ -529,7 +617,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       <div style={{ position: "absolute", right: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
                           <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>{activeMatch.away.flag}</span>
                         <span style={{ color: "var(--live)", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
-                          {activeMatch.marketType === "qualifies" ? "clasifica" : "gana"}
+                          {"gana"}
                         </span>
                       </div>
                     </motion.div>
