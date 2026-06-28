@@ -3,7 +3,7 @@
 import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { OutcomePayouts } from "@/components/outcome-payouts";
+import { MatchRevealPanel } from "@/components/match-reveal-panel";
 import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
 import { VoteFace } from "@/components/vote-face";
@@ -149,7 +149,7 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
         </div>
       )}
 
-      <OutcomePayouts match={match} />
+      <MatchRevealPanel match={match} />
     </section>
   );
 }
