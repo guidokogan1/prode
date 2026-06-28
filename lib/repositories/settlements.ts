@@ -249,10 +249,7 @@ export async function recomputeLeaderboardSnapshots() {
   const snapshotRows = displayOrdered.map((row, index) => {
     const existing = existingByUser.get(row.userId);
     const newRankPosition = index + 1;
-    const userMoved = existing != null && existing.rank_position !== newRankPosition;
-    const previousRankPosition = userMoved
-      ? existing.rank_position
-      : existing?.previous_rank_position ?? null;
+    const previousRankPosition = existing?.rank_position ?? null;
 
     return {
       user_id: row.userId,
