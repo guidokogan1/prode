@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isChampionPickLocked } from "@/lib/champion";
+import { isChampionPickAllowedFor } from "@/lib/champion";
 import { logPickEvent } from "@/lib/pick-events";
 import { getCurrentSession } from "@/lib/server-session";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
@@ -12,13 +12,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, reason: "Falta el equipo." }, { status: 400 });
   }
 
-  if (isChampionPickLocked()) {
-    return NextResponse.json({ ok: false, reason: "El campeón ya quedó cerrado." }, { status: 400 });
-  }
-
   const session = await getCurrentSession();
   if (!session?.userId) {
     return NextResponse.json({ ok: false, reason: "No hay sesión remota activa." }, { status: 401 });
+  }
+
+  if (!isChampionPickAllowedFor(session.displayName)) {
+    return NextResponse.json({ ok: false, reason: "El campeón ya quedó cerrado." }, { status: 400 });
   }
 
   const supabase = getSupabaseServerClient();

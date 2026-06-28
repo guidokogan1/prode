@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChampionPickCard } from "@/components/champion-pick-card";
-import { isChampionPickLocked } from "@/lib/champion";
+import { isChampionPickAllowedFor } from "@/lib/champion";
 import { shouldIncludeMatchInChampionPool } from "@/lib/dummy-matches";
 import { listMatches } from "@/lib/repositories/matches";
 import { getProfile } from "@/lib/repositories/profile";
 import { getTournamentFinalState } from "@/lib/repositories/tournament";
+import { getCurrentSession } from "@/lib/server-session";
 
 export default async function ChampionPage() {
   const tournament = await getTournamentFinalState();
@@ -13,7 +14,7 @@ export default async function ChampionPage() {
     redirect("/profile");
   }
 
-  const [profile, matches] = await Promise.all([getProfile(), listMatches()]);
+  const [profile, matches, session] = await Promise.all([getProfile(), listMatches(), getCurrentSession()]);
 
   const teams = Array.from(
     new Map(
@@ -38,7 +39,7 @@ export default async function ChampionPage() {
       <ChampionPickCard
         initialPick={profile.championPick === "Sin elegir" ? null : profile.championPick}
         teams={teams}
-        locked={isChampionPickLocked()}
+        locked={!isChampionPickAllowedFor(session?.displayName)}
         mode="checklist"
       />
     </main>

@@ -2,18 +2,20 @@ import { ChampionFinaleCard } from "@/components/champion-finale-card";
 import { ChampionPickCard } from "@/components/champion-pick-card";
 import { ProfileHero } from "@/components/profile-hero";
 import { SessionPanel } from "@/components/session-panel";
-import { isChampionPickLocked } from "@/lib/champion";
+import { isChampionPickAllowedFor } from "@/lib/champion";
 import { listMatches } from "@/lib/repositories/matches";
 import { getProfile } from "@/lib/repositories/profile";
 import { getRanking } from "@/lib/repositories/ranking";
 import { getTournamentFinalState } from "@/lib/repositories/tournament";
+import { getCurrentSession } from "@/lib/server-session";
 
 export default async function ProfilePage() {
-  const [profile, matches, tournament, ranking] = await Promise.all([
+  const [profile, matches, tournament, ranking, session] = await Promise.all([
     getProfile(),
     listMatches(),
     getTournamentFinalState(),
     getRanking(),
+    getCurrentSession(),
   ]);
   const currentRanking = ranking.find((item) => item.isCurrentUser) ?? null;
   const teams = Array.from(
@@ -44,7 +46,7 @@ export default async function ProfilePage() {
         <ChampionPickCard
           initialPick={profile.championPick === "Sin elegir" ? null : profile.championPick}
           teams={teams}
-          locked={isChampionPickLocked()}
+          locked={!isChampionPickAllowedFor(session?.displayName)}
           mode="summary"
         />
       )}
