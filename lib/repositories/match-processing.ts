@@ -10,7 +10,11 @@ export async function processMatchLifecycle(matchId: string) {
     return syncResult;
   }
 
-  if (syncResult.nextStatus === "settled" && syncResult.winningOutcomeCode) {
+  if (
+    syncResult.nextStatus === "settled" &&
+    syncResult.winningOutcomeCode &&
+    syncResult.previousStatus !== "settled"
+  ) {
     const settlementResult = await settleMatchMarket(matchId);
 
     if (!settlementResult.ok) {
@@ -25,7 +29,7 @@ export async function processMatchLifecycle(matchId: string) {
     };
   }
 
-  if (syncResult.nextStatus === "revealed") {
+  if (syncResult.nextStatus === "revealed" && syncResult.previousStatus !== "revealed") {
     const leaderboardResult = await recomputeLeaderboardSnapshots();
 
     if (!leaderboardResult.ok) {

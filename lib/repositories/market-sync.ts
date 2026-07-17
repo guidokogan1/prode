@@ -104,6 +104,7 @@ export async function syncMatchMarket(matchId: string) {
 
   return {
     ok: true as const,
+    previousStatus: market.status,
     nextStatus,
     winningOutcomeCode,
   };
