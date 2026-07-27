@@ -1,30 +1,29 @@
-import worldCup2026Data from "@/data/world-cup-2026.json";
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { LIGA_2026_TOURNAMENT } from "@/lib/liga-2026";
 
-const STANDINGS_URL = "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings?season=2026";
-const SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260628-20260720&limit=80";
+const LEAGUE = LIGA_2026_TOURNAMENT.leagueCode;
+const YEAR = LIGA_2026_TOURNAMENT.year;
 
-const ESPN_TO_DB: Record<string, string> = { RSA: "ZAF", HAI: "HTI", URY: "URU" };
+const STANDINGS_URL = `https://site.api.espn.com/apis/v2/sports/soccer/${LEAGUE}/standings?season=${YEAR}`;
+const SCOREBOARD_URL = `https://site.api.espn.com/apis/site/v2/sports/soccer/${LEAGUE}/scoreboard?limit=100`;
 
-const flagByCode = new Map(
-  (worldCup2026Data as { groups: { teams: { code: string; flag: string }[] }[] }).groups
-    .flatMap((group) => group.teams)
-    .map((team) => [team.code, team.flag]),
-);
-const flagFor = (abbreviation: string) => flagByCode.get(ESPN_TO_DB[abbreviation] ?? abbreviation) ?? "";
+const ZONE_QUALIFIERS = 8;
+const ZONE_ROUNDS = 16;
 
 const ROUND_DEFS: { key: string; label: string; slugs: string[] }[] = [
-  { key: "r32", label: "16vos", slugs: ["round-of-32"] },
-  { key: "r16", label: "8vos", slugs: ["round-of-16"] },
-  { key: "qf", label: "4tos", slugs: ["quarterfinals"] },
-  { key: "sf", label: "Semis", slugs: ["semifinals"] },
-  { key: "final", label: "Final", slugs: ["final", "3rd-place-match"] },
+  { key: "r16", label: "8vos", slugs: ["round-of-16", "octavos-de-final"] },
+  { key: "qf", label: "4tos", slugs: ["quarterfinals", "cuartos-de-final"] },
+  { key: "sf", label: "Semis", slugs: ["semifinals", "semifinales"] },
+  { key: "final", label: "Final", slugs: ["final"] },
 ];
+
+const crestUrl = (espnId: string | undefined) =>
+  espnId ? `https://a.espncdn.com/i/teamlogos/soccer/500/${espnId}.png` : "";
 
 export type StandingRow = {
   rank: number;
   name: string;
   flag: string;
+  logo: string;
   played: number;
   won: number;
   drawn: number;
@@ -44,6 +43,7 @@ export type GroupStanding = {
 export type BracketSlot = {
   text: string;
   flag: string;
+  logo: string;
   resolved: boolean;
 };
 
@@ -69,37 +69,38 @@ export type BracketData = {
   rounds: KnockoutRound[];
 };
 
-type ScoreboardEvent = {
-  date: string;
-  name?: string;
-  season?: { slug?: string };
-  competitions: { competitors: { homeAway: string; team?: { abbreviation?: string; displayName?: string } }[] }[];
+type StandingsEntry = {
+  team: { id?: string; displayName: string };
+  stats: { name: string; value: number }[];
 };
 
-async function loadSpanishNames() {
-  const supabase = getSupabaseServerClient();
-  if (!supabase) return new Map<string, string>();
-  const { data } = await supabase.from("teams").select("name, fifa_code");
-  return new Map((data ?? []).map((team) => [team.fifa_code, team.name]));
-}
+type StandingsChild = {
+  name: string;
+  standings: { entries: StandingsEntry[] };
+};
 
-function statValue(entry: { stats: { name: string; value: number }[] }, name: string) {
+type ScoreboardEvent = {
+  date: string;
+  season?: { slug?: string };
+  competitions: { competitors: { homeAway: string; team?: { id?: string; displayName?: string } }[] }[];
+};
+
+function statValue(entry: StandingsEntry, name: string) {
   return entry.stats.find((stat) => stat.name === name)?.value ?? 0;
 }
 
-function buildGroups(
-  payload: { children?: { name: string; standings: { entries: { team: { abbreviation: string; displayName: string }; stats: { name: string; value: number }[] }[] } }[] },
-  nameByCode: Map<string, string>,
-): GroupStanding[] {
-  const toSpanish = (abbreviation: string, fallback: string) =>
-    nameByCode.get(ESPN_TO_DB[abbreviation] ?? abbreviation) ?? fallback;
+function zoneLabel(name: string) {
+  return name.replace(/group/i, "Zona").trim();
+}
 
-  return (payload.children ?? []).map((group) => {
-    const rows = group.standings.entries
+function buildGroups(payload: { children?: StandingsChild[] }): GroupStanding[] {
+  return (payload.children ?? []).map((child) => {
+    const rows = child.standings.entries
       .map((entry) => ({
         rank: statValue(entry, "rank"),
-        name: toSpanish(entry.team.abbreviation, entry.team.displayName),
-        flag: flagFor(entry.team.abbreviation),
+        name: entry.team.displayName,
+        flag: "",
+        logo: crestUrl(entry.team.id),
         played: statValue(entry, "gamesPlayed"),
         won: statValue(entry, "wins"),
         drawn: statValue(entry, "ties"),
@@ -107,56 +108,37 @@ function buildGroups(
         goalDiff: statValue(entry, "pointDifferential"),
         goalsFor: statValue(entry, "pointsFor"),
         points: statValue(entry, "points"),
-        advanced: statValue(entry, "advanced") === 1,
+        advanced: statValue(entry, "advanced") === 1 || statValue(entry, "rank") <= ZONE_QUALIFIERS,
       }))
       .sort((left, right) => left.rank - right.rank);
 
     return {
-      label: group.name.replace("Group", "Grupo"),
-      complete: rows.every((row) => row.played >= 3),
+      label: zoneLabel(child.name),
+      complete: rows.length > 0 && rows.every((row) => row.played >= ZONE_ROUNDS),
       rows,
     };
   });
 }
 
-function slotFromCompetitor(
-  competitor: { team?: { abbreviation?: string; displayName?: string } },
-  nameByCode: Map<string, string>,
-): BracketSlot {
-  const abbreviation = competitor.team?.abbreviation ?? "";
+function slotFromCompetitor(competitor: { team?: { id?: string; displayName?: string } }): BracketSlot {
   const displayName = competitor.team?.displayName ?? "";
-
-  const realName = nameByCode.get(ESPN_TO_DB[abbreviation] ?? abbreviation);
-  if (realName) return { text: realName, flag: flagFor(abbreviation), resolved: true };
-
-  const winnerMatch = abbreviation.match(/^1([A-L])$/);
-  if (winnerMatch) return { text: `Ganador Grupo ${winnerMatch[1]}`, flag: "", resolved: false };
-
-  const runnerMatch = abbreviation.match(/^2([A-L])$/);
-  if (runnerMatch) return { text: `2º Grupo ${runnerMatch[1]}`, flag: "", resolved: false };
-
-  if (abbreviation === "3RD" || /3rd place/i.test(displayName)) {
-    const groupsMatch = displayName.match(/Group ([A-L/]+)/);
-    return { text: `3º (${groupsMatch ? groupsMatch[1] : "?"})`, flag: "", resolved: false };
-  }
-
-  return { text: "Por definir", flag: "", resolved: false };
+  if (displayName) return { text: displayName, flag: "", logo: crestUrl(competitor.team?.id), resolved: true };
+  return { text: "Por definir", flag: "", logo: "", resolved: false };
 }
 
-function buildRounds(events: ScoreboardEvent[], nameByCode: Map<string, string>): KnockoutRound[] {
+function buildRounds(events: ScoreboardEvent[]): KnockoutRound[] {
   return ROUND_DEFS.map((definition) => {
     const matches = events
       .filter((event) => definition.slugs.includes(event.season?.slug ?? ""))
       .sort((left, right) => left.date.localeCompare(right.date))
       .map((event) => {
         const competitors = event.competitions[0].competitors;
-        const home = slotFromCompetitor(competitors.find((competitor) => competitor.homeAway === "home") ?? {}, nameByCode);
-        const away = slotFromCompetitor(competitors.find((competitor) => competitor.homeAway === "away") ?? {}, nameByCode);
-        const isThirdPlace = (event.season?.slug ?? "") === "3rd-place-match";
+        const home = slotFromCompetitor(competitors.find((competitor) => competitor.homeAway === "home") ?? {});
+        const away = slotFromCompetitor(competitors.find((competitor) => competitor.homeAway === "away") ?? {});
         return {
           date: event.date,
-          title: isThirdPlace ? "3er puesto" : null,
-          third: isThirdPlace,
+          title: null,
+          third: false,
           home,
           away,
           fullyResolved: home.resolved && away.resolved,
@@ -170,18 +152,15 @@ export async function getBracketData(): Promise<BracketData> {
   const empty: BracketData = { available: false, groups: [], groupsComplete: 0, rounds: [] };
 
   try {
-    const [nameByCode, standingsResponse, scoreboardResponse] = await Promise.all([
-      loadSpanishNames(),
+    const [standingsResponse, scoreboardResponse] = await Promise.all([
       fetch(STANDINGS_URL, { next: { revalidate: 300 } }),
       fetch(SCOREBOARD_URL, { next: { revalidate: 300 } }),
     ]);
 
     if (!standingsResponse.ok) return empty;
 
-    const groups = buildGroups(await standingsResponse.json(), nameByCode);
-    const rounds = scoreboardResponse.ok
-      ? buildRounds((await scoreboardResponse.json()).events ?? [], nameByCode)
-      : [];
+    const groups = buildGroups(await standingsResponse.json());
+    const rounds = scoreboardResponse.ok ? buildRounds((await scoreboardResponse.json()).events ?? []) : [];
 
     return {
       available: groups.length > 0,

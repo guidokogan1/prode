@@ -10,6 +10,7 @@
     "test": "vitest run",
     "qa": "pnpm test && pnpm typecheck && pnpm build",
     "db:seed:world-cup": "node scripts/seed-world-cup-2026.mjs",
+    "db:seed:liga": "node scripts/seed-liga-2026.mjs",
     "ops:process:one": "node scripts/process-match.mjs",
     "ops:process:all": "node scripts/process-all-matches.mjs"
   },

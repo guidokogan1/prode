@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { getWorldCupTeamMeta } from "@/lib/world-cup-2026";
+import { getLigaTeamMeta } from "@/lib/liga-2026";
 
 export type TournamentFinalState = {
   finished: boolean;
@@ -41,7 +41,7 @@ export const getTournamentFinalState = cache(async (): Promise<TournamentFinalSt
     .eq("rank_position", 1)
     .maybeSingle<{ rank_position: number; user: { display_name: string } | null }>();
 
-  const flag = getWorldCupTeamMeta(marketQuery.data.team.fifa_code)?.flag ?? "🏳️";
+  const flag = getLigaTeamMeta(marketQuery.data.team.fifa_code)?.flag ?? "";
 
   return {
     finished: true,

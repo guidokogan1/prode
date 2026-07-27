@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { BracketData, BracketSlot } from "@/lib/espn-bracket";
+import { TeamCrest } from "@/components/team-crest";
 
 const DATE_FORMAT = new Intl.DateTimeFormat("es-AR", {
   weekday: "short",
@@ -11,12 +12,12 @@ const DATE_FORMAT = new Intl.DateTimeFormat("es-AR", {
   minute: "2-digit",
 });
 const formatKickoff = (iso: string) => DATE_FORMAT.format(new Date(iso)).replace(/\./g, "");
-const positionClass = (rank: number) => (rank <= 2 ? "q" : rank === 3 ? "m" : "o");
+const positionClass = (rank: number) => (rank <= 8 ? "q" : "o");
 
 function Slot({ slot }: { slot: BracketSlot }) {
   return (
     <div className={`s ${slot.resolved ? "team" : "pend"}`}>
-      {slot.resolved && slot.flag ? <span className="av">{slot.flag}</span> : <span className="av empty" />}
+      {slot.resolved && slot.logo ? <TeamCrest url={slot.logo} alt={slot.text} size={20} /> : <span className="av empty" />}
       <span className="nm">{slot.text}</span>
     </div>
   );
@@ -348,7 +349,7 @@ export function BracketView({ data }: { data: BracketData }) {
                     {group.rows.map((row) => (
                       <tr className={positionClass(row.rank)} key={row.rank}>
                         <td className="n">{row.rank}</td>
-                        <td className="fl">{row.flag}</td>
+                        <td className="fl"><TeamCrest url={row.logo} alt={row.name} size={18} /></td>
                         <td className="t">
                           {row.name}
                           {row.advanced ? <span className="adv" /> : null}

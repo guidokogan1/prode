@@ -1,0 +1,50 @@
+{
+  "tournament": {
+    "leagueCode": "arg.1",
+    "seasonSlug": "torneo-clausura",
+    "year": 2026,
+    "name": "Torneo Clausura 2026"
+  },
+  "zones": [
+    {
+      "letter": "A",
+      "teams": [
+        { "espnId": "5", "code": "CABJ", "name": "Boca Juniors" },
+        { "espnId": "11989", "code": "CTR", "name": "Central Córdoba (SdE)" },
+        { "espnId": "8950", "code": "DYJ", "name": "Defensa y Justicia" },
+        { "espnId": "17702", "code": "RIE", "name": "Deportivo Riestra" },
+        { "espnId": "8", "code": "EST", "name": "Estudiantes de La Plata" },
+        { "espnId": "11972", "code": "GMZ", "name": "Gimnasia (Mendoza)" },
+        { "espnId": "11", "code": "IND", "name": "Independiente" },
+        { "espnId": "2975", "code": "IACC", "name": "Instituto (Córdoba)" },
+        { "espnId": "12", "code": "LAN", "name": "Lanús" },
+        { "espnId": "14", "code": "NOB", "name": "Newell's Old Boys" },
+        { "espnId": "7764", "code": "PLA", "name": "Platense" },
+        { "espnId": "18", "code": "SLO", "name": "San Lorenzo" },
+        { "espnId": "19", "code": "TALL", "name": "Talleres (Córdoba)" },
+        { "espnId": "20", "code": "USF", "name": "Unión (Santa Fe)" },
+        { "espnId": "21", "code": "VEL", "name": "Vélez Sarsfield" }
+      ]
+    },
+    {
+      "letter": "B",
+      "teams": [
+        { "espnId": "9739", "code": "ALDO", "name": "Aldosivi" },
+        { "espnId": "3", "code": "ARGJ", "name": "Argentinos Juniors" },
+        { "espnId": "9785", "code": "CAT", "name": "Atlético Tucumán" },
+        { "espnId": "235", "code": "BAN", "name": "Banfield" },
+        { "espnId": "10060", "code": "BAR", "name": "Barracas Central" },
+        { "espnId": "4", "code": "BEL", "name": "Belgrano (Córdoba)" },
+        { "espnId": "19685", "code": "AAE", "name": "Estudiantes de Río Cuarto" },
+        { "espnId": "9", "code": "GLP", "name": "Gimnasia La Plata" },
+        { "espnId": "10", "code": "HUR", "name": "Huracán" },
+        { "espnId": "9744", "code": "RIVM", "name": "Independiente Rivadavia" },
+        { "espnId": "15", "code": "RAC", "name": "Racing Club" },
+        { "espnId": "16", "code": "RIV", "name": "River Plate" },
+        { "espnId": "17", "code": "ROS", "name": "Rosario Central" },
+        { "espnId": "10158", "code": "SARM", "name": "Sarmiento (Junín)" },
+        { "espnId": "7767", "code": "TIG", "name": "Tigre" }
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@ import { CHAMPION_CREDIT } from "@/lib/champion";
 import { logPickEvent } from "@/lib/pick-events";
 import { getServerSessionState } from "@/lib/product/session-state";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { getWorldCupGroupLabel, getWorldCupTeamMeta } from "@/lib/world-cup-2026";
+import { getLigaTeamMeta, getLigaZoneLabel } from "@/lib/liga-2026";
 
 type MarketRow = {
   id: string;
@@ -903,7 +903,7 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
             id: row.id,
             stage: stage.name,
             stageSortOrder: stage.sort_order,
-            groupLabel: getWorldCupGroupLabel(home.fifa_code, away.fifa_code, stage.code),
+            groupLabel: getLigaZoneLabel(home.fifa_code, away.fifa_code, stage.code),
             venue: row.venue_city ?? row.venue_name ?? "Sede",
             kickoffAt: row.kickoff_at,
             kickoffLabel: formatKickoffLabel(row.kickoff_at),
@@ -922,12 +922,12 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
             isEditable: market.status === "open",
             home: {
               name: home.name,
-              flag: getWorldCupTeamMeta(home.fifa_code)?.flag ?? "🏳️",
+              flag: getLigaTeamMeta(home.fifa_code)?.flag ?? "",
               score: row.status === "finished" ? row.home_score_ft ?? 0 : row.home_score_90 ?? 0,
             },
             away: {
               name: away.name,
-              flag: getWorldCupTeamMeta(away.fifa_code)?.flag ?? "🏳️",
+              flag: getLigaTeamMeta(away.fifa_code)?.flag ?? "",
               score: row.status === "finished" ? row.away_score_ft ?? 0 : row.away_score_90 ?? 0,
             },
             allocation,

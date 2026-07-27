@@ -1,11 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/register"];
+const OPEN_PATHS = ["/preview"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = Boolean(request.cookies.get("mundial_pool_session")?.value);
   const isPublicPath = PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  const isOpenPath = OPEN_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+
+  if (isOpenPath) {
+    return NextResponse.next();
+  }
 
   if (!hasSession && !isPublicPath) {
     const loginUrl = request.nextUrl.clone();
