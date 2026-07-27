@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { TeamCrest } from "@/components/team-crest";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
@@ -109,7 +110,7 @@ export function QualifiesSliderFooter({
           style={{ flex: 1, gap: 8 }}
           onClick={() => onHomeAmountChange(snap(homeAmount + STEP))}
         >
-          <span style={{ fontSize: "1.1rem" }}>{match.home.flag}</span> +1.000
+          <TeamCrest url={match.home.logo} alt={match.home.name} size={18} /> +1.000
         </button>
         <button
           type="button"
@@ -117,7 +118,7 @@ export function QualifiesSliderFooter({
           style={{ flex: 1, gap: 8 }}
           onClick={() => onHomeAmountChange(snap(homeAmount - STEP))}
         >
-          +1.000 <span style={{ fontSize: "1.1rem" }}>{match.away.flag}</span>
+          +1.000 <TeamCrest url={match.away.logo} alt={match.away.name} size={18} />
         </button>
       </div>
 

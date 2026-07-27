@@ -117,7 +117,7 @@ function SheetOverlay({ open, onClose }: { open: boolean; onClose: () => void })
               </header>
 
               <RulesSection title="La idea en una línea">
-                <p>Cada partido apostás <strong>$10.000</strong>. Si le pegás al resultado, cobrás parte del pozo del grupo. Si errás, no cobrás nada de ese partido. Gana el que más acumula al final del Mundial.</p>
+                <p>Cada partido apostás <strong>$10.000</strong>. Si le pegás al resultado, cobrás parte del pozo del grupo. Si errás, no cobrás nada de ese partido. Gana el que más acumula al final del torneo.</p>
               </RulesSection>
 
               <RulesSection title="Cómo apostás">
@@ -194,13 +194,13 @@ function SheetOverlay({ open, onClose }: { open: boolean; onClose: () => void })
               </RulesSection>
 
               <RulesSection title="Cómo se lee la tabla">
-                <p><strong>Total</strong> — la plata que cobraste en todos los partidos del Mundial. Ordena la tabla. Nunca baja.</p>
+                <p><strong>Total</strong> — la plata que cobraste en todos los partidos del torneo. Ordena la tabla. Nunca baja.</p>
                 <p><strong>Aciertos</strong> — cuántos partidos leíste bien con tu apuesta principal.</p>
                 <p><strong>Mejor</strong> — el cobro más grande que pegaste en un solo partido.</p>
               </RulesSection>
 
               <RulesSection title="Apuesta al campeón">
-                <p>Antes del partido inaugural elegís quién pensás que sale campeón. Cada uno pone <strong>$10.000</strong>, que arman un pozo aparte. Cuando termina el Mundial, ese pozo se reparte entre los que acertaron — mientras menos sean, más se llevan.</p>
+                <p>Antes del partido inaugural elegís quién pensás que sale campeón. Cada uno pone <strong>$10.000</strong>, que arman un pozo aparte. Cuando termina el torneo, ese pozo se reparte entre los que acertaron — mientras menos sean, más se llevan.</p>
                 <p>Lo que cobres al campeón <strong>se suma a tu total</strong> de la misma tabla del ranking. Es un partido extra que se juega al principio y se cobra al final.</p>
               </RulesSection>
 
@@ -209,7 +209,7 @@ function SheetOverlay({ open, onClose }: { open: boolean; onClose: () => void })
                 <ol style={{ display: "grid", gap: 6, paddingLeft: 20, margin: 0 }}>
                   <li>Quien tenga más aciertos</li>
                   <li>Quien haya tenido el mejor cobro individual</li>
-                  <li>Quien le pegó al campeón del Mundial</li>
+                  <li>Quien le pegó al campeón del torneo</li>
                   <li>Si todo lo anterior empata, empate compartido</li>
                 </ol>
               </RulesSection>

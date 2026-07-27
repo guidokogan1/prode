@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
 import { Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
+import { TeamCrest } from "@/components/team-crest";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildPresetAllocation, type IntensityPreset } from "@/lib/game";
@@ -459,7 +460,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               placeItems: "center",
             }}
           >
-            <span style={{ fontSize: "1.25rem" }}>{match.home.flag}</span>
+            <TeamCrest url={match.home.logo} alt={match.home.name} size={22} />
           </motion.button>
           {quickPlayTargets.draw ? (
             <motion.button
@@ -493,7 +494,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               placeItems: "center",
             }}
           >
-            <span style={{ fontSize: "1.25rem" }}>{match.away.flag}</span>
+            <TeamCrest url={match.away.logo} alt={match.away.name} size={22} />
           </motion.button>
         </div>
       ) : null}

@@ -7,6 +7,7 @@ import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "
 import { Check, Droplets, Flame, Sparkles, Zap } from "lucide-react";
 import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
+import { TeamCrest } from "@/components/team-crest";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildPresetAllocation, creditForMarketType, type IntensityPreset } from "@/lib/game";
@@ -598,7 +599,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       }}
                     >
                       <div style={{ position: "absolute", left: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
-                          <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>{activeMatch.home.flag}</span>
+                          <TeamCrest url={activeMatch.home.logo} alt={activeMatch.home.name} size={44} />
                         <span style={{ color: "var(--gold)", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                           {"gana"}
                         </span>
@@ -615,7 +616,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       }}
                     >
                       <div style={{ position: "absolute", right: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
-                          <span style={{ fontSize: "2.5rem", lineHeight: 1 }}>{activeMatch.away.flag}</span>
+                          <TeamCrest url={activeMatch.away.logo} alt={activeMatch.away.name} size={44} />
                         <span style={{ color: "var(--live)", fontFamily: "var(--font-body)", fontSize: ".68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".12em" }}>
                           {"gana"}
                         </span>
@@ -837,7 +838,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{activeMatch.home.flag}</span>
+                      <TeamCrest url={activeMatch.home.logo} alt={activeMatch.home.name} size={22} />
                       <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{activeMatch.home.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>
@@ -881,7 +882,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                      <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>{activeMatch.away.flag}</span>
+                      <TeamCrest url={activeMatch.away.logo} alt={activeMatch.away.name} size={22} />
                       <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontStyle: "normal", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>{activeMatch.away.name.slice(0, 3)}</span>
                     </div>
                   </motion.button>

@@ -32,7 +32,7 @@ export default async function RankingPage() {
       <section className="title-stack" style={{ paddingTop: 8, gap: 6 }}>
         <div className="split-row" style={{ alignItems: "start", gap: 12 }}>
           <div className="title-stack" style={{ gap: 6 }}>
-            {finished ? <p className="eyebrow" style={{ color: "var(--gold)" }}>Mundial terminado</p> : null}
+            {finished ? <p className="eyebrow" style={{ color: "var(--gold)" }}>Torneo terminado</p> : null}
             <h1 className="display-title">{finished ? "Tabla final" : "Tabla actual"}</h1>
             {finished && tournament.winnerTeam ? (
               <p className="muted-copy">

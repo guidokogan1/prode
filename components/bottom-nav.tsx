@@ -43,7 +43,10 @@ export function BottomNav() {
       </nav>
       <nav className="top-nav-desktop" aria-label="Navegacion principal">
         <div className="top-nav-inner">
-          <div className="top-nav-brand">Mundial Pool</div>
+          <div className="top-nav-brand" style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <img src="/lpf.jpg" alt="LPF" width={30} height={30} style={{ borderRadius: 7, objectFit: "cover" }} />
+            LPF
+          </div>
           <div className="top-nav-links">{links}</div>
         </div>
       </nav>

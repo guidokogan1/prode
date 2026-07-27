@@ -21,8 +21,8 @@ const barlowCondensed = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  title: "Mundial Pool",
-  description: "Juego mobile-first para vivir el Mundial con tus amigos.",
+  title: "LPF",
+  description: "Juego mobile-first para vivir la LPF con tus amigos.",
   manifest: "/manifest.webmanifest",
   robots: { index: false, follow: false },
   icons: {

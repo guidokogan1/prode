@@ -32,7 +32,7 @@ export function ChampionFinaleCard({ tournament, userPick }: ChampionFinaleCardP
       }}
     >
       <div className="title-stack" style={{ gap: 4 }}>
-        <p className="eyebrow">Campeón del Mundial</p>
+        <p className="eyebrow">Campeón del torneo</p>
         <strong className="section-title" style={{ color: accent }}>
           {tournament.winnerTeam.flag} {tournament.winnerTeam.name}
         </strong>
@@ -51,8 +51,8 @@ export function ChampionFinaleCard({ tournament, userPick }: ChampionFinaleCardP
         fileName="prode-campeon.jpg"
         shareText={
           pickedWinner
-            ? `Acerté el campeón del Mundial: ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`
-            : `Pegamos el prode del Mundial. Campeón ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`
+            ? `Acerté el campeón del torneo: ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`
+            : `Pegamos el prode del torneo. Campeón ${tournament.winnerTeam.flag} ${tournament.winnerTeam.name}`
         }
         label="Compartir"
         className="button-ghost"

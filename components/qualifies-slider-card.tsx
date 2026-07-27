@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { MatchRevealPanel } from "@/components/match-reveal-panel";
 import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
+import { TeamCrest } from "@/components/team-crest";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchViewModel } from "@/lib/domain";
 import { formatCredits } from "@/lib/format";
@@ -133,8 +134,8 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
                   <div style={{ width: `${100 - homePct}%`, background: awayFill }} />
                 </div>
                 <div className="split-row">
-                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.5rem", letterSpacing: "-0.02em", color: homeText, fontVariantNumeric: "tabular-nums" }}>{match.home.flag} {formatCredits(homeAmount)}</strong>
-                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.5rem", letterSpacing: "-0.02em", color: awayText, fontVariantNumeric: "tabular-nums" }}>{formatCredits(awayAmount)} {match.away.flag}</strong>
+                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.5rem", letterSpacing: "-0.02em", color: homeText, fontVariantNumeric: "tabular-nums", display: "inline-flex", alignItems: "center", gap: 6 }}><TeamCrest url={match.home.logo} alt={match.home.name} size={22} /> {formatCredits(homeAmount)}</strong>
+                  <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.5rem", letterSpacing: "-0.02em", color: awayText, fontVariantNumeric: "tabular-nums", display: "inline-flex", alignItems: "center", gap: 6 }}>{formatCredits(awayAmount)} <TeamCrest url={match.away.logo} alt={match.away.name} size={22} /></strong>
                 </div>
                 {match.isEditable ? (
                   <button type="button" className="button-secondary" style={{ width: "100%", justifyContent: "center", minHeight: 46, marginTop: 4 }} onClick={() => setEditing(true)}>
