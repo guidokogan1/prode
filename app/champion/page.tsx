@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChampionPickCard } from "@/components/champion-pick-card";
 import { isChampionPickAllowedFor } from "@/lib/champion";
+import { getLigaZoneLabelByName } from "@/lib/liga-2026";
 import { shouldIncludeMatchInChampionPool } from "@/lib/dummy-matches";
 import { listMatches } from "@/lib/repositories/matches";
 import { getProfile } from "@/lib/repositories/profile";
@@ -21,8 +22,8 @@ export default async function ChampionPage() {
       matches
         .filter((match) => match.groupLabel && shouldIncludeMatchInChampionPool(match.id))
         .flatMap((match) => [
-          { name: match.home.name, flag: match.home.flag, groupLabel: match.groupLabel },
-          { name: match.away.name, flag: match.away.flag, groupLabel: match.groupLabel },
+          { name: match.home.name, flag: match.home.flag, logo: match.home.logo, groupLabel: getLigaZoneLabelByName(match.home.name) ?? match.groupLabel },
+          { name: match.away.name, flag: match.away.flag, logo: match.away.logo, groupLabel: getLigaZoneLabelByName(match.away.name) ?? match.groupLabel },
         ])
         .map((team) => [team.name, team]),
     ).values(),

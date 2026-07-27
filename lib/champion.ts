@@ -1,8 +1,8 @@
-export const TOURNAMENT_START_AT = "2026-06-11T00:00:00.000Z";
+export const CHAMPION_PICK_LOCK_AT = "2026-08-18T00:00:00.000Z";
 export const CHAMPION_CREDIT = 10000;
 
 export function isChampionPickLocked(now = Date.now()) {
-  return now >= new Date(TOURNAMENT_START_AT).getTime();
+  return now >= new Date(CHAMPION_PICK_LOCK_AT).getTime();
 }
 
 function getChampionLatePickNames() {

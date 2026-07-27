@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Trophy } from "lucide-react";
 import { LeaderboardPodium } from "@/components/leaderboard-podium";
 import { RankingList } from "@/components/ranking-list";
 import { ShareByIdButton } from "@/components/share-by-id-button";
@@ -16,13 +18,39 @@ export default async function RankingPage() {
 
   if (!ranking.length) {
     return (
-      <main className="page-shell page-scroll" style={{ display: "grid", gap: 18, fontFamily: "var(--font-body)" }}>
-        <section className="title-stack" style={{ paddingTop: 8, gap: 6 }}>
-          <h1 className="display-title">Tabla actual</h1>
-        </section>
-        <section className="surface-card-soft soft-panel section-stack" style={{ textAlign: "center", padding: 32 }}>
-          <p className="muted-copy">Todavía no hay resultados. La tabla se arma cuando empiecen a liquidarse los partidos.</p>
-        </section>
+      <main
+        className="page-shell page-scroll"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          gap: 14,
+          minHeight: "68vh",
+          fontFamily: "var(--font-body)",
+        }}
+      >
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 999,
+            display: "grid",
+            placeItems: "center",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <Trophy size={25} strokeWidth={1.8} color="var(--text-tertiary)" />
+        </div>
+        <h1 className="display-title" style={{ margin: 0 }}>Todavía no hay tabla</h1>
+        <p className="muted-copy" style={{ maxWidth: 320 }}>
+          Se arma sola cuando se liquiden los primeros partidos. Mientras tanto, cargá tus jugadas.
+        </p>
+        <Link href="/matches" className="button-secondary" style={{ marginTop: 6, minHeight: 40 }}>
+          Ir a Partidos
+        </Link>
       </main>
     );
   }

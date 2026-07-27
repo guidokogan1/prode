@@ -46,7 +46,7 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
           </>
         ) : null}
         <div className="title-stack" style={{ gap: 4, textAlign: "center", justifyItems: "center" }}>
-          <p className="eyebrow" style={{ color: "var(--gold)" }}>Mundial terminado</p>
+          <p className="eyebrow" style={{ color: "var(--gold)" }}>Torneo terminado</p>
           <h1 className="display-title" style={{ fontSize: "clamp(2rem, 7vw, 2.6rem)", color: "var(--gold)" }}>
             Campeón
           </h1>
@@ -158,7 +158,7 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
           shareText={
             userIsLeader
               ? `Salí campeón del prode con ${formatGross(userInRanking?.grossAmount ?? 0)} 🏆`
-              : "Así terminó el prode del Mundial"
+              : "Así terminó el prode del torneo"
           }
           label="Compartir resultado"
           className="button-primary"

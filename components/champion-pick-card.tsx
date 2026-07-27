@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SessionContext } from "@/components/session-provider";
+import { TeamCrest } from "@/components/team-crest";
 import type { SessionState } from "@/lib/domain";
 import {
   CHAMPION_EVENT,
@@ -17,6 +18,7 @@ import {
 type ChampionOption = {
   name: string;
   flag: string;
+  logo?: string;
   groupLabel?: string;
 };
 
@@ -192,7 +194,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
           <h2 className="section-title" style={{ fontSize: "clamp(1.3rem, 5.4vw, 1.6rem)" }}>
             {selectedOption ? `${selectedOption.flag} ${selectedOption.name}` : "Sin elegir"}
           </h2>
-          <p className="muted-copy">{locked ? "Ya quedó cerrado." : "Podés cambiarlo hasta que arranque el Mundial."}</p>
+          <p className="muted-copy">{locked ? "Ya quedó cerrado." : "Podés cambiarlo hasta la fecha 4."}</p>
         </div>
 
         {!locked ? (
@@ -236,7 +238,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
           {selectedOption ? `${selectedOption.flag} ${selectedOption.name}` : "Elegí uno para arrancar"}
         </strong>
         <span className="micro-copy">
-          {locked ? "Quedó cerrado." : "Después lo podés editar desde tu perfil hasta que arranque el Mundial."}
+          {locked ? "Quedó cerrado." : "Después lo podés editar desde tu perfil hasta la fecha 4."}
         </span>
       </section>
 
@@ -270,7 +272,7 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
                   }}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: "1.3rem" }}>{team.flag}</span>
+                    <TeamCrest url={team.logo} alt={team.name} size={24} />
                     <span style={{ color: selected ? "var(--gold)" : "#EDE8D9", fontWeight: selected ? 700 : 600 }}>{team.name}</span>
                   </span>
                   <span

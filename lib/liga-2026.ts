@@ -45,6 +45,18 @@ export function getLigaTeamMetaByEspnId(espnId: string) {
   return teamMetaByEspnId.get(espnId);
 }
 
+const zoneLetterByName = new Map<string, string>();
+for (const zone of zones) {
+  for (const team of zone.teams) {
+    zoneLetterByName.set(team.name, zone.letter);
+  }
+}
+
+export function getLigaZoneLabelByName(name: string) {
+  const letter = zoneLetterByName.get(name);
+  return letter ? `Zona ${letter}` : undefined;
+}
+
 export function getLigaZoneLabel(homeCode: string, awayCode: string, stageCode: string) {
   if (stageCode !== "group") {
     return undefined;

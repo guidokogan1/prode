@@ -1147,7 +1147,7 @@ function buildProjectedKnockout(matches: MatchViewModel[], allocationScope: stri
         {
           id: "champion",
           label: `${champion.flag} ${champion.name}`,
-          hint: "Así terminaría tu Mundial ideal.",
+          hint: "Así terminaría tu torneo ideal.",
         },
       ],
     };
