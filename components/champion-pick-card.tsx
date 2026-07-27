@@ -128,19 +128,13 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
     setSaveError(null);
 
     let currentSession = session;
-    if (!currentSession) {
-      for (let i = 0; i < 25; i += 1) {
-        await new Promise((r) => setTimeout(r, 200));
-        try {
-          const r = await fetch("/api/session", { credentials: "include", cache: "no-store" });
-          const body = (await r.json()) as { session?: SessionState };
-          if (body.session) {
-            currentSession = body.session;
-            break;
-          }
-        } catch {
-        }
+    try {
+      const r = await fetch("/api/session", { credentials: "include", cache: "no-store" });
+      const body = (await r.json()) as { session?: SessionState };
+      if (body.session) {
+        currentSession = body.session;
       }
+    } catch {
     }
 
     if (currentSession?.kind === "remote") {
