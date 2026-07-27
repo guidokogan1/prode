@@ -20,13 +20,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (hasSession && isPublicPath) {
-    const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/";
-    homeUrl.search = "";
-    return NextResponse.redirect(homeUrl);
-  }
-
   const response = NextResponse.next();
   if (!isPublicPath) {
     response.headers.set("Cache-Control", "private, no-store, must-revalidate");
