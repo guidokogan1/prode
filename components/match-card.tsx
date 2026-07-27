@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchViewModel } from "@/lib/domain";
 import { getOutcomeColor } from "@/lib/match-ui";
+import { TeamCrest } from "@/components/team-crest";
 
 type MatchCardProps = {
   match: MatchViewModel;
@@ -68,7 +69,9 @@ export function MatchCard({ match }: MatchCardProps) {
         <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 10, alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <span style={{ fontSize: "1.25rem", flexShrink: 0, width: 28, textAlign: "center" }}>{match.home.flag}</span>
+              <span style={{ flexShrink: 0, width: 28, display: "flex", justifyContent: "center" }}>
+                <TeamCrest url={match.home.logo} alt={match.home.name} size={26} />
+              </span>
               <strong
                 style={{
                   fontFamily: "var(--font-body)",
@@ -113,7 +116,9 @@ export function MatchCard({ match }: MatchCardProps) {
               >
                 {match.away.name}
               </strong>
-              <span style={{ fontSize: "1.25rem", flexShrink: 0, width: 28, textAlign: "center" }}>{match.away.flag}</span>
+              <span style={{ flexShrink: 0, width: 28, display: "flex", justifyContent: "center" }}>
+                <TeamCrest url={match.away.logo} alt={match.away.name} size={26} />
+              </span>
             </div>
           </div>
 

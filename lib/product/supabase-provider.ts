@@ -681,6 +681,10 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
       .match(matchId ? { id: matchId } : {})
       .returns<MatchQueryRow[]>();
 
+    if (matchesQuery.error) {
+      throw new Error(`matches query: ${matchesQuery.error.message} · ${matchesQuery.error.code ?? ""}`);
+    }
+
     const matchRows = (matchesQuery.data ?? []).map((row) => {
       if (!isDummyMatchId(row.id)) {
         return row;
@@ -708,6 +712,10 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
       .select("id, match_id, market_type, lock_at, winning_outcome_code, status")
       .in("match_id", matchIds)
       .returns<MarketQueryRow[]>();
+
+    if (marketsQuery.error) {
+      throw new Error(`markets query: ${marketsQuery.error.message} · ${marketsQuery.error.code ?? ""}`);
+    }
 
     const dummyStatusByMatchId = new Map(
       matchRows
@@ -923,11 +931,13 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
             home: {
               name: home.name,
               flag: getLigaTeamMeta(home.fifa_code)?.flag ?? "",
+              logo: getLigaTeamMeta(home.fifa_code)?.logoUrl ?? "",
               score: row.status === "finished" ? row.home_score_ft ?? 0 : row.home_score_90 ?? 0,
             },
             away: {
               name: away.name,
               flag: getLigaTeamMeta(away.fifa_code)?.flag ?? "",
+              logo: getLigaTeamMeta(away.fifa_code)?.logoUrl ?? "",
               score: row.status === "finished" ? row.away_score_ft ?? 0 : row.away_score_90 ?? 0,
             },
             allocation,

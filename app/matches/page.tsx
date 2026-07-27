@@ -53,8 +53,8 @@ export default async function MatchesPage() {
 }
 
 function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>) {
-  const groupStageMatches = matches.filter((match) => match.stage === "Fase de grupos");
-  const knockoutMatches = matches.filter((match) => match.stage !== "Fase de grupos");
+  const groupStageMatches = matches.filter((match) => Boolean(match.groupLabel));
+  const knockoutMatches = matches.filter((match) => !match.groupLabel);
 
   const groupStageGroups = [...new Set(groupStageMatches.map((match) => match.groupLabel).filter(Boolean))]
     .sort((left, right) => {

@@ -50,11 +50,13 @@ export type MatchViewModel = {
   home: {
     name: string;
     flag: string;
+    logo?: string;
     score: number;
   };
   away: {
     name: string;
     flag: string;
+    logo?: string;
     score: number;
   };
   allocation: OutcomeViewModel[];

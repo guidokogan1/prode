@@ -3,12 +3,20 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 const codeByEspnId = new Map(LIGA_2026_TEAMS.map((team) => [team.espnId, team.code]));
 
+type EspnCompetitor = { homeAway: string; team?: { id?: string }; score?: string | null; winner?: boolean };
 type EspnEvent = {
   id: string;
   date: string;
   season?: { slug?: string };
-  competitions: { competitors: { homeAway: string; team?: { id?: string } }[] }[];
+  status?: { type?: { state?: "pre" | "in" | "post" } };
+  competitions: { competitors: EspnCompetitor[] }[];
 };
+
+function parseScore(value: string | null | undefined): number | null {
+  if (value == null || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 function espnDate(offsetDays: number): string {
   const base = Date.now() + offsetDays * 24 * 60 * 60 * 1000;
@@ -48,23 +56,63 @@ export async function ingestLigaFixtures({ daysBack = 3, daysAhead = 10 } = {}) 
   const existingQuery = await supabase.from("matches").select("id, kickoff_at, status");
   const existingById = new Map((existingQuery.data ?? []).map((match) => [match.id, match]));
 
-  const toCreate: { id: string; homeId: string; awayId: string; kickoff: string; externalId: string }[] = [];
+  type NewFixture = {
+    id: string;
+    homeId: string;
+    awayId: string;
+    kickoff: string;
+    externalId: string;
+    status: string;
+    homeScore: number | null;
+    awayScore: number | null;
+    winnerTeamId: string | null;
+    winnerMode: string | null;
+  };
+  const toCreate: NewFixture[] = [];
   const toReschedule: { id: string; kickoff: string }[] = [];
+  const toBackfill: { id: string; status: string; homeScore: number | null; awayScore: number | null; winnerTeamId: string | null; winnerMode: string | null }[] = [];
   for (const event of payload.events ?? []) {
     if (event.season?.slug && event.season.slug !== LIGA_2026_TOURNAMENT.seasonSlug) continue;
     const competitors = event.competitions?.[0]?.competitors ?? [];
-    const homeId = resolveTeamId(competitors.find((c) => c.homeAway === "home")?.team?.id);
-    const awayId = resolveTeamId(competitors.find((c) => c.homeAway === "away")?.team?.id);
+    const homeCompetitor = competitors.find((c) => c.homeAway === "home");
+    const awayCompetitor = competitors.find((c) => c.homeAway === "away");
+    const homeId = resolveTeamId(homeCompetitor?.team?.id);
+    const awayId = resolveTeamId(awayCompetitor?.team?.id);
     if (!homeId || !awayId) continue;
 
     const id = `cl-${event.id}`;
+    const state = event.status?.type?.state ?? "pre";
+    const homeScore = parseScore(homeCompetitor?.score);
+    const awayScore = parseScore(awayCompetitor?.score);
+    const status = state === "post" ? "finished" : state === "in" ? "live" : "scheduled";
+    let winnerTeamId: string | null = null;
+    if (state === "post" && homeScore != null && awayScore != null) {
+      if (homeScore > awayScore) winnerTeamId = homeId;
+      else if (awayScore > homeScore) winnerTeamId = awayId;
+    }
+
     const existing = existingById.get(id);
     if (existing) {
       const drifted = Math.abs(new Date(existing.kickoff_at).getTime() - new Date(event.date).getTime()) > 60_000;
       if (drifted && existing.status === "scheduled") toReschedule.push({ id, kickoff: event.date });
+      if (existing.status === "scheduled" && status !== "scheduled") {
+        toBackfill.push({ id, status, homeScore, awayScore, winnerTeamId, winnerMode: state === "post" ? "regulation" : null });
+      }
       continue;
     }
-    toCreate.push({ id, homeId, awayId, kickoff: event.date, externalId: event.id });
+
+    toCreate.push({
+      id,
+      homeId,
+      awayId,
+      kickoff: event.date,
+      externalId: event.id,
+      status,
+      homeScore,
+      awayScore,
+      winnerTeamId,
+      winnerMode: state === "post" ? "regulation" : null,
+    });
   }
 
   for (const match of toReschedule) {
@@ -72,7 +120,25 @@ export async function ingestLigaFixtures({ daysBack = 3, daysAhead = 10 } = {}) 
     await supabase.from("match_markets").update({ lock_at: match.kickoff }).eq("match_id", match.id).eq("status", "open");
   }
 
-  if (!toCreate.length) return { ok: true as const, created: [] as string[], rescheduled: toReschedule.length };
+  for (const match of toBackfill) {
+    await supabase
+      .from("matches")
+      .update({
+        status: match.status,
+        home_score_90: match.homeScore,
+        away_score_90: match.awayScore,
+        home_score_ft: match.status === "finished" ? match.homeScore : null,
+        away_score_ft: match.status === "finished" ? match.awayScore : null,
+        winner_team_id: match.winnerTeamId,
+        winner_mode: match.winnerMode,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", match.id);
+  }
+
+  if (!toCreate.length) {
+    return { ok: true as const, created: [] as string[], rescheduled: toReschedule.length, backfilled: toBackfill.length };
+  }
 
   const matchRows = toCreate.map((fixture) => ({
     id: fixture.id,
@@ -81,7 +147,13 @@ export async function ingestLigaFixtures({ daysBack = 3, daysAhead = 10 } = {}) 
     home_team_id: fixture.homeId,
     away_team_id: fixture.awayId,
     kickoff_at: fixture.kickoff,
-    status: "scheduled",
+    status: fixture.status,
+    home_score_90: fixture.homeScore,
+    away_score_90: fixture.awayScore,
+    home_score_ft: fixture.status === "finished" ? fixture.homeScore : null,
+    away_score_ft: fixture.status === "finished" ? fixture.awayScore : null,
+    winner_team_id: fixture.winnerTeamId,
+    winner_mode: fixture.winnerMode,
   }));
   const matchError = (await supabase.from("matches").upsert(matchRows, { onConflict: "id", ignoreDuplicates: true })).error;
   if (matchError) return { ok: false as const, reason: `matches: ${matchError.message}` };
@@ -106,5 +178,5 @@ export async function ingestLigaFixtures({ daysBack = 3, daysAhead = 10 } = {}) 
     if (outcomeError) return { ok: false as const, reason: `outcomes: ${outcomeError.message}` };
   }
 
-  return { ok: true as const, created: toCreate.map((fixture) => fixture.id), rescheduled: toReschedule.length };
+  return { ok: true as const, created: toCreate.map((fixture) => fixture.id), rescheduled: toReschedule.length, backfilled: toBackfill.length };
 }
