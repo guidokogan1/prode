@@ -81,3 +81,26 @@ export async function getLigaPreviewDays(): Promise<PreviewDay[]> {
     matches,
   }));
 }
+
+export type PreviewHome = {
+  live: PreviewMatch[];
+  focusLabel: string;
+  focusIsUpcoming: boolean;
+  focusMatches: PreviewMatch[];
+};
+
+export async function getLigaPreviewHome(): Promise<PreviewHome | null> {
+  const days = await getLigaPreviewDays();
+  if (days.length === 0) return null;
+
+  const live = days.flatMap((day) => day.matches).filter((match) => match.state === "in");
+  const upcomingDay = days.find((day) => day.matches.some((match) => match.state !== "post"));
+  const focus = upcomingDay ?? days[days.length - 1];
+
+  return {
+    live,
+    focusLabel: focus.label,
+    focusIsUpcoming: Boolean(upcomingDay),
+    focusMatches: focus.matches,
+  };
+}
