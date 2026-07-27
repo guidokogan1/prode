@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
+import { TeamCrest } from "@/components/team-crest";
 
 type VoteFaceProps = {
   match: MatchViewModel;
@@ -98,7 +99,7 @@ export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLa
       >
         <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 24px 1fr", gap: 4, alignItems: "center" }}>
           <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
-            <span style={{ fontSize: "2.4rem", lineHeight: 1 }}>{match.home.flag}</span>
+            <TeamCrest url={match.home.logo} alt={match.home.name} size={40} />
             <span className="team-display" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontStyle: "normal", textAlign: "center" }}>{match.home.name}</span>
             <span className="micro-copy" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontStyle: "normal", fontSize: ".62rem", letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(151,173,153,0.74)" }}>Local</span>
           </div>
@@ -108,7 +109,7 @@ export function VoteFace({ match, showDrawGesture, centerMode = "vs", topRightLa
             </span>
           </div>
           <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
-            <span style={{ fontSize: "2.4rem", lineHeight: 1 }}>{match.away.flag}</span>
+            <TeamCrest url={match.away.logo} alt={match.away.name} size={40} />
             <span className="team-display" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontStyle: "normal", textAlign: "center" }}>{match.away.name}</span>
             <span className="micro-copy" style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontStyle: "normal", fontSize: ".62rem", letterSpacing: ".08em", textTransform: "uppercase", color: "rgba(151,173,153,0.74)" }}>Visitante</span>
           </div>

@@ -7,6 +7,7 @@ import { ArrowLeft, Check, Droplets, Flame, Sparkles } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import { ShareImageButton } from "@/components/share-image-button";
 import { VoteFace } from "@/components/vote-face";
+import { TeamCrest } from "@/components/team-crest";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { formatCredits, formatGross } from "@/lib/format";
@@ -607,7 +608,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   type="button"
                 >
                   <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                    <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.home.flag}</span>
+                    <TeamCrest url={effectiveMatch.home.logo} alt={effectiveMatch.home.name} size={20} />
                     <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
                       {effectiveMatch.home.name.slice(0, 3)}
                     </span>
@@ -651,7 +652,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   type="button"
                 >
                   <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
-                    <span style={{ fontSize: "1.12rem", lineHeight: 1 }}>{effectiveMatch.away.flag}</span>
+                    <TeamCrest url={effectiveMatch.away.logo} alt={effectiveMatch.away.name} size={20} />
                     <span style={{ fontFamily: "var(--font-barlow), system-ui, sans-serif", fontSize: ".5rem", fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
                       {effectiveMatch.away.name.slice(0, 3)}
                     </span>
