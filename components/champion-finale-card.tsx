@@ -26,9 +26,9 @@ export function ChampionFinaleCard({ tournament, userPick }: ChampionFinaleCardP
         display: "grid",
         gap: 12,
         background: pickedWinner
-          ? "linear-gradient(160deg, rgba(216,255,86,0.1) 0%, rgba(15,21,29,0.96) 60%)"
+          ? "linear-gradient(160deg, rgba(63,227,242,0.1) 0%, rgba(15,21,29,0.96) 60%)"
           : "rgba(255,255,255,0.035)",
-        borderColor: pickedWinner ? "rgba(216,255,86,0.28)" : "rgba(255,255,255,0.1)",
+        borderColor: pickedWinner ? "rgba(63,227,242,0.28)" : "rgba(255,255,255,0.1)",
       }}
     >
       <div className="title-stack" style={{ gap: 4 }}>

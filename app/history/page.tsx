@@ -31,8 +31,8 @@ export default async function HistoryPage() {
             style={{
               padding: 14,
               borderRadius: 14,
-              background: item.grossAmount > 0 ? "rgba(216,255,86,0.05)" : "rgba(255,255,255,0.03)",
-              borderColor: item.grossAmount > 0 ? "rgba(216,255,86,0.16)" : "rgba(255,255,255,0.08)",
+              background: item.grossAmount > 0 ? "rgba(63,227,242,0.05)" : "rgba(255,255,255,0.03)",
+              borderColor: item.grossAmount > 0 ? "rgba(63,227,242,0.16)" : "rgba(255,255,255,0.08)",
               display: "grid",
               gap: 10,
             }}

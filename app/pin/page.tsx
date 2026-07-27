@@ -15,7 +15,7 @@ export default function PinPage() {
         <p className="muted-copy">Validá tu acceso actual y actualizá el PIN para seguir entrando sin fricción.</p>
 
         <div className="two-col-grid">
-          <div className="surface-card-soft soft-panel-md" style={{ background: "rgba(255,85,71,0.05)", borderColor: "rgba(255,85,71,0.16)" }}>
+          <div className="surface-card-soft soft-panel-md" style={{ background: "rgba(244,166,60,0.05)", borderColor: "rgba(244,166,60,0.16)" }}>
             <div className="title-stack">
               <span className="micro-copy">Paso 1</span>
               <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.08rem", letterSpacing: "-0.03em", textTransform: "uppercase" }}>Verificá</strong>

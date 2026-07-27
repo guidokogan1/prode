@@ -88,7 +88,7 @@ export default async function RankingPage() {
           </section>
         ) : null}
         {leader ? (
-          <section className="surface-card-soft soft-panel section-stack" style={{ background: "rgba(216,255,86,0.06)", borderColor: "rgba(216,255,86,0.18)" }}>
+          <section className="surface-card-soft soft-panel section-stack" style={{ background: "rgba(63,227,242,0.06)", borderColor: "rgba(63,227,242,0.18)" }}>
             <span className="micro-copy">Líder</span>
             <div className="split-row">
               <strong style={{ fontSize: "1.05rem", textTransform: "uppercase" }}>#{leader.position} {leader.name}</strong>

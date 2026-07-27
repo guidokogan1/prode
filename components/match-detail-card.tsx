@@ -374,7 +374,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     cardState.heroTone === "positive"
       ? "var(--gold)"
       : cardState.heroTone === "negative"
-        ? "var(--live)"
+        ? "var(--negative)"
         : cardState.heroTone === "live"
         ? "var(--live)"
           : "#EDE8D9";
@@ -469,8 +469,8 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 >
                   {isInteractiveEditor ? (
                     <>
-                      <motion.div style={{ opacity: homeOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(135deg, rgba(61,155,95,0.55) 0%, transparent 55%)" }} />
-                      <motion.div style={{ opacity: awayOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(225deg, rgba(232,65,58,0.55) 0%, transparent 55%)" }} />
+                      <motion.div style={{ opacity: homeOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(135deg, rgba(63,227,242,0.55) 0%, transparent 55%)" }} />
+                      <motion.div style={{ opacity: awayOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(225deg, rgba(244,166,60,0.55) 0%, transparent 55%)" }} />
                       {cardState.showDrawGesture ? <motion.div style={{ opacity: drawOpacity, position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(0deg, rgba(91,143,240,0.5) 0%, transparent 50%)" }} /> : null}
                     </>
                   ) : null}
@@ -573,7 +573,7 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   }}
                 >
                   <div className="section-stack" style={{ justifyItems: "center" }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(216,255,86,0.14)", border: "2px solid rgba(216,255,86,0.48)", boxShadow: isSaving ? "0 0 0 10px rgba(216,255,86,0.08)" : "0 0 0 0 rgba(216,255,86,0)" }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(63,227,242,0.14)", border: "2px solid rgba(63,227,242,0.48)", boxShadow: isSaving ? "0 0 0 10px rgba(63,227,242,0.08)" : "0 0 0 0 rgba(63,227,242,0)" }}>
                       <Check size={24} style={{ color: "var(--gold)" }} />
                     </div>
                     <p className="section-title">Guardado</p>
@@ -598,9 +598,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     width: 52,
                     height: 52,
                     borderRadius: 999,
-                    border: "1.5px solid rgba(216,255,86,0.3)",
-                    background: "rgba(216,255,86,0.12)",
-                    boxShadow: "0 4px 20px rgba(216,255,86,0.16)",
+                    border: "1.5px solid rgba(63,227,242,0.3)",
+                    background: "rgba(63,227,242,0.12)",
+                    boxShadow: "0 4px 20px rgba(63,227,242,0.16)",
                     display: "grid",
                     placeItems: "center",
                     color: "var(--gold)",
@@ -623,9 +623,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                       width: 44,
                       height: 44,
                       borderRadius: 999,
-                      border: "1.5px solid rgba(120,167,255,0.35)",
-                      background: "rgba(120,167,255,0.12)",
-                      boxShadow: "0 4px 20px rgba(120,167,255,0.16)",
+                      border: "1.5px solid rgba(142,162,201,0.35)",
+                      background: "rgba(142,162,201,0.12)",
+                      boxShadow: "0 4px 20px rgba(142,162,201,0.16)",
                       display: "grid",
                       placeItems: "center",
                     }}
@@ -642,9 +642,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     width: 52,
                     height: 52,
                     borderRadius: 999,
-                    border: "1.5px solid rgba(255,85,71,0.35)",
-                    background: "rgba(255,85,71,0.12)",
-                    boxShadow: "0 4px 20px rgba(255,85,71,0.18)",
+                    border: "1.5px solid rgba(244,166,60,0.35)",
+                    background: "rgba(244,166,60,0.12)",
+                    boxShadow: "0 4px 20px rgba(244,166,60,0.18)",
                     display: "grid",
                     placeItems: "center",
                     color: "var(--live)",

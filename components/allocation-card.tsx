@@ -79,7 +79,7 @@ export function AllocationCard({ match }: AllocationCardProps) {
   const remaining = credit - total;
   const validation = validateAllocations(allocations.map((item) => ({ outcomeCode: item.label, amount: item.amount })), credit);
   const leadingAllocation = [...allocations].sort((left, right) => right.amount - left.amount)[0] ?? null;
-  const remainingTone = remaining === 0 ? "#3D9B5F" : remaining > 0 ? "#D4A64B" : "#E8413A";
+  const remainingTone = remaining === 0 ? "#3FE3F2" : remaining > 0 ? "#D4A64B" : "#F4A63C";
   const remainingLabel = remaining === 0 ? "Listo" : remaining > 0 ? `Faltan ${formatCredits(remaining)}` : `Sobran ${formatCredits(Math.abs(remaining))}`;
 
   function updateAmount(index: number, rawValue: string) {

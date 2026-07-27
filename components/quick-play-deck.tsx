@@ -595,7 +595,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                         position: "absolute",
                         inset: 0,
                         pointerEvents: "none",
-                        background: "linear-gradient(135deg, rgba(61,155,95,0.55) 0%, transparent 55%)",
+                        background: "linear-gradient(135deg, rgba(63,227,242,0.55) 0%, transparent 55%)",
                       }}
                     >
                       <div style={{ position: "absolute", left: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
@@ -612,7 +612,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                         position: "absolute",
                         inset: 0,
                         pointerEvents: "none",
-                        background: "linear-gradient(225deg, rgba(232,65,58,0.55) 0%, transparent 55%)",
+                        background: "linear-gradient(225deg, rgba(244,166,60,0.55) 0%, transparent 55%)",
                       }}
                     >
                       <div style={{ position: "absolute", right: 20, top: "46%", transform: "translateY(-50%)", display: "grid", gap: 6, justifyItems: "center" }}>
@@ -775,7 +775,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                     <div style={{ display: "grid", gap: 16, justifyItems: "center", position: "relative", zIndex: 1 }}>
                       <motion.div
                         initial={{ scale: 0, rotate: -20 }}
-                        animate={{ scale: 1, rotate: 0, boxShadow: isSaving ? "0 0 0 12px rgba(61,155,95,0.08)" : "0 0 0 0 rgba(61,155,95,0)" }}
+                        animate={{ scale: 1, rotate: 0, boxShadow: isSaving ? "0 0 0 12px rgba(63,227,242,0.08)" : "0 0 0 0 rgba(63,227,242,0)" }}
                         transition={{ type: "spring", stiffness: 350, damping: 20, delay: 0.08 }}
                         style={{
                           width: 64,
@@ -783,11 +783,11 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                           borderRadius: 999,
                           display: "grid",
                           placeItems: "center",
-                          background: "rgba(61,155,95,0.18)",
-                          border: "2px solid #3D9B5F",
+                          background: "rgba(63,227,242,0.18)",
+                          border: "2px solid #3FE3F2",
                         }}
                       >
-                        <Check size={28} style={{ color: "#3D9B5F" }} />
+                        <Check size={28} style={{ color: "#3FE3F2" }} />
                       </motion.div>
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} style={{ display: "grid", gap: 6 }}>
                         <p className="section-title">Guardado</p>
@@ -829,12 +829,12 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       width: 58,
                       height: 58,
                       borderRadius: 999,
-                      border: "1.5px solid rgba(61,155,95,0.35)",
-                      background: "rgba(61,155,95,0.12)",
-                      boxShadow: "0 4px 20px rgba(61,155,95,0.18)",
+                      border: "1.5px solid rgba(63,227,242,0.35)",
+                      background: "rgba(63,227,242,0.12)",
+                      boxShadow: "0 4px 20px rgba(63,227,242,0.18)",
                       display: "grid",
                       placeItems: "center",
-                      color: "#3D9B5F",
+                      color: "#3FE3F2",
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
@@ -873,12 +873,12 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                       width: 58,
                       height: 58,
                       borderRadius: 999,
-                      border: "1.5px solid rgba(232,65,58,0.35)",
-                      background: "rgba(232,65,58,0.12)",
-                      boxShadow: "0 4px 20px rgba(232,65,58,0.18)",
+                      border: "1.5px solid rgba(244,166,60,0.35)",
+                      background: "rgba(244,166,60,0.12)",
+                      boxShadow: "0 4px 20px rgba(244,166,60,0.18)",
                       display: "grid",
                       placeItems: "center",
-                      color: "#E8413A",
+                      color: "#F4A63C",
                     }}
                   >
                     <div style={{ display: "grid", justifyItems: "center", gap: 2 }}>
@@ -973,7 +973,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                   width: "100%",
                   maxWidth: "calc(var(--shell-width) - 32px)",
                   pointerEvents: "auto",
-                  boxShadow: "0 0 0 1px rgba(216,255,86,0.42), 0 0 28px rgba(216,255,86,0.34), 0 14px 34px rgba(0,0,0,0.34)",
+                  boxShadow: "0 0 0 1px rgba(63,227,242,0.42), 0 0 28px rgba(63,227,242,0.34), 0 14px 34px rgba(0,0,0,0.34)",
                 }}
               >
                 Edita tus partidos

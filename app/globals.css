@@ -1,21 +1,22 @@
 :root {
-  --background: #05070b;
-  --background-deep: #020409;
-  --background-elevated: #0c1117;
-  --card-dark: #0b1016;
-  --card-mid: #121923;
-  --surface: #0f151d;
-  --surface-alt: #151d28;
+  --background: #070a14;
+  --background-deep: #04060e;
+  --background-elevated: #0e1424;
+  --card-dark: #0b111f;
+  --card-mid: #141b2e;
+  --surface: #111828;
+  --surface-alt: #182034;
   --surface-soft: rgba(255, 255, 255, 0.045);
   --text-primary: #f8fbff;
   --text-secondary: #b7c0cf;
   --text-tertiary: #7f8999;
-  --gold: #d8ff56;
-  --gold-dark: #0d1117;
-  --outcome-home: #d8ff56;
-  --outcome-away: #ff5547;
-  --outcome-draw: #78a7ff;
-  --live: #ff5547;
+  --gold: #3fe3f2;
+  --gold-dark: #04141a;
+  --outcome-home: #3fe3f2;
+  --outcome-away: #f4a63c;
+  --outcome-draw: #8ea2c9;
+  --live: #f4a63c;
+  --negative: #8b93ab;
   --line: rgba(255, 255, 255, 0.09);
   --line-strong: rgba(255, 255, 255, 0.16);
   --shadow-heavy: 0 16px 40px rgba(0, 0, 0, 0.28);
@@ -62,7 +63,7 @@ body::before {
   z-index: -3;
   pointer-events: none;
   background:
-    radial-gradient(circle at 18% -4%, rgba(216, 255, 86, 0.08), transparent 22%),
+    radial-gradient(circle at 18% -4%, rgba(63, 227, 242, 0.08), transparent 22%),
     radial-gradient(circle at 100% 8%, rgba(255, 255, 255, 0.05), transparent 24%),
     radial-gradient(circle at 50% 110%, rgba(255, 255, 255, 0.03), transparent 36%),
     linear-gradient(180deg, rgba(16, 22, 30, 0.96) 0%, rgba(7, 10, 15, 0.985) 42%, rgba(2, 4, 9, 1) 100%);
@@ -123,7 +124,7 @@ input,
   pointer-events: none;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.028) 0%, transparent 24%),
-    radial-gradient(circle at 82% 18%, rgba(120, 167, 255, 0.045), transparent 18%);
+    radial-gradient(circle at 82% 18%, rgba(142, 162, 201, 0.045), transparent 18%);
 }
 
 .app-shell::after {
@@ -405,8 +406,8 @@ input,
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: rgba(216, 255, 86, 0.14);
-  border: 2px solid rgba(216, 255, 86, 0.34);
+  background: rgba(63, 227, 242, 0.14);
+  border: 2px solid rgba(63, 227, 242, 0.34);
   color: var(--gold);
   font-family: var(--font-accent);
   font-weight: 700;
@@ -478,8 +479,8 @@ input,
 
 .status-pill-gold {
   color: var(--gold);
-  background: rgba(216, 255, 86, 0.09);
-  border-color: rgba(216, 255, 86, 0.22);
+  background: rgba(63, 227, 242, 0.09);
+  border-color: rgba(63, 227, 242, 0.22);
 }
 
 .button-primary,
@@ -559,8 +560,8 @@ input,
 }
 
 .text-input:focus {
-  border-color: rgba(216, 255, 86, 0.55);
-  box-shadow: 0 0 0 3px rgba(216, 255, 86, 0.12);
+  border-color: rgba(63, 227, 242, 0.55);
+  box-shadow: 0 0 0 3px rgba(63, 227, 242, 0.12);
 }
 
 .bottom-nav {
@@ -595,7 +596,7 @@ input,
 
 .nav-link.active {
   color: var(--gold);
-  background: rgba(216, 255, 86, 0.09);
+  background: rgba(63, 227, 242, 0.09);
 }
 
 .nav-link:active {
@@ -629,7 +630,7 @@ input,
 
 .money-negative {
   font-family: var(--font-body), system-ui, sans-serif !important;
-  color: var(--outcome-away);
+  color: var(--negative);
 }
 
 .error-copy {
@@ -682,7 +683,7 @@ input,
 }
 
 :focus-visible {
-  outline: 2px solid rgba(216, 255, 86, 0.6);
+  outline: 2px solid rgba(63, 227, 242, 0.6);
   outline-offset: 2px;
   border-radius: inherit;
 }
@@ -728,10 +729,10 @@ kbd {
 
 @keyframes finale-hero-pulse {
   0%, 100% {
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), 0 0 0 0 rgba(216, 255, 86, 0);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), 0 0 0 0 rgba(63, 227, 242, 0);
   }
   50% {
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), 0 0 28px 4px rgba(216, 255, 86, 0.18);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18), 0 0 28px 4px rgba(63, 227, 242, 0.18);
   }
 }
 
@@ -779,7 +780,7 @@ kbd {
 
   .nav-link.active:hover {
     color: var(--gold);
-    background: rgba(216, 255, 86, 0.13);
+    background: rgba(63, 227, 242, 0.13);
   }
 }
 
@@ -924,7 +925,7 @@ kbd {
 .cruces-takeover .adv{display:inline-block;width:5px;height:5px;border-radius:9px;background:var(--gold);margin-left:5px;vertical-align:middle;}
 .cruces-takeover .mc{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:9px 11px;display:flex;flex-direction:column;justify-content:center;}
 .cruces-takeover .col.knock .mc{position:absolute;left:7px;right:7px;margin:0;}
-.cruces-takeover .mc.set{border-color:rgba(216,255,86,.20);background:color-mix(in srgb,var(--surface) 92%,var(--gold) 8%);}
+.cruces-takeover .mc.set{border-color:rgba(63,227,242,.20);background:color-mix(in srgb,var(--surface) 92%,var(--gold) 8%);}
 .cruces-takeover .mc-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
 .cruces-takeover .mc-d{font-size:.6rem;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.06em;font-weight:600;}
 .cruces-takeover .mc-t{font-size:.58rem;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;font-weight:700;}

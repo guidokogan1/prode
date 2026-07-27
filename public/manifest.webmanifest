@@ -4,8 +4,8 @@
   "description": "Prode del Torneo Clausura 2026 entre amigos.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#091409",
-  "theme_color": "#0c1710",
+  "background_color": "#04060e",
+  "theme_color": "#070a14",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

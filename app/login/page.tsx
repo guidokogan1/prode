@@ -15,7 +15,7 @@ export default function LoginPage() {
         <p className="muted-copy">Volvé al pool, revisá tus jugadas y seguí el ritmo del torneo.</p>
 
         <div className="two-col-grid">
-          <div className="surface-card-soft soft-panel-md" style={{ background: "rgba(216,255,86,0.06)", borderColor: "rgba(216,255,86,0.18)" }}>
+          <div className="surface-card-soft soft-panel-md" style={{ background: "rgba(63,227,242,0.06)", borderColor: "rgba(63,227,242,0.18)" }}>
             <div className="title-stack">
               <span className="micro-copy">Rápido</span>
               <strong style={{ fontFamily: "var(--font-display)", fontSize: "1.08rem", letterSpacing: "-0.03em", textTransform: "uppercase" }}>Nombre + PIN</strong>

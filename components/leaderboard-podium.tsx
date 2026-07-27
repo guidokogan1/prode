@@ -5,7 +5,7 @@ type LeaderboardPodiumProps = {
   items: RankingEntry[];
 };
 
-const PODIUM_COLORS = ["#d8ff56", "#d8dde5", "#ff8f57"];
+const PODIUM_COLORS = ["#3fe3f2", "#d8dde5", "#ff8f57"];
 const PODIUM_EMOJIS = ["🥇", "🥈", "🥉"];
 
 export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
@@ -38,9 +38,9 @@ export function LeaderboardPodium({ items }: LeaderboardPodiumProps) {
                   borderRadius: 999,
                   display: "grid",
                   placeItems: "center",
-                  background: item.isCurrentUser ? "rgba(216,255,86,0.16)" : "rgba(255,255,255,0.07)",
+                  background: item.isCurrentUser ? "rgba(63,227,242,0.16)" : "rgba(255,255,255,0.07)",
                   color: item.isCurrentUser ? "var(--gold)" : "#EDE8D9",
-                  border: item.isCurrentUser ? "2px solid rgba(216,255,86,0.34)" : "0",
+                  border: item.isCurrentUser ? "2px solid rgba(63,227,242,0.34)" : "0",
                   fontFamily: "var(--font-accent)",
                   fontWeight: 800,
                 }}

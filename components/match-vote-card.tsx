@@ -285,7 +285,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                   position: "absolute",
                   inset: 0,
                   pointerEvents: "none",
-                  background: "linear-gradient(135deg, rgba(61,155,95,0.55) 0%, transparent 55%)",
+                  background: "linear-gradient(135deg, rgba(63,227,242,0.55) 0%, transparent 55%)",
                 }}
               />
 
@@ -295,7 +295,7 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                   position: "absolute",
                   inset: 0,
                   pointerEvents: "none",
-                  background: "linear-gradient(225deg, rgba(232,65,58,0.55) 0%, transparent 55%)",
+                  background: "linear-gradient(225deg, rgba(244,166,60,0.55) 0%, transparent 55%)",
                 }}
               />
 
@@ -420,11 +420,11 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
                     borderRadius: 999,
                     display: "grid",
                     placeItems: "center",
-                    background: "rgba(61,155,95,0.18)",
-                    border: "2px solid #3D9B5F",
+                    background: "rgba(63,227,242,0.18)",
+                    border: "2px solid #3FE3F2",
                   }}
                 >
-                  <Check size={28} style={{ color: "#3D9B5F" }} />
+                  <Check size={28} style={{ color: "#3FE3F2" }} />
                 </div>
                 <p className="section-title">Guardado</p>
                 <p className="muted-copy">
@@ -454,8 +454,8 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               width: 58,
               height: 58,
               borderRadius: 999,
-              border: "1.5px solid rgba(61,155,95,0.35)",
-              background: "rgba(61,155,95,0.12)",
+              border: "1.5px solid rgba(63,227,242,0.35)",
+              background: "rgba(63,227,242,0.12)",
               display: "grid",
               placeItems: "center",
             }}
@@ -488,8 +488,8 @@ export function MatchVoteCard({ match }: MatchVoteCardProps) {
               width: 58,
               height: 58,
               borderRadius: 999,
-              border: "1.5px solid rgba(232,65,58,0.35)",
-              background: "rgba(232,65,58,0.12)",
+              border: "1.5px solid rgba(244,166,60,0.35)",
+              background: "rgba(244,166,60,0.12)",
               display: "grid",
               placeItems: "center",
             }}

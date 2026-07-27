@@ -15,15 +15,15 @@ export function MatchCard({ match }: MatchCardProps) {
   const cardState = getMatchCardState(match, "compact");
   const statusTone =
     cardState.mode === "live"
-      ? "rgba(255,85,71,0.05)"
+      ? "rgba(244,166,60,0.05)"
       : cardState.mode === "settled"
-        ? "rgba(216,255,86,0.04)"
+        ? "rgba(63,227,242,0.04)"
         : "rgba(255,255,255,0.02)";
   const statusBorder =
     cardState.mode === "live"
-      ? "rgba(255,85,71,0.28)"
+      ? "rgba(244,166,60,0.28)"
       : cardState.mode === "settled"
-        ? "rgba(216,255,86,0.2)"
+        ? "rgba(63,227,242,0.2)"
         : "rgba(255,255,255,0.1)";
 
   return (
@@ -134,7 +134,7 @@ export function MatchCard({ match }: MatchCardProps) {
                     cardState.heroTone === "positive"
                       ? "var(--gold)"
                       : cardState.heroTone === "negative"
-                        ? "var(--live)"
+                        ? "var(--negative)"
                         : undefined,
                 }}
               >
@@ -150,7 +150,7 @@ export function MatchCard({ match }: MatchCardProps) {
                       ? cardState.heroTone === "positive"
                         ? "var(--gold)"
                         : cardState.heroTone === "negative"
-                          ? "var(--live)"
+                          ? "var(--negative)"
                           : undefined
                       : cardState.leadingUserOutcome
                         ? getOutcomeColor(cardState.leadingUserOutcome.code)

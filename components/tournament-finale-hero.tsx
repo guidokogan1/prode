@@ -31,8 +31,8 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
           padding: 22,
           display: "grid",
           gap: 16,
-          background: "linear-gradient(160deg, rgba(216,255,86,0.16) 0%, rgba(15,21,29,0.97) 60%)",
-          borderColor: "rgba(216,255,86,0.28)",
+          background: "linear-gradient(160deg, rgba(63,227,242,0.16) 0%, rgba(15,21,29,0.97) 60%)",
+          borderColor: "rgba(63,227,242,0.28)",
           position: "relative",
           overflow: "hidden",
         }}
@@ -63,8 +63,8 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
             style={{
               padding: 14,
               borderRadius: 14,
-              background: "rgba(216,255,86,0.12)",
-              borderColor: "rgba(216,255,86,0.34)",
+              background: "rgba(63,227,242,0.12)",
+              borderColor: "rgba(63,227,242,0.34)",
               display: "grid",
               gap: 4,
               textAlign: "center",
@@ -118,8 +118,8 @@ export function TournamentFinaleHero({ tournament, ranking, currentUserName, cur
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
-                background: entry.position === 1 ? "rgba(216,255,86,0.08)" : "rgba(255,255,255,0.035)",
-                borderColor: entry.position === 1 ? "rgba(216,255,86,0.28)" : "rgba(255,255,255,0.08)",
+                background: entry.position === 1 ? "rgba(63,227,242,0.08)" : "rgba(255,255,255,0.035)",
+                borderColor: entry.position === 1 ? "rgba(63,227,242,0.28)" : "rgba(255,255,255,0.08)",
                 display: "grid",
                 gridTemplateColumns: "32px minmax(0, 1fr) auto",
                 alignItems: "center",

@@ -63,7 +63,7 @@ export function ChampionHomeCard() {
       <div className="section-stack" style={{ gap: 12 }}>
         <div className="split-row" style={{ alignItems: "center" }}>
           <span className="status-pill status-pill-gold" style={{ minHeight: 28, paddingInline: 10 }}>Pendiente</span>
-          <span className="micro-copy">Se cierra al inicio</span>
+          <span className="micro-copy">Se cierra en la fecha 4</span>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 14, alignItems: "start" }}>
@@ -72,7 +72,7 @@ export function ChampionHomeCard() {
             <h2 className="display-title" style={{ fontSize: "clamp(1.6rem, 6vw, 2rem)" }}>
               Elegí quién lo gana
             </h2>
-            <p className="muted-copy">Una sola vez. Queda fijo cuando arranca.</p>
+            <p className="muted-copy">Una sola vez. Lo podés cambiar hasta la fecha 4.</p>
           </div>
 
           <div
@@ -83,8 +83,8 @@ export function ChampionHomeCard() {
               borderRadius: 12,
               display: "grid",
               placeItems: "center",
-              background: "linear-gradient(160deg, rgba(216,255,86,0.16) 0%, rgba(216,255,86,0.04) 100%)",
-              border: "1px solid rgba(216,255,86,0.14)",
+              background: "linear-gradient(160deg, rgba(63,227,242,0.16) 0%, rgba(63,227,242,0.04) 100%)",
+              border: "1px solid rgba(63,227,242,0.14)",
               fontSize: "1.5rem",
             }}
           >
@@ -96,7 +96,7 @@ export function ChampionHomeCard() {
       <div style={{ display: "grid", gap: 12 }}>
         <div className="split-row">
           <span className="micro-copy">Apuesta larga</span>
-          <span className="micro-copy">Antes del 11 Jun</span>
+          <span className="micro-copy">Antes de la fecha 4</span>
         </div>
         <Link className="button-primary" href="/champion">
           Elegir campeón

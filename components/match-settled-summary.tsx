@@ -19,7 +19,7 @@ export function MatchSettledSummary({ match }: MatchSettledSummaryProps) {
   }
 
   const pickedWinner = leadingAllocation?.code === resolvedOutcome;
-  const toneColor = resultTone === "positive" ? "#D8FF56" : "#9098A6";
+  const toneColor = resultTone === "positive" ? "#3fe3f2" : "#9098A6";
   const pickPill = !leadingAllocation ? "Sin jugar" : pickedWinner ? "Acertaste" : "No entró";
   const detail =
     !leadingAllocation

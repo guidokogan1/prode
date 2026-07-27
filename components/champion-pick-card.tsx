@@ -261,12 +261,12 @@ export function ChampionPickCard({ initialPick, teams, locked, mode }: ChampionP
                   style={{
                     minHeight: 64,
                     borderRadius: 12,
-                    border: selected ? "1px solid rgba(216,255,86,0.34)" : "1px solid rgba(255,255,255,0.08)",
-                    background: selected ? "linear-gradient(180deg, rgba(216,255,86,0.12) 0%, rgba(255,255,255,0.03) 100%)" : "rgba(255,255,255,0.03)",
+                    border: selected ? "1px solid rgba(63,227,242,0.34)" : "1px solid rgba(255,255,255,0.08)",
+                    background: selected ? "linear-gradient(180deg, rgba(63,227,242,0.12) 0%, rgba(255,255,255,0.03) 100%)" : "rgba(255,255,255,0.03)",
                     justifyContent: "space-between",
                     paddingInline: 12,
                     gap: 10,
-                    boxShadow: selected ? "0 0 0 1px rgba(216,255,86,0.06), 0 10px 20px rgba(0,0,0,0.18)" : "none",
+                    boxShadow: selected ? "0 0 0 1px rgba(63,227,242,0.06), 0 10px 20px rgba(0,0,0,0.18)" : "none",
                     transform: selected ? "translateY(-1px)" : "none",
                     transition: "background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease",
                   }}

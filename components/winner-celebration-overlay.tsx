@@ -98,9 +98,9 @@ export function WinnerCelebrationOverlay({
               display: "grid",
               gap: 14,
               textAlign: "center",
-              background: "linear-gradient(160deg, rgba(216,255,86,0.22) 0%, rgba(15,21,29,0.97) 70%)",
-              borderColor: "rgba(216,255,86,0.36)",
-              boxShadow: "0 18px 42px rgba(0,0,0,0.4), 0 0 0 1px rgba(216,255,86,0.16)",
+              background: "linear-gradient(160deg, rgba(63,227,242,0.22) 0%, rgba(15,21,29,0.97) 70%)",
+              borderColor: "rgba(63,227,242,0.36)",
+              boxShadow: "0 18px 42px rgba(0,0,0,0.4), 0 0 0 1px rgba(63,227,242,0.16)",
             }}
           >
             <button

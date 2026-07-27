@@ -180,13 +180,13 @@ function TimelineChart({ timeline, selectedUserName }: { timeline: RankingTimeli
             <path
               d={toPath(selected.points)}
               fill="none"
-              stroke="#D8FF56"
+              stroke="#3fe3f2"
               strokeWidth={2.4}
               strokeLinejoin="round"
               strokeLinecap="round"
             />
             {selected.points.map((p, i) => (
-              <circle key={i} cx={x(i)} cy={y(p)} r={2.4} fill="#D8FF56" />
+              <circle key={i} cx={x(i)} cy={y(p)} r={2.4} fill="#3fe3f2" />
             ))}
           </>
         ) : null}

@@ -15,14 +15,14 @@ export function formatCompactCredits(value: number) {
 
 export function getOutcomeColor(code: MatchOutcomeCode) {
   if (code === "home" || code === "home_qualifies") {
-    return "#D8FF56";
+    return "#3FE3F2";
   }
 
   if (code === "away" || code === "away_qualifies") {
-    return "#FF5547";
+    return "#F4A63C";
   }
 
-  return "#78A7FF";
+  return "#8EA2C9";
 }
 
 export function getOutcomeFlag(code: MatchOutcomeCode, match: MatchViewModel) {

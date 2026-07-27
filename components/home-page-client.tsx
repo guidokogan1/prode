@@ -98,7 +98,7 @@ export function HomePageClient({
               minWidth: 86,
               display: "grid",
               gap: 2,
-              background: "linear-gradient(180deg, rgba(216,255,86,0.1) 0%, rgba(255,255,255,0.03) 100%)",
+              background: "linear-gradient(180deg, rgba(63,227,242,0.1) 0%, rgba(255,255,255,0.03) 100%)",
               alignContent: "start",
             }}
           >
