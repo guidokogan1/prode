@@ -63,7 +63,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
 
   const deck = useMemo(() => {
     const pending = effectiveMatches.filter((match) => isPendingQuickPlayMatch(match) && !justSavedIds.has(match.id));
-    return pending;
+    return pending.sort((a, b) => (a.kickoffAt ?? "").localeCompare(b.kickoffAt ?? ""));
   }, [effectiveMatches, justSavedIds]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<CardPhase>("idle");
