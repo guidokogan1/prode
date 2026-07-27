@@ -43,7 +43,7 @@ export async function ingestLigaFixtures({ daysBack = 3, daysAhead = 10 } = {}) 
     return code ? teamIdByCode.get(code) ?? null : null;
   };
 
-  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${LIGA_2026_TOURNAMENT.leagueCode}/scoreboard?dates=${espnDate(-daysBack)}-${espnDate(daysAhead)}&limit=100`;
+  const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/${LIGA_2026_TOURNAMENT.leagueCode}/scoreboard?dates=${espnDate(-daysBack)}-${espnDate(daysAhead)}&limit=400`;
   let payload: { events?: EspnEvent[] };
   try {
     const response = await fetch(url, { cache: "no-store" });
