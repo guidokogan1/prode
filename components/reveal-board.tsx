@@ -125,15 +125,17 @@ export function RevealBoard({ tickets }: RevealBoardProps) {
                   </div>
 
                   <div className="reveal-picks">
-                    {ticket.allocations.map((allocation) => (
-                      <div
-                        className={`reveal-pick${allocation.label === mainPick?.label ? " reveal-pick-main" : ""}`}
-                        key={`${ticket.userName}-${allocation.label}`}
-                      >
-                        <span>{allocation.label}</span>
-                        <strong>{formatCredits(allocation.amount)}</strong>
-                      </div>
-                    ))}
+                    {ticket.allocations
+                      .filter((allocation) => allocation.amount > 0)
+                      .map((allocation) => (
+                        <div
+                          className={`reveal-pick${allocation.label === mainPick?.label ? " reveal-pick-main" : ""}`}
+                          key={`${ticket.userName}-${allocation.label}`}
+                        >
+                          <span>{allocation.label}</span>
+                          <strong>{formatCredits(allocation.amount)}</strong>
+                        </div>
+                      ))}
                   </div>
                 </article>
               );

@@ -45,25 +45,18 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
   const homeText = homeIsPick ? PICK : GRAY_TEXT;
   const awayText = homeIsPick ? GRAY_TEXT : PICK;
 
-  function handleAmountChange(amount: number) {
-    setHomeAmount(amount);
-    if (saveState !== "idle") {
-      setSaveState("idle");
-      setSaveMessage(null);
-    }
-  }
-
   function handleBack() {
     if (typeof window !== "undefined" && window.history.length > 1) router.back();
     else router.push("/matches");
   }
 
-  async function confirm() {
+  async function confirm(pickedHomeAmount: number) {
     if (!homeOutcome || !awayOutcome) return;
+    setHomeAmount(pickedHomeAmount);
     setSaveState("saving");
     const payload = [
-      { code: homeOutcome.code, label: homeOutcome.label, amount: homeAmount },
-      { code: awayOutcome.code, label: awayOutcome.label, amount: awayAmount },
+      { code: homeOutcome.code, label: homeOutcome.label, amount: pickedHomeAmount },
+      { code: awayOutcome.code, label: awayOutcome.label, amount: credit - pickedHomeAmount },
     ];
     saveStoredAllocation(allocationScope, match.id, { allocations: payload, savedAt: new Date().toISOString(), status: "draft" });
 
@@ -109,9 +102,7 @@ export function QualifiesSliderCard({ match }: { match: MatchViewModel }) {
         <QualifiesVoteCard
           match={match}
           credit={credit}
-          homeAmount={homeAmount}
-          onHomeAmountChange={handleAmountChange}
-          onConfirm={() => void confirm()}
+          onPick={(pickedHomeAmount) => void confirm(pickedHomeAmount)}
           topRightLabel={match.statusLabel}
           saving={saveState === "saving"}
           errorMessage={saveState === "error" ? saveMessage : null}

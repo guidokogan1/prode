@@ -4,15 +4,15 @@ import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
-import { Check, Droplets, Flame, Sparkles, Zap } from "lucide-react";
+import { Check } from "lucide-react";
 import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
 import { TeamCrest } from "@/components/team-crest";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
-import { buildPresetAllocation, creditForMarketType, type IntensityPreset } from "@/lib/game";
+import { buildSinglePickAllocation, creditForMarketType } from "@/lib/game";
 import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
-import { getOutcomeColor, getOutcomeFlag, getOutcomeHint, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
+import { getOutcomeFlag, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
 
 type QuickPlayDeckProps = {
   matches: MatchViewModel[];
@@ -20,24 +20,7 @@ type QuickPlayDeckProps = {
   onPendingCountChange?: (count: number) => void;
 };
 
-type CardPhase = "idle" | "chosen" | "saved";
-type IntensityOption = "soft" | "medium" | "hard";
-
-const INTENSITIES: { id: IntensityOption; label: string; icon: typeof Droplets }[] = [
-  { id: "soft", label: "Suave", icon: Droplets },
-  { id: "medium", label: "Media", icon: Sparkles },
-  { id: "hard", label: "Fuerte", icon: Flame },
-];
-
-function isDrawCode(code: MatchOutcomeCode) {
-  return code === "draw";
-}
-
-function getIntensityCopy(intensity: IntensityPreset) {
-  if (intensity === "soft") return "Más cubierto";
-  if (intensity === "medium") return "Más decidido";
-  return "A fondo";
-}
+type CardPhase = "idle" | "saved";
 
 export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: QuickPlayDeckProps) {
   const router = useRouter();
@@ -68,7 +51,6 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<CardPhase>("idle");
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
-  const [chosenIntensity, setChosenIntensity] = useState<IntensityOption | null>(null);
   const [savedMatchSnapshot, setSavedMatchSnapshot] = useState<MatchViewModel | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
@@ -76,7 +58,6 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
   const [isFinePointer, setIsFinePointer] = useState(false);
   const nextTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isChoosingRef = useRef(false);
-  const [qualifiesHome, setQualifiesHome] = useState(0);
   const [qualifiesSaving, setQualifiesSaving] = useState(false);
   const [qualifiesError, setQualifiesError] = useState<string | null>(null);
 
@@ -136,19 +117,11 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
   );
 
   useEffect(() => {
-    if (!match || match.marketType !== "qualifies") {
-      return;
-    }
-    const credit = creditForMarketType(match.marketType);
-    const homeOutcome = match.allocation.find((item) => item.code === "home_qualifies") ?? match.allocation[0];
-    const total = match.allocation.reduce((sum, item) => sum + item.amount, 0);
-    const initial = total > 0 ? homeOutcome?.amount ?? credit / 2 : credit / 2;
-    setQualifiesHome(Math.max(0, Math.min(credit, Math.round(initial / 1000) * 1000)));
     setQualifiesError(null);
     setQualifiesSaving(false);
   }, [match?.id]);
 
-  async function confirmQualifies() {
+  async function confirmQualifies(homeAmount: number) {
     if (!match) {
       return;
     }
@@ -159,8 +132,8 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
       return;
     }
     const payload = [
-      { code: homeOutcome.code, label: homeOutcome.label, amount: qualifiesHome },
-      { code: awayOutcome.code, label: awayOutcome.label, amount: credit - qualifiesHome },
+      { code: homeOutcome.code, label: homeOutcome.label, amount: homeAmount },
+      { code: awayOutcome.code, label: awayOutcome.label, amount: credit - homeAmount },
     ];
 
     setQualifiesSaving(true);
@@ -203,7 +176,6 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
   const resetPhase = () => {
     setPhase("idle");
     setChosenOutcome(null);
-    setChosenIntensity(null);
     setSavedMatchSnapshot(null);
     setSaveMessage(null);
     setSaveTone("default");
@@ -218,7 +190,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
   }
 
   async function chooseOutcome(code: MatchOutcomeCode) {
-    if (phase !== "idle" || isChoosingRef.current) {
+    if (!match || phase !== "idle" || isChoosingRef.current) {
       return;
     }
 
@@ -233,32 +205,14 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
           : 0;
     const targetY = code === "draw" ? -Math.max(260, Math.abs(currentY) + 160) : currentY * 0.2;
 
-    await Promise.all([
-      animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
-    ]);
-
-    setChosenOutcome(code);
-    setPhase("chosen");
-    x.set(0);
-    y.set(0);
-    cardOpacity.set(1);
-    isChoosingRef.current = false;
-  }
-
-  async function handleIntensityPick(option: (typeof INTENSITIES)[number]) {
-    if (!match || !chosenOutcome) {
-      return;
-    }
-
-    const payload = buildPresetAllocation(
-      match.allocation.map((item) => item.code),
-      chosenOutcome,
-      option.id,
+    const savedMatch = match;
+    const payload = buildSinglePickAllocation(
+      savedMatch.allocation.map((item) => item.code),
+      code,
+      creditForMarketType(savedMatch.marketType),
     ).map((item) => ({
       code: item.outcomeCode as MatchOutcomeCode,
-      label: match.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
+      label: savedMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
       amount: item.amount,
     }));
 
@@ -266,23 +220,33 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
       clearTimeout(nextTimerRef.current);
     }
 
-    saveStoredAllocation(allocationScope, match.id, {
+    await Promise.all([
+      animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
+      animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
+      animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
+    ]);
+
+    saveStoredAllocation(allocationScope, savedMatch.id, {
       allocations: payload,
       savedAt: new Date().toISOString(),
       status: "draft",
     });
-    setSavedMatchSnapshot(match);
+    setChosenOutcome(code);
+    setSavedMatchSnapshot(savedMatch);
     setJustSavedIds((prev) => {
       const next = new Set(prev);
-      next.add(match.id);
+      next.add(savedMatch.id);
       return next;
     });
-    onMatchSaved?.(match.id);
-    setChosenIntensity(option.id);
+    onMatchSaved?.(savedMatch.id);
     setPhase("saved");
     setIsSaving(true);
     setSaveMessage("Guardando");
     setSaveTone("loading");
+    x.set(0);
+    y.set(0);
+    cardOpacity.set(1);
+    isChoosingRef.current = false;
 
     try {
       const [, response] = await Promise.all([
@@ -293,7 +257,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            matchId: match.id,
+            matchId: savedMatch.id,
             allocations: payload,
           }),
         }),
@@ -303,7 +267,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
         throw new Error("remote save failed");
       }
 
-      saveStoredAllocation(allocationScope, match.id, {
+      saveStoredAllocation(allocationScope, savedMatch.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "saved_remote",
@@ -311,7 +275,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
       setSaveMessage("Guardado");
       setSaveTone("default");
     } catch {
-      saveStoredAllocation(allocationScope, match.id, {
+      saveStoredAllocation(allocationScope, savedMatch.id, {
         allocations: payload,
         savedAt: new Date().toISOString(),
         status: "sync_error",
@@ -352,30 +316,6 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [isFinePointer, match, phase, quickPlayTargets, showDrawGesture]);
-
-  useEffect(() => {
-    if (!isFinePointer || !match || phase !== "chosen") {
-      return;
-    }
-    const handler = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-        return;
-      }
-      const optionByKey: Record<string, (typeof INTENSITIES)[number] | undefined> = {
-        "1": INTENSITIES[0],
-        "2": INTENSITIES[1],
-        "3": INTENSITIES[2],
-      };
-      const option = optionByKey[event.key];
-      if (option) {
-        event.preventDefault();
-        void handleIntensityPick(option);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isFinePointer, match, phase]);
 
   async function snapCardBack() {
     const spring = isFinePointer
@@ -493,12 +433,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
               <QualifiesVoteCard
                 match={activeMatch}
                 credit={creditForMarketType(activeMatch.marketType)}
-                homeAmount={qualifiesHome}
-                onHomeAmountChange={(amount) => {
-                  setQualifiesHome(amount);
-                  if (qualifiesError) setQualifiesError(null);
-                }}
-                onConfirm={() => void confirmQualifies()}
+                onPick={(homeAmount) => void confirmQualifies(homeAmount)}
                 topRightLabel={activeMatch.kickoffLabel}
                 saving={qualifiesSaving}
                 errorMessage={qualifiesError}
@@ -653,99 +588,9 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                   </motion.div>
                 ) : null}
 
-                {phase === "chosen" && chosenOutcome ? (
+                {phase === "saved" && chosenOutcome && savedMatchSnapshot ? (
                   <motion.div
-                    key={`chosen-${activeMatch.id}-${chosenOutcome}`}
-                    initial={{ scale: 0.94, opacity: 0, y: 14 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.94, opacity: 0, y: -14 }}
-                    transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                    style={{
-                      minHeight: 292,
-                      padding: 14,
-                      background: `linear-gradient(180deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 16%, #18212d) 0%, #0b1016 100%)`,
-                      border: `1px solid ${getOutcomeColor(chosenOutcome)}30`,
-                      boxShadow: `0 16px 38px rgba(0,0,0,0.3)`,
-                      borderRadius: 14,
-                      display: "flex",
-                      flexDirection: "column",
-                      position: "relative",
-                      zIndex: 4,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                        background: "linear-gradient(135deg, rgba(255,255,255,0.07), transparent 42%)",
-                      }}
-                    />
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, position: "relative", zIndex: 1 }}>
-                      <span className="eyebrow">{activeMatch.stage}</span>
-                      <span className="micro-copy">{activeMatch.kickoffLabel}</span>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, position: "relative", zIndex: 1 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: 999, background: getOutcomeColor(chosenOutcome) }} />
-                      <span className="eyebrow">Vas con</span>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.06)", position: "relative", zIndex: 1 }}>
-                      <span style={{ fontSize: "2.8rem", lineHeight: 1 }}>{getOutcomeFlag(chosenOutcome, activeMatch)}</span>
-                      <div style={{ display: "grid", gap: 4 }}>
-                        <p className="section-title">{activeMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"}</p>
-                        <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>
-                          {getOutcomeHint(chosenOutcome, activeMatch.marketType)}
-                        </p>
-                      </div>
-                    </div>
-
-                      <div style={{ display: "grid", gap: 10, marginTop: "auto", marginBottom: "auto", position: "relative", zIndex: 1 }}>
-                      <p className="eyebrow">¿Cómo la querés jugar?</p>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
-                        {INTENSITIES.map((option) => {
-                          const Icon = option.icon;
-                          const iconColor = option.id === "hard" ? "#D4A64B" : option.id === "medium" ? "#EDE8D9" : "#7A9A81";
-
-                          return (
-                            <motion.button
-                              key={option.id}
-                              whileTap={{ scale: 0.94 }}
-                              whileHover={{ scale: 1.03 }}
-                              onClick={() => void handleIntensityPick(option)}
-                              style={{
-                            minHeight: 92,
-                            borderRadius: 12,
-                            border: "1px solid rgba(255,255,255,0.09)",
-                            background: "rgba(255,255,255,0.035)",
-                                display: "grid",
-                                placeItems: "center",
-                                gap: 8,
-                                padding: 16,
-                                color: "#EDE8D9",
-                              }}
-                            >
-                              <Icon size={26} style={{ color: iconColor }} />
-                              <span style={{ fontFamily: "var(--font-display)", fontSize: ".98rem", fontWeight: 700 }}>{option.label}</span>
-                              <span className="micro-copy" style={{ color: "#7A9A81" }}>{getIntensityCopy(option.id)}</span>
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <button className="button-ghost" onClick={resetPhase} style={{ marginTop: 14, position: "relative", zIndex: 1 }}>
-                      Cambiar
-                    </button>
-                  </motion.div>
-                ) : null}
-
-                {phase === "saved" && chosenOutcome && chosenIntensity && savedMatchSnapshot ? (
-                  <motion.div
-                    key={`saved-${savedMatchSnapshot.id}-${chosenOutcome}-${chosenIntensity}`}
+                    key={`saved-${savedMatchSnapshot.id}-${chosenOutcome}`}
                     initial={{ scale: 0.96, opacity: 0, y: 16 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.94, opacity: 0, y: -24 }}
@@ -793,8 +638,6 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                         <p className="section-title">Guardado</p>
                         <p className="muted-copy">
                           {getOutcomeFlag(chosenOutcome, savedMatchSnapshot)} {savedMatchSnapshot.allocation.find((item) => item.code === chosenOutcome)?.label}
-                          {" · "}
-                          <span style={{ color: "#D4A64B" }}>{getIntensityCopy(chosenIntensity)}</span>
                         </p>
                         {saveMessage ? (
                           <span

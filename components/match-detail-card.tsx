@@ -3,7 +3,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
-import { ArrowLeft, Check, Droplets, Flame, Sparkles } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import { ShareImageButton } from "@/components/share-image-button";
 import { VoteFace } from "@/components/vote-face";
@@ -11,14 +11,13 @@ import { TeamCrest } from "@/components/team-crest";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { formatCredits, formatGross } from "@/lib/format";
-import { buildPresetAllocation, creditForMarketType, type IntensityPreset } from "@/lib/game";
+import { buildSinglePickAllocation, creditForMarketType } from "@/lib/game";
 import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
 import {
   deriveResolvedOutcome,
   formatCompactCredits,
   getOutcomeColor,
   getOutcomeFlag,
-  getOutcomeHint,
   getQuickPlayOutcomeTargets,
   getQuickPlaySwipeOutcome,
 } from "@/lib/match-ui";
@@ -27,20 +26,7 @@ type MatchDetailCardProps = {
   match: MatchViewModel;
 };
 
-type CardPhase = "idle" | "chosen" | "saved";
-type IntensityOption = "soft" | "medium" | "hard";
-
-const INTENSITIES: { id: IntensityOption; label: string; icon: typeof Droplets }[] = [
-  { id: "soft", label: "Suave", icon: Droplets },
-  { id: "medium", label: "Media", icon: Sparkles },
-  { id: "hard", label: "Fuerte", icon: Flame },
-];
-
-function getIntensityCopy(intensity: IntensityPreset) {
-  if (intensity === "soft") return "Más cubierto";
-  if (intensity === "medium") return "Más decidido";
-  return "A fondo";
-}
+type CardPhase = "idle" | "saved";
 
 export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const router = useRouter();
@@ -51,7 +37,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const [phase, setPhase] = useState<CardPhase>("idle");
   const [isEditingSaved, setIsEditingSaved] = useState(false);
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
-  const [chosenIntensity, setChosenIntensity] = useState<IntensityOption | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveTone, setSaveTone] = useState<"default" | "warning" | "loading">("default");
   const [isSaving, setIsSaving] = useState(false);
@@ -187,7 +172,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     }
     setPhase("idle");
     setChosenOutcome(null);
-    setChosenIntensity(null);
     setSaveMessage(null);
     setSaveTone("default");
     setIsSaving(false);
@@ -214,29 +198,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
           : 0;
     const targetY = code === "draw" ? -Math.max(260, Math.abs(currentY) + 160) : currentY * 0.2;
 
-    await Promise.all([
-      animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
-    ]);
-
-    setChosenOutcome(code);
-    setPhase("chosen");
-    x.set(0);
-    y.set(0);
-    cardOpacity.set(1);
-    isChoosingRef.current = false;
-  }
-
-  async function handleIntensityPick(option: (typeof INTENSITIES)[number]) {
-    if (!chosenOutcome) {
-      return;
-    }
-
-    const payload = buildPresetAllocation(
+    const payload = buildSinglePickAllocation(
       effectiveMatch.allocation.map((item) => item.code),
-      chosenOutcome,
-      option.id,
+      code,
       creditForMarketType(effectiveMatch.marketType),
     ).map((item) => ({
       code: item.outcomeCode as MatchViewModel["allocation"][number]["code"],
@@ -244,14 +208,24 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
       amount: item.amount,
     }));
 
+    await Promise.all([
+      animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
+      animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
+      animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
+    ]);
+
     saveStoredAllocation(allocationScope, effectiveMatch.id, {
       allocations: payload,
       savedAt: new Date().toISOString(),
       status: "draft",
     });
 
-    setChosenIntensity(option.id);
+    setChosenOutcome(code);
     setPhase("saved");
+    x.set(0);
+    y.set(0);
+    cardOpacity.set(1);
+    isChoosingRef.current = false;
     setIsSaving(true);
     setSaveMessage("Guardando");
     setSaveTone("loading");
@@ -327,30 +301,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [isFinePointer, isInteractiveEditor, phase, quickPlayTargets, showDrawGesture]);
 
-  useEffect(() => {
-    if (!isFinePointer || phase !== "chosen") {
-      return;
-    }
-    const handler = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
-        return;
-      }
-      const optionByKey: Record<string, (typeof INTENSITIES)[number] | undefined> = {
-        "1": INTENSITIES[0],
-        "2": INTENSITIES[1],
-        "3": INTENSITIES[2],
-      };
-      const option = optionByKey[event.key];
-      if (option) {
-        event.preventDefault();
-        void handleIntensityPick(option);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isFinePointer, phase]);
-
   const showMatchCenter =
     cardState.mode === "editable-empty" ||
     (cardState.mode === "editable-saved" && (isEditingSaved || phase !== "idle"));
@@ -358,17 +308,8 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
   const showLiveSummaryHero = cardState.mode === "live" && phase === "idle";
   const showSettledSummaryHero = cardState.mode === "settled" && phase === "idle";
   const compactHeroMinHeight = 176;
-  const chosenColor = chosenOutcome ? getOutcomeColor(chosenOutcome) : null;
   const heroPanelBackground = "rgba(12, 17, 24, 0.96)";
   const heroPanelBorder = "rgba(255,255,255,0.1)";
-  const chosenOutcomeLabel = chosenOutcome
-    ? effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label ?? "Pick"
-    : null;
-  const chosenOutcomeHint = chosenOutcome ? getOutcomeHint(chosenOutcome, effectiveMatch.marketType) : null;
-  const showChosenHint =
-    chosenOutcomeLabel &&
-    chosenOutcomeHint &&
-    chosenOutcomeLabel.trim().toLowerCase() !== chosenOutcomeHint.trim().toLowerCase();
 
   const heroToneColor =
     cardState.heroTone === "positive"
@@ -485,78 +426,9 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                 </motion.div>
               ) : null}
 
-              {phase === "chosen" && chosenOutcome ? (
+              {phase === "saved" && chosenOutcome ? (
                 <motion.div
-                  key={`detail-chosen-${effectiveMatch.id}-${chosenOutcome}`}
-                  initial={{ scale: 0.94, opacity: 0, y: 14 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.94, opacity: 0, y: -14 }}
-                  transition={{ type: "spring", stiffness: 250, damping: 24 }}
-                  style={{
-                    minHeight: 250,
-                    height: "100%",
-                    display: "grid",
-                    gap: 12,
-                    gridTemplateRows: "auto auto 1fr auto",
-                    alignContent: "stretch",
-                    padding: 14,
-                    background: `linear-gradient(180deg, color-mix(in srgb, ${getOutcomeColor(chosenOutcome)} 12%, #17202a) 0%, #0b1016 100%)`,
-                    border: `1px solid ${getOutcomeColor(chosenOutcome)}24`,
-                    borderRadius: 14,
-                  }}
-                >
-                  <p className="eyebrow">Vas con</p>
-
-                  <div className="title-stack" style={{ gap: 2 }}>
-                    <h2 className="display-title" style={{ fontSize: "clamp(1.8rem, 8vw, 2.2rem)", lineHeight: 0.94 }}>
-                      {chosenOutcomeLabel}
-                    </h2>
-                    {showChosenHint ? (
-                      <p className="muted-copy" style={{ color: getOutcomeColor(chosenOutcome) }}>
-                        {chosenOutcomeHint}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <p className="eyebrow">¿Cómo la querés jugar?</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, alignSelf: "center" }}>
-                    {INTENSITIES.map((option) => {
-                      const Icon = option.icon;
-                      return (
-                        <motion.button
-                          key={option.id}
-                          whileTap={{ scale: 0.94 }}
-                          whileHover={{ scale: 1.03 }}
-                          onClick={() => void handleIntensityPick(option)}
-                          style={{
-                            minHeight: 96,
-                            borderRadius: 12,
-                            border: "1px solid rgba(255,255,255,0.09)",
-                            background: "rgba(255,255,255,0.035)",
-                            display: "grid",
-                            placeItems: "center",
-                            gap: 6,
-                            padding: 12,
-                            color: "#EDE8D9",
-                          }}
-                        >
-                          <Icon size={20} style={{ color: option.id === "hard" ? "var(--live)" : option.id === "medium" ? "#EDE8D9" : "var(--gold)" }} />
-                          <span style={{ fontFamily: "var(--font-display)", fontSize: ".88rem", fontWeight: 700 }}>{option.label}</span>
-                          <span className="micro-copy" style={{ textAlign: "center" }}>{getIntensityCopy(option.id)}</span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-
-                  <button className="button-ghost" onClick={resetPhase} style={{ minHeight: 36, justifySelf: "center", alignSelf: "end", paddingInline: 0 }}>
-                    Cambiar
-                  </button>
-                </motion.div>
-              ) : null}
-
-              {phase === "saved" && chosenOutcome && chosenIntensity ? (
-                <motion.div
-                  key={`detail-saved-${effectiveMatch.id}-${chosenOutcome}-${chosenIntensity}`}
+                  key={`detail-saved-${effectiveMatch.id}-${chosenOutcome}`}
                   initial={{ scale: 0.96, opacity: 0, y: 16 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.94, opacity: 0, y: -24 }}
@@ -579,8 +451,6 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                     <p className="section-title">Guardado</p>
                     <p className="muted-copy">
                       {getOutcomeFlag(chosenOutcome, effectiveMatch)} {effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label}
-                      {" · "}
-                      {getIntensityCopy(chosenIntensity)}
                     </p>
                     {saveMessage ? <span className="micro-copy" style={{ color: saveTone === "warning" ? "var(--live)" : saveTone === "loading" ? "#EDE8D9" : "var(--gold)" }}>{saveMessage}</span> : null}
                   </div>

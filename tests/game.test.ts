@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildPresetAllocation,
-  buildFocusedAllocation,
-  buildWeightedAllocation,
+  buildSinglePickAllocation,
   formatNetAmount,
   isMarketEditable,
   settleTicket,
@@ -124,43 +122,28 @@ describe("game rules", () => {
     ).toThrow("negativo");
   });
 
-  it("builds a focused allocation preset for a selected outcome", () => {
-    expect(buildFocusedAllocation(["1", "X", "2"], "1")).toEqual([
-      { outcomeCode: "1", amount: 9000 },
-      { outcomeCode: "X", amount: 1000 },
-      { outcomeCode: "2", amount: 0 },
+  it("puts the full credit on the picked outcome and zero on the rest", () => {
+    expect(buildSinglePickAllocation(["home", "draw", "away"], "home")).toEqual([
+      { outcomeCode: "home", amount: 10000 },
+      { outcomeCode: "draw", amount: 0 },
+      { outcomeCode: "away", amount: 0 },
     ]);
 
-    expect(buildFocusedAllocation(["A", "B"], "B")).toEqual([
-      { outcomeCode: "A", amount: 0 },
-      { outcomeCode: "B", amount: 10000 },
+    expect(buildSinglePickAllocation(["home", "draw", "away"], "draw")).toEqual([
+      { outcomeCode: "home", amount: 0 },
+      { outcomeCode: "draw", amount: 10000 },
+      { outcomeCode: "away", amount: 0 },
     ]);
   });
 
-  it("builds weighted allocations for softer presets", () => {
-    expect(buildWeightedAllocation(["1", "X", "2"], "X", 5500)).toEqual([
-      { outcomeCode: "1", amount: 2250 },
-      { outcomeCode: "X", amount: 5500 },
-      { outcomeCode: "2", amount: 2250 },
+  it("scales the pick to the market credit", () => {
+    expect(buildSinglePickAllocation(["home_qualifies", "away_qualifies"], "away_qualifies", 15000)).toEqual([
+      { outcomeCode: "home_qualifies", amount: 0 },
+      { outcomeCode: "away_qualifies", amount: 15000 },
     ]);
   });
 
-  it("builds the new intensity presets for 1X2 and draw selections", () => {
-    expect(buildPresetAllocation(["home", "draw", "away"], "home", "soft")).toEqual([
-      { outcomeCode: "home", amount: 5000 },
-      { outcomeCode: "draw", amount: 3000 },
-      { outcomeCode: "away", amount: 2000 },
-    ]);
-
-    expect(buildPresetAllocation(["home", "draw", "away"], "draw", "hard")).toEqual([
-      { outcomeCode: "home", amount: 1000 },
-      { outcomeCode: "draw", amount: 8000 },
-      { outcomeCode: "away", amount: 1000 },
-    ]);
-
-    expect(buildPresetAllocation(["home_qualifies", "away_qualifies"], "home_qualifies", "medium")).toEqual([
-      { outcomeCode: "home_qualifies", amount: 8000 },
-      { outcomeCode: "away_qualifies", amount: 2000 },
-    ]);
+  it("rejects a pick that is not among the outcomes", () => {
+    expect(() => buildSinglePickAllocation(["home", "away"], "draw")).toThrow("invalido");
   });
 });
