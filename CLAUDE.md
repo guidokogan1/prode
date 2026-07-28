@@ -4,12 +4,13 @@ This repo was born as a **World Cup 2026** football pool and was **re-targeted t
 
 ## What it is
 
-Mobile-first pari-mutuel prode for a group of friends. Each user bets a fixed credit (`MATCH_CREDIT` = 10000) per match on 1X2 (or "qualifies" in playoffs); winners split the pool proportional to their stake on the winning outcome. There's also a season-long **champion pick**. Next.js (app router) + Supabase + Vercel.
+Mobile-first pari-mutuel prode for a group of friends. Each user makes a single **all-in** pick per match on 1X2 (or "qualifies" in playoffs) — the full credit (`MATCH_CREDIT` = 10000, `KNOCKOUT_CREDIT` = 15000) goes on the chosen outcome; winners split the pool. Since 2026-07-28 there's no soft/medium/hard split anymore (removed — too much friction across ~190 Liga matches). There's also a season-long **champion pick**. Next.js (app router) + Supabase + Vercel.
 
 - **Live:** `prode-indol.vercel.app` — Vercel project **prode**, account "Guido's projects" (Hobby), **not** the BenefitFlow team.
 - **Repo:** `github.com/guidokogan1/prode` (Guido's personal account, NOT BF).
 - **Push procedure:** `gh auth switch -u guidokogan1` → push → `gh auth switch -u guidokogan-bf` to switch back. NEVER open PRs / push without Guido's explicit OK.
 - **Local dev:** `PORT=3100 pnpm dev` (port 3000 may be taken). Gate before committing is `pnpm typecheck` (some `pnpm test` failures are pre-existing supabase-mock noise, ~11/63, identical on main).
+- **Running DB/ops scripts:** the `scripts/*.mjs` read `process.env` directly with no dotenv loader, so run them with `node --env-file=.env.local scripts/<x>.mjs` (Node 22+). These ops/audit scripts stay **untracked** by convention (only `seed-*` and `process-*` are wired into package.json).
 
 ## Data source (Argentine Liga)
 
