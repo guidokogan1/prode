@@ -377,13 +377,12 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
               {phase === "idle" ? (
                 <motion.div
                   key={`detail-idle-${effectiveMatch.id}`}
-                  drag={isInteractiveEditor}
+                  drag={isInteractiveEditor ? "x" : false}
                   dragMomentum={false}
-                  dragDirectionLock
-                  dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                  dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={0.14}
                   onDragEnd={async (_, info) => {
-                    const outcome = getQuickPlaySwipeOutcome(effectiveMatch, info.offset.x, info.offset.y);
+                    const outcome = getQuickPlaySwipeOutcome(effectiveMatch, info.offset.x, 0);
                     if (outcome) {
                       await chooseOutcome(outcome);
                       return;

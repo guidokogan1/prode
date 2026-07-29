@@ -483,27 +483,19 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                 {phase === "idle" ? (
                   <motion.div
                     key={`idle-${activeMatch.id}`}
-                    drag
+                    drag="x"
                     dragMomentum={false}
-                    dragDirectionLock
-                    dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                    dragConstraints={{ left: 0, right: 0 }}
                     dragElastic={0.14}
                     onDragEnd={async (_, info) => {
-                      const { x: offsetX, y: offsetY } = info.offset;
                       if (!match || !quickPlayTargets) {
                         return;
                       }
 
-                      const outcome = getQuickPlaySwipeOutcome(activeMatch, offsetX, offsetY);
+                      const outcome = getQuickPlaySwipeOutcome(activeMatch, info.offset.x, 0);
                       if (outcome) {
                         await chooseOutcome(outcome);
                         return;
-                      }
-                      if (offsetY < -68 && showDrawGesture) {
-                        if (activeQuickPlayTargets.draw) {
-                          await chooseOutcome(activeQuickPlayTargets.draw);
-                          return;
-                        }
                       }
                       await snapCardBack();
                     }}
