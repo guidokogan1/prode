@@ -19,6 +19,7 @@ ESPN hidden API, league `arg.1`, season slug `torneo-clausura`:
 - Standings (2 zones, live): `https://site.api.espn.com/apis/v2/sports/soccer/arg.1/standings?season=2026` → `children` = Group A / Group B (the two zonas), each with `advanced` flag + points.
 - Team logos (escudos): `https://a.espncdn.com/i/teamlogos/soccer/500/{espnId}.png`
 - **Gotcha:** ESPN reuses abbreviation `RIV` for BOTH River Plate (id 16) and Independiente Rivadavia (id 9744). Everything keys by **ESPN numeric team id**, never abbreviation. Disambiguated DB codes: River=`RIV`, Ind. Rivadavia=`RIVM`.
+- **Gotcha:** `matches.id` is **text**, not uuid — it is the ESPN id with a prefix (`cl-401841448`). Every FK pointing at `matches(id)` must be declared `text` or Postgres rejects it with `42804 ... incompatible types: uuid and text`. Everything else (users, tickets, markets, outcomes) is uuid, so it is easy to assume wrong. Read `supabase/schema.sql` before writing a migration.
 
 Tournament format (2026): 30 teams, 2 zonas of 15, 16-fecha regular phase, then playoffs (octavos→final, top 8 of each zone) + champion.
 
