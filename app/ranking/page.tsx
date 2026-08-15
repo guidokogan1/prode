@@ -7,10 +7,13 @@ import { formatGross } from "@/lib/format";
 import { getRanking } from "@/lib/repositories/ranking";
 import { getRankingTimeline } from "@/lib/repositories/timeline";
 import { getTournamentFinalState } from "@/lib/repositories/tournament";
+import { requireSession } from "@/lib/server-session";
 
 export const dynamic = "force-dynamic";
 
 export default async function RankingPage() {
+  await requireSession();
+
   const [ranking, tournament, timeline] = await Promise.all([getRanking(), getTournamentFinalState(), getRankingTimeline()]);
   const currentUser = ranking.find((item) => item.isCurrentUser) ?? null;
   const leader = ranking[0] ?? null;

@@ -5,8 +5,11 @@ import { MatchCard } from "@/components/match-card";
 import { getMatchActionPriority } from "@/lib/match-ui";
 import { getHomeSummary } from "@/lib/repositories/home";
 import { listMatches } from "@/lib/repositories/matches";
+import { requireSession } from "@/lib/server-session";
 
 export default async function MatchesPage() {
+  await requireSession();
+
   const [matches, summary] = await Promise.all([listMatches(), getHomeSummary()]);
   const groups = buildCompetitionGroups(matches);
 

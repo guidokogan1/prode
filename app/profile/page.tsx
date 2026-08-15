@@ -7,9 +7,11 @@ import { listMatches } from "@/lib/repositories/matches";
 import { getProfile } from "@/lib/repositories/profile";
 import { getRanking } from "@/lib/repositories/ranking";
 import { getTournamentFinalState } from "@/lib/repositories/tournament";
-import { getCurrentSession } from "@/lib/server-session";
+import { getCurrentSession, requireSession } from "@/lib/server-session";
 
 export default async function ProfilePage() {
+  await requireSession();
+
   const [profile, matches, tournament, ranking, session] = await Promise.all([
     getProfile(),
     listMatches(),

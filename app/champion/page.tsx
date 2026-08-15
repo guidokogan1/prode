@@ -7,9 +7,11 @@ import { shouldIncludeMatchInChampionPool } from "@/lib/dummy-matches";
 import { listMatches } from "@/lib/repositories/matches";
 import { getProfile } from "@/lib/repositories/profile";
 import { getTournamentFinalState } from "@/lib/repositories/tournament";
-import { getCurrentSession } from "@/lib/server-session";
+import { getCurrentSession, requireSession } from "@/lib/server-session";
 
 export default async function ChampionPage() {
+  await requireSession();
+
   const tournament = await getTournamentFinalState();
   if (tournament.finished) {
     redirect("/profile");

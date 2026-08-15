@@ -1,7 +1,10 @@
 import { getHistory } from "@/lib/repositories/history";
 import { formatCredits, formatGross } from "@/lib/format";
+import { requireSession } from "@/lib/server-session";
 
 export default async function HistoryPage() {
+  await requireSession();
+
   const history = await getHistory();
 
   return (
