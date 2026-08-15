@@ -2,53 +2,52 @@
 
 import { useContext, useEffect, useRef } from "react";
 import { SessionContext } from "@/components/session-provider";
-import {
-  buildAllocationScope,
-  listAllStoredAllocations,
-  listSyncErrorAllocations,
-  saveStoredAllocation,
-} from "@/lib/local-store";
+import { buildAllocationScope } from "@/lib/local-store";
+import { countUnconfirmedPicks, retryUnconfirmedPicks } from "@/lib/pick-save";
+
+const RETRY_INTERVAL_MS = 20000;
 
 export function SyncRetry() {
   const session = useContext(SessionContext);
-  const ranRef = useRef(false);
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
-    if (ranRef.current) return;
-    if (session?.kind !== "remote") return;
-    ranRef.current = true;
+    if (session?.kind !== "remote") {
+      return;
+    }
 
     const allocationScope = buildAllocationScope(session);
+    let cancelled = false;
+
     const sync = async () => {
-      const errored = listSyncErrorAllocations(allocationScope);
-      const all = new Map<string, (typeof errored)[number]>();
-      for (const item of errored) all.set(item.matchId, item);
+      if (cancelled || inFlightRef.current) {
+        return;
+      }
+      if (!countUnconfirmedPicks(allocationScope)) {
+        return;
+      }
 
-      if (!all.size) return;
-
-      await Promise.all(
-        Array.from(all.values()).map(async ({ matchId, draft }) => {
-          try {
-            const response = await fetch("/api/tickets", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ matchId, allocations: draft.allocations }),
-              credentials: "include",
-            });
-            if (response.ok) {
-              saveStoredAllocation(allocationScope, matchId, {
-                ...draft,
-                status: "saved_remote",
-                savedAt: new Date().toISOString(),
-              });
-            }
-          } catch {
-          }
-        }),
-      );
+      inFlightRef.current = true;
+      try {
+        await retryUnconfirmedPicks(allocationScope);
+      } finally {
+        inFlightRef.current = false;
+      }
     };
 
     void sync();
+
+    const interval = setInterval(() => void sync(), RETRY_INTERVAL_MS);
+    const onWake = () => void sync();
+    window.addEventListener("focus", onWake);
+    window.addEventListener("online", onWake);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      window.removeEventListener("focus", onWake);
+      window.removeEventListener("online", onWake);
+    };
   }, [session]);
 
   return null;

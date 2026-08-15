@@ -4,15 +4,17 @@ import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
-import { Check } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { QualifiesVoteCard } from "@/components/qualifies-slider";
 import { SessionContext } from "@/components/session-provider";
 import { TeamCrest } from "@/components/team-crest";
 import { VoteFace } from "@/components/vote-face";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildSinglePickAllocation, creditForMarketType } from "@/lib/game";
-import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
+import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation } from "@/lib/local-store";
 import { getOutcomeFlag, getQuickPlayOutcomeTargets, getQuickPlaySwipeOutcome } from "@/lib/match-ui";
+import { settleAnimations } from "@/lib/motion-settle";
+import { savePick } from "@/lib/pick-save";
 
 type QuickPlayDeckProps = {
   matches: MatchViewModel[];
@@ -25,7 +27,7 @@ type CardPhase = "idle" | "saved";
 export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: QuickPlayDeckProps) {
   const router = useRouter();
   const session = useContext(SessionContext);
-  const [justSavedIds, setJustSavedIds] = useState<Set<string>>(new Set());
+  const [handledIds, setHandledIds] = useState<Set<string>>(new Set());
   const allocationScope = buildAllocationScope(session);
   const [effectiveMatches, setEffectiveMatches] = useState(() => matches);
 
@@ -45,9 +47,9 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
   }, [allocationScope, matches]);
 
   const deck = useMemo(() => {
-    const pending = effectiveMatches.filter((match) => isPendingQuickPlayMatch(match) && !justSavedIds.has(match.id));
+    const pending = effectiveMatches.filter((match) => isPendingQuickPlayMatch(match) && !handledIds.has(match.id));
     return pending.sort((a, b) => (a.kickoffAt ?? "").localeCompare(b.kickoffAt ?? ""));
-  }, [effectiveMatches, justSavedIds]);
+  }, [effectiveMatches, handledIds]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<CardPhase>("idle");
   const [chosenOutcome, setChosenOutcome] = useState<MatchOutcomeCode | null>(null);
@@ -136,41 +138,28 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
       { code: awayOutcome.code, label: awayOutcome.label, amount: credit - homeAmount },
     ];
 
+    const savedMatchId = match.id;
     setQualifiesSaving(true);
     setQualifiesError(null);
-    saveStoredAllocation(allocationScope, match.id, { allocations: payload, savedAt: new Date().toISOString(), status: "draft" });
 
-    let savedStatus: "saved_remote" | "saved_local" | "sync_error" = "saved_local";
     try {
-      const response = await fetch("/api/tickets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matchId: match.id, allocations: payload }),
-      });
-      const result = (await response.json()) as { ok: boolean; reason?: string; state?: string };
-      if (!response.ok || !result.ok) {
-        saveStoredAllocation(allocationScope, match.id, { allocations: payload, savedAt: new Date().toISOString(), status: "sync_error" });
+      const result = await savePick(allocationScope, savedMatchId, payload);
+
+      if (!result.confirmed) {
         setQualifiesError(result.reason ?? "No se pudo guardar la jugada.");
-        setQualifiesSaving(false);
         return;
       }
-      savedStatus = result.state === "saved_remote" ? "saved_remote" : "saved_local";
-    } catch {
-      savedStatus = "sync_error";
-    }
 
-    saveStoredAllocation(allocationScope, match.id, { allocations: payload, savedAt: new Date().toISOString(), status: savedStatus });
-    setJustSavedIds((prev) => {
-      const next = new Set(prev);
-      next.add(match.id);
-      return next;
-    });
-    onMatchSaved?.(match.id);
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event(ALLOCATION_EVENT));
+      setHandledIds((prev) => {
+        const next = new Set(prev);
+        next.add(savedMatchId);
+        return next;
+      });
+      onMatchSaved?.(savedMatchId);
+      moveNext();
+    } finally {
+      setQualifiesSaving(false);
     }
-    setQualifiesSaving(false);
-    moveNext();
   }
 
   const resetPhase = () => {
@@ -195,100 +184,78 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
     }
 
     isChoosingRef.current = true;
-    const currentX = x.get();
-    const currentY = y.get();
-    const targetX =
-      code === "home" || code === "home_qualifies"
-        ? -Math.max(320, Math.abs(currentX) + 180)
-        : code === "away" || code === "away_qualifies"
-          ? Math.max(320, Math.abs(currentX) + 180)
-          : 0;
-    const targetY = code === "draw" ? -Math.max(260, Math.abs(currentY) + 160) : currentY * 0.2;
-
-    const savedMatch = match;
-    const payload = buildSinglePickAllocation(
-      savedMatch.allocation.map((item) => item.code),
-      code,
-      creditForMarketType(savedMatch.marketType),
-    ).map((item) => ({
-      code: item.outcomeCode as MatchOutcomeCode,
-      label: savedMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
-      amount: item.amount,
-    }));
-
-    if (nextTimerRef.current) {
-      clearTimeout(nextTimerRef.current);
-    }
-
-    await Promise.all([
-      animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
-    ]);
-
-    saveStoredAllocation(allocationScope, savedMatch.id, {
-      allocations: payload,
-      savedAt: new Date().toISOString(),
-      status: "draft",
-    });
-    setChosenOutcome(code);
-    setSavedMatchSnapshot(savedMatch);
-    setJustSavedIds((prev) => {
-      const next = new Set(prev);
-      next.add(savedMatch.id);
-      return next;
-    });
-    onMatchSaved?.(savedMatch.id);
-    setPhase("saved");
-    setIsSaving(true);
-    setSaveMessage("Guardando");
-    setSaveTone("loading");
-    x.set(0);
-    y.set(0);
-    cardOpacity.set(1);
-    isChoosingRef.current = false;
 
     try {
-      const [, response] = await Promise.all([
-        new Promise((resolve) => setTimeout(resolve, 760)),
-        fetch("/api/tickets", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            matchId: savedMatch.id,
-            allocations: payload,
-          }),
-        }),
-      ]);
+      const currentX = x.get();
+      const currentY = y.get();
+      const targetX =
+        code === "home" || code === "home_qualifies"
+          ? -Math.max(320, Math.abs(currentX) + 180)
+          : code === "away" || code === "away_qualifies"
+            ? Math.max(320, Math.abs(currentX) + 180)
+            : 0;
+      const targetY = code === "draw" ? -Math.max(260, Math.abs(currentY) + 160) : currentY * 0.2;
 
-      if (!response.ok) {
-        throw new Error("remote save failed");
+      const savedMatch = match;
+      const payload = buildSinglePickAllocation(
+        savedMatch.allocation.map((item) => item.code),
+        code,
+        creditForMarketType(savedMatch.marketType),
+      ).map((item) => ({
+        code: item.outcomeCode as MatchOutcomeCode,
+        label: savedMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
+        amount: item.amount,
+      }));
+
+      if (nextTimerRef.current) {
+        clearTimeout(nextTimerRef.current);
       }
 
-      saveStoredAllocation(allocationScope, savedMatch.id, {
-        allocations: payload,
-        savedAt: new Date().toISOString(),
-        status: "saved_remote",
+      const flyOut = settleAnimations([
+        animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
+        animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
+        animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
+      ]);
+
+      setChosenOutcome(code);
+      setSavedMatchSnapshot(savedMatch);
+      setPhase("saved");
+      setIsSaving(true);
+      setSaveMessage("Guardando");
+      setSaveTone("loading");
+
+      const [result] = await Promise.all([savePick(allocationScope, savedMatch.id, payload), flyOut]);
+
+      x.set(0);
+      y.set(0);
+      cardOpacity.set(1);
+      setIsSaving(false);
+
+      setHandledIds((prev) => {
+        const next = new Set(prev);
+        next.add(savedMatch.id);
+        return next;
       });
+
+      if (!result.confirmed) {
+        setSaveMessage(result.reason ?? "No se pudo guardar, reintentando");
+        setSaveTone("warning");
+        nextTimerRef.current = setTimeout(() => {
+          moveNext();
+        }, 1400);
+        return;
+      }
+
       setSaveMessage("Guardado");
       setSaveTone("default");
-    } catch {
-      saveStoredAllocation(allocationScope, savedMatch.id, {
-        allocations: payload,
-        savedAt: new Date().toISOString(),
-        status: "sync_error",
-      });
-      setSaveMessage(session?.kind === "remote" ? "Sin conexión, guardado local" : "Guardado local");
-      setSaveTone("warning");
-    } finally {
-      setIsSaving(false);
-    }
+      onMatchSaved?.(savedMatch.id);
 
-    nextTimerRef.current = setTimeout(() => {
-      moveNext();
-    }, 760);
+      nextTimerRef.current = setTimeout(() => {
+        moveNext();
+      }, 620);
+    } finally {
+      isChoosingRef.current = false;
+    }
   }
 
   const showDrawGesture = match?.allocation.some((item) => item.code === "draw");
@@ -332,7 +299,7 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
     <div style={{ display: "grid", gap: 10, minHeight: 0 }}>
       {!done ? (() => {
         const MAX_DOTS = 8;
-        const savedCount = justSavedIds.size;
+        const savedCount = handledIds.size;
         const totalMatches = deck.length + savedCount;
         const totalDots = Math.min(MAX_DOTS, totalMatches);
         const startIndex = Math.max(
@@ -620,14 +587,20 @@ export function QuickPlayDeck({ matches, onMatchSaved, onPendingCountChange }: Q
                           borderRadius: 999,
                           display: "grid",
                           placeItems: "center",
-                          background: "rgba(63,227,242,0.18)",
-                          border: "2px solid #3FE3F2",
+                          background: saveTone === "warning" ? "rgba(244,166,60,0.18)" : "rgba(63,227,242,0.18)",
+                          border: `2px solid ${saveTone === "warning" ? "#F4A63C" : "#3FE3F2"}`,
                         }}
                       >
-                        <Check size={28} style={{ color: "#3FE3F2" }} />
+                        {saveTone === "warning" ? (
+                          <AlertTriangle size={28} style={{ color: "#F4A63C" }} />
+                        ) : (
+                          <Check size={28} style={{ color: "#3FE3F2" }} />
+                        )}
                       </motion.div>
                       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} style={{ display: "grid", gap: 6 }}>
-                        <p className="section-title">Guardado</p>
+                        <p className="section-title">
+                          {saveTone === "warning" ? "Sin confirmar" : isSaving ? "Guardando" : "Guardado"}
+                        </p>
                         <p className="muted-copy">
                           {getOutcomeFlag(chosenOutcome, savedMatchSnapshot)} {savedMatchSnapshot.allocation.find((item) => item.code === chosenOutcome)?.label}
                         </p>

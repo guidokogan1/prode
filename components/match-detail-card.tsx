@@ -3,7 +3,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, animate, motion, useMotionValue, useTransform } from "motion/react";
-import { ArrowLeft, Check } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
 import { ShareImageButton } from "@/components/share-image-button";
 import { VoteFace } from "@/components/vote-face";
@@ -12,7 +12,9 @@ import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { formatCredits, formatGross } from "@/lib/format";
 import { buildSinglePickAllocation, creditForMarketType } from "@/lib/game";
-import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation, saveStoredAllocation } from "@/lib/local-store";
+import { ALLOCATION_EVENT, buildAllocationScope, getStoredAllocation } from "@/lib/local-store";
+import { settleAnimations } from "@/lib/motion-settle";
+import { savePick } from "@/lib/pick-save";
 import {
   deriveResolvedOutcome,
   formatCompactCredits,
@@ -187,89 +189,65 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
     }
 
     isChoosingRef.current = true;
-    setIsEditingSaved(true);
-    const currentX = x.get();
-    const currentY = y.get();
-    const targetX =
-      code === "home" || code === "home_qualifies"
-        ? -Math.max(320, Math.abs(currentX) + 180)
-        : code === "away" || code === "away_qualifies"
-          ? Math.max(320, Math.abs(currentX) + 180)
-          : 0;
-    const targetY = code === "draw" ? -Math.max(260, Math.abs(currentY) + 160) : currentY * 0.2;
-
-    const payload = buildSinglePickAllocation(
-      effectiveMatch.allocation.map((item) => item.code),
-      code,
-      creditForMarketType(effectiveMatch.marketType),
-    ).map((item) => ({
-      code: item.outcomeCode as MatchViewModel["allocation"][number]["code"],
-      label: effectiveMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
-      amount: item.amount,
-    }));
-
-    await Promise.all([
-      animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
-      animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
-    ]);
-
-    saveStoredAllocation(allocationScope, effectiveMatch.id, {
-      allocations: payload,
-      savedAt: new Date().toISOString(),
-      status: "draft",
-    });
-
-    setChosenOutcome(code);
-    setPhase("saved");
-    x.set(0);
-    y.set(0);
-    cardOpacity.set(1);
-    isChoosingRef.current = false;
-    setIsSaving(true);
-    setSaveMessage("Guardando");
-    setSaveTone("loading");
 
     try {
-      const response = await fetch("/api/tickets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          matchId: effectiveMatch.id,
-          allocations: payload,
-        }),
-      });
+      setIsEditingSaved(true);
+      const currentX = x.get();
+      const currentY = y.get();
+      const targetX =
+        code === "home" || code === "home_qualifies"
+          ? -Math.max(320, Math.abs(currentX) + 180)
+          : code === "away" || code === "away_qualifies"
+            ? Math.max(320, Math.abs(currentX) + 180)
+            : 0;
+      const targetY = code === "draw" ? -Math.max(260, Math.abs(currentY) + 160) : currentY * 0.2;
 
-      if (!response.ok) {
-        throw new Error("remote save failed");
+      const payload = buildSinglePickAllocation(
+        effectiveMatch.allocation.map((item) => item.code),
+        code,
+        creditForMarketType(effectiveMatch.marketType),
+      ).map((item) => ({
+        code: item.outcomeCode as MatchViewModel["allocation"][number]["code"],
+        label: effectiveMatch.allocation.find((allocation) => allocation.code === item.outcomeCode)?.label ?? item.outcomeCode,
+        amount: item.amount,
+      }));
+
+      const flyOut = settleAnimations([
+        animate(x, targetX, { duration: 0.2, ease: "easeOut" }).finished,
+        animate(y, targetY, { duration: 0.2, ease: "easeOut" }).finished,
+        animate(cardOpacity, 0, { duration: 0.18, ease: "easeOut" }).finished,
+      ]);
+
+      setChosenOutcome(code);
+      setPhase("saved");
+      setIsSaving(true);
+      setSaveMessage("Guardando");
+      setSaveTone("loading");
+
+      const [result] = await Promise.all([savePick(allocationScope, effectiveMatch.id, payload), flyOut]);
+
+      x.set(0);
+      y.set(0);
+      cardOpacity.set(1);
+      setIsSaving(false);
+
+      if (result.confirmed) {
+        setSaveMessage("Guardado");
+        setSaveTone("default");
+        router.refresh();
+      } else {
+        setSaveMessage(result.reason ?? "No se pudo guardar, reintentando");
+        setSaveTone("warning");
       }
 
-      saveStoredAllocation(allocationScope, effectiveMatch.id, {
-        allocations: payload,
-        savedAt: new Date().toISOString(),
-        status: "saved_remote",
-      });
-      setSaveMessage("Guardado");
-      setSaveTone("default");
-      router.refresh();
-    } catch {
-      saveStoredAllocation(allocationScope, effectiveMatch.id, {
-        allocations: payload,
-        savedAt: new Date().toISOString(),
-        status: "sync_error",
-      });
-      setSaveMessage(session?.kind === "remote" ? "Guardado local" : "Guardado local");
-      setSaveTone("warning");
-    } finally {
-      setIsSaving(false);
       if (saveResetTimeoutRef.current) {
         clearTimeout(saveResetTimeoutRef.current);
       }
       saveResetTimeoutRef.current = setTimeout(() => {
         resetPhase();
-      }, 900);
+      }, result.confirmed ? 900 : 1800);
+    } finally {
+      isChoosingRef.current = false;
     }
   }
 
@@ -444,10 +422,16 @@ export function MatchDetailCard({ match }: MatchDetailCardProps) {
                   }}
                 >
                   <div className="section-stack" style={{ justifyItems: "center" }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 999, display: "grid", placeItems: "center", background: "rgba(63,227,242,0.14)", border: "2px solid rgba(63,227,242,0.48)", boxShadow: isSaving ? "0 0 0 10px rgba(63,227,242,0.08)" : "0 0 0 0 rgba(63,227,242,0)" }}>
-                      <Check size={24} style={{ color: "var(--gold)" }} />
+                    <div style={{ width: 56, height: 56, borderRadius: 999, display: "grid", placeItems: "center", background: saveTone === "warning" ? "rgba(244,166,60,0.14)" : "rgba(63,227,242,0.14)", border: `2px solid ${saveTone === "warning" ? "rgba(244,166,60,0.48)" : "rgba(63,227,242,0.48)"}`, boxShadow: isSaving ? "0 0 0 10px rgba(63,227,242,0.08)" : "0 0 0 0 rgba(63,227,242,0)" }}>
+                      {saveTone === "warning" ? (
+                        <AlertTriangle size={24} style={{ color: "var(--live)" }} />
+                      ) : (
+                        <Check size={24} style={{ color: "var(--gold)" }} />
+                      )}
                     </div>
-                    <p className="section-title">Guardado</p>
+                    <p className="section-title">
+                      {saveTone === "warning" ? "Sin confirmar" : isSaving ? "Guardando" : "Guardado"}
+                    </p>
                     <p className="muted-copy">
                       {getOutcomeFlag(chosenOutcome, effectiveMatch)} {effectiveMatch.allocation.find((item) => item.code === chosenOutcome)?.label}
                     </p>

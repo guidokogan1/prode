@@ -34,6 +34,65 @@ function canUseStorage() {
   return typeof window !== "undefined";
 }
 
+function readKey(key: string) {
+  if (!canUseStorage()) {
+    return null;
+  }
+
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeKey(key: string, value: string) {
+  if (!canUseStorage()) {
+    return false;
+  }
+
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function removeKey(key: string) {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+  }
+}
+
+function listKeys() {
+  if (!canUseStorage()) {
+    return [];
+  }
+
+  try {
+    return Object.keys(window.localStorage);
+  } catch {
+    return [];
+  }
+}
+
+function emit(name: string, detail: unknown) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.dispatchEvent(new CustomEvent(name, { detail }));
+  } catch {
+  }
+}
+
 function buildAllocationScopedKey(scopeKey: string, matchId: string) {
   return `${ALLOCATION_PREFIX}${scopeKey}.${matchId}`;
 }
@@ -59,11 +118,7 @@ export function buildAllocationScope(session: SessionState | null) {
 }
 
 export function getStoredSession(): StoredSession | null {
-  if (!canUseStorage()) {
-    return null;
-  }
-
-  const raw = window.localStorage.getItem(SESSION_KEY);
+  const raw = readKey(SESSION_KEY);
   if (!raw) {
     return null;
   }
@@ -76,32 +131,20 @@ export function getStoredSession(): StoredSession | null {
 }
 
 export function saveStoredSession(session: StoredSession) {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  window.dispatchEvent(new CustomEvent(SESSION_EVENT, { detail: session }));
+  writeKey(SESSION_KEY, JSON.stringify(session));
+  emit(SESSION_EVENT, session);
 }
 
 export function clearStoredSession() {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  window.localStorage.removeItem(SESSION_KEY);
-  window.dispatchEvent(new CustomEvent(SESSION_EVENT, { detail: null }));
+  removeKey(SESSION_KEY);
+  emit(SESSION_EVENT, null);
 }
 
 export function getStoredAllocation(scopeKey: string, matchId: string): StoredAllocationDraft | null {
-  if (!canUseStorage()) {
-    return null;
-  }
-
   const raw =
-    window.localStorage.getItem(buildAllocationScopedKey(scopeKey, matchId)) ??
-    (scopeKey !== "guest" ? window.localStorage.getItem(buildAllocationScopedKey("guest", matchId)) : null) ??
-    window.localStorage.getItem(buildLegacyAllocationKey(matchId));
+    readKey(buildAllocationScopedKey(scopeKey, matchId)) ??
+    (scopeKey !== "guest" ? readKey(buildAllocationScopedKey("guest", matchId)) : null) ??
+    readKey(buildLegacyAllocationKey(matchId));
   if (!raw) {
     return null;
   }
@@ -114,21 +157,20 @@ export function getStoredAllocation(scopeKey: string, matchId: string): StoredAl
 }
 
 export function saveStoredAllocation(scopeKey: string, matchId: string, draft: StoredAllocationDraft) {
-  if (!canUseStorage()) {
-    return;
-  }
-
   const nextKey = buildAllocationScopedKey(scopeKey, matchId);
-  window.localStorage.setItem(nextKey, JSON.stringify(draft));
+  writeKey(nextKey, JSON.stringify(draft));
+
   const guestKey = buildAllocationScopedKey("guest", matchId);
   if (guestKey !== nextKey) {
-    window.localStorage.removeItem(guestKey);
+    removeKey(guestKey);
   }
+
   const legacyKey = buildLegacyAllocationKey(matchId);
   if (legacyKey !== nextKey) {
-    window.localStorage.removeItem(legacyKey);
+    removeKey(legacyKey);
   }
-  window.dispatchEvent(new CustomEvent(ALLOCATION_EVENT, { detail: { scopeKey, matchId, draft } }));
+
+  emit(ALLOCATION_EVENT, { scopeKey, matchId, draft });
 }
 
 export function listSyncErrorAllocations(scopeKey: string): { matchId: string; draft: StoredAllocationDraft }[] {
@@ -146,20 +188,16 @@ function listAllocationsForScope(
   scopeKey: string,
   predicate: (draft: StoredAllocationDraft) => boolean,
 ): { matchId: string; draft: StoredAllocationDraft }[] {
-  if (!canUseStorage()) {
-    return [];
-  }
   const out = new Map<string, StoredAllocationDraft>();
-  for (let i = 0; i < window.localStorage.length; i += 1) {
-    const key = window.localStorage.key(i);
-    if (!key?.startsWith(ALLOCATION_PREFIX)) continue;
+  for (const key of listKeys()) {
+    if (!key.startsWith(ALLOCATION_PREFIX)) continue;
     const scopedPrefix = `${ALLOCATION_PREFIX}${scopeKey}.`;
     const guestPrefix = `${ALLOCATION_PREFIX}guest.`;
     const isScopedKey = key.startsWith(scopedPrefix);
     const isGuestKey = scopeKey !== "guest" && key.startsWith(guestPrefix);
     const isLegacyKey = !key.slice(ALLOCATION_PREFIX.length).includes(".");
     if (!isScopedKey && !isGuestKey && !isLegacyKey) continue;
-    const raw = window.localStorage.getItem(key);
+    const raw = readKey(key);
     if (!raw) continue;
     try {
       const draft = JSON.parse(raw) as StoredAllocationDraft;
@@ -181,11 +219,7 @@ function listAllocationsForScope(
 }
 
 export function getStoredChampionPick(scopeKey: string): StoredChampionPick | null {
-  if (!canUseStorage()) {
-    return null;
-  }
-
-  const raw = window.localStorage.getItem(`${CHAMPION_PREFIX}${scopeKey}`);
+  const raw = readKey(`${CHAMPION_PREFIX}${scopeKey}`);
   if (!raw) {
     return null;
   }
@@ -198,22 +232,14 @@ export function getStoredChampionPick(scopeKey: string): StoredChampionPick | nu
 }
 
 export function saveStoredChampionPick(scopeKey: string, pick: StoredChampionPick) {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  window.localStorage.setItem(`${CHAMPION_PREFIX}${scopeKey}`, JSON.stringify(pick));
-  window.dispatchEvent(new CustomEvent(CHAMPION_EVENT, { detail: { scopeKey, pick } }));
+  writeKey(`${CHAMPION_PREFIX}${scopeKey}`, JSON.stringify(pick));
+  emit(CHAMPION_EVENT, { scopeKey, pick });
 }
 
 const PENDING_CHAMPION_PICK_KEY = "mundial-pool.champion.__pending__";
 
 export function getPendingChampionPick(): StoredChampionPick | null {
-  if (!canUseStorage()) {
-    return null;
-  }
-
-  const raw = window.localStorage.getItem(PENDING_CHAMPION_PICK_KEY);
+  const raw = readKey(PENDING_CHAMPION_PICK_KEY);
   if (!raw) {
     return null;
   }
@@ -226,17 +252,9 @@ export function getPendingChampionPick(): StoredChampionPick | null {
 }
 
 export function setPendingChampionPick(pick: StoredChampionPick) {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  window.localStorage.setItem(PENDING_CHAMPION_PICK_KEY, JSON.stringify(pick));
+  writeKey(PENDING_CHAMPION_PICK_KEY, JSON.stringify(pick));
 }
 
 export function clearPendingChampionPick() {
-  if (!canUseStorage()) {
-    return;
-  }
-
-  window.localStorage.removeItem(PENDING_CHAMPION_PICK_KEY);
+  removeKey(PENDING_CHAMPION_PICK_KEY);
 }

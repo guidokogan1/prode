@@ -1,4 +1,4 @@
-export const CHAMPION_PICK_LOCK_AT = "2026-08-18T00:00:00.000Z";
+export const CHAMPION_PICK_LOCK_AT = "2026-08-31T02:59:59.000Z";
 export const CHAMPION_CREDIT = 10000;
 
 export function isChampionPickLocked(now = Date.now()) {

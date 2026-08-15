@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { DemoFloatingBar } from "@/components/demo-floating-bar";
 import { SessionProvider } from "@/components/session-provider";
 import { SyncRetry } from "@/components/sync-retry";
+import { UnconfirmedPicksBanner } from "@/components/unconfirmed-picks-banner";
 import { getActiveDemoPersonaSlug } from "@/lib/demo-state";
 import { getDemoPersonas } from "@/lib/mock-data";
 import "./globals.css";
@@ -57,6 +58,9 @@ export default async function RootLayout({
         <SessionProvider>
           <SyncRetry />
           <div className="app-shell">
+            <div style={{ padding: "0 16px" }}>
+              <UnconfirmedPicksBanner />
+            </div>
             {children}
             <BottomNav />
           </div>
