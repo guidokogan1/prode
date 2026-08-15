@@ -2,9 +2,22 @@ import { writeFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-const confirm = process.argv.includes('--confirm');
 
-const FECHA_6_STARTS_AT = '2026-08-21T00:00:00Z';
+const confirm = process.argv.includes('--confirm');
+const fromArg = process.argv.find((arg) => arg.startsWith('--from='))?.slice('--from='.length);
+
+if (!fromArg) {
+  console.error('Falta --from=<ISO>. Ej: --from=2026-08-15T17:30:00Z');
+  console.error('Todo partido con kickoff ANTERIOR a esa fecha deja de contar para la tabla.');
+  process.exit(1);
+}
+
+const cutoff = new Date(fromArg);
+if (Number.isNaN(cutoff.getTime())) {
+  console.error(`--from invalido: ${fromArg}`);
+  process.exit(1);
+}
+const cutoffIso = cutoff.toISOString();
 
 async function fetchAll(table, columns) {
   const rows = [];
@@ -21,49 +34,72 @@ async function fetchAll(table, columns) {
 
 const matches = await fetchAll('matches', 'id, kickoff_at, status');
 const markets = await fetchAll('match_markets', 'id, match_id, status');
+const tickets = await fetchAll('tickets', 'id, user_id, match_market_id');
 const settlements = await fetchAll('settlements', '*');
 const snapshots = await fetchAll('leaderboard_snapshots', '*');
-const tickets = await fetchAll('tickets', 'id, user_id, match_market_id');
 
-const marketById = new Map(markets.map((m) => [m.id, m]));
 const matchById = new Map(matches.map((m) => [m.id, m]));
+const marketById = new Map(markets.map((m) => [m.id, m]));
 const ticketById = new Map(tickets.map((t) => [t.id, t]));
 
-const afterCutoff = settlements.filter((s) => {
-  const market = marketById.get(ticketById.get(s.ticket_id)?.match_market_id);
-  const match = market ? matchById.get(market.match_id) : null;
-  return match && match.kickoff_at >= FECHA_6_STARTS_AT;
-});
+function matchOfSettlement(settlement) {
+  const market = marketById.get(ticketById.get(settlement.ticket_id)?.match_market_id);
+  return market ? matchById.get(market.match_id) : null;
+}
 
-console.log(`settlements totales: ${settlements.length}`);
-console.log(`leaderboard_snapshots: ${snapshots.length}`);
-console.log(`settlements de fecha 6 en adelante (NO deberia haber ninguno): ${afterCutoff.length}`);
+// Postgres returns "+00:00" and toISOString() returns ".000Z", so the same instant
+// compares unequal as strings and "+" sorts before "." Compare instants, never text.
+function isBeforeCutoff(kickoffAt) {
+  return new Date(kickoffAt).getTime() < cutoff.getTime();
+}
 
-const stillOpen = matches.filter((m) => m.kickoff_at < FECHA_6_STARTS_AT && m.status !== 'finished');
-console.log(`partidos previos a fecha 6 sin terminar: ${stillOpen.length}`);
-for (const m of stillOpen) console.log(`  ${m.kickoff_at}  ${m.status}`);
+const toDelete = [];
+const toKeep = [];
+const orphans = [];
+for (const settlement of settlements) {
+  const match = matchOfSettlement(settlement);
+  if (!match) orphans.push(settlement);
+  else if (isBeforeCutoff(match.kickoff_at)) toDelete.push(settlement);
+  else toKeep.push(settlement);
+}
 
-if (afterCutoff.length > 0) {
-  console.error('\nABORTADO: hay settlements posteriores al corte. Revisar antes de borrar.');
+console.log(`corte: ${cutoffIso}`);
+console.log(`settlements a borrar (kickoff anterior al corte): ${toDelete.length}`);
+console.log(`settlements que se conservan (kickoff posterior):  ${toKeep.length}`);
+console.log(`settlements huerfanos (sin partido resoluble):     ${orphans.length}`);
+console.log(`leaderboard_snapshots a borrar:                    ${snapshots.length}`);
+
+const unfinishedBeforeCutoff = matches.filter((m) => isBeforeCutoff(m.kickoff_at) && m.status !== 'finished');
+if (unfinishedBeforeCutoff.length > 0) {
+  console.error(`\nABORTADO: ${unfinishedBeforeCutoff.length} partido(s) anteriores al corte todavia no terminaron.`);
+  console.error('Si se liquidan despues, van a contar para la tabla nueva sin quererlo.');
+  for (const m of unfinishedBeforeCutoff) console.error(`  ${m.kickoff_at}  ${m.status}`);
   process.exit(1);
 }
 
-if (stillOpen.length > 0) {
-  console.error('\nABORTADO: quedan partidos previos a la fecha 6 sin liquidar. Esperar a que cierre la fecha 5.');
+if (orphans.length > 0) {
+  console.error('\nABORTADO: hay settlements que no resuelven a un partido. Revisar a mano antes de borrar.');
   process.exit(1);
 }
 
-const backupPath = `scripts/backup-reset-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-writeFileSync(backupPath, JSON.stringify({ settlements, snapshots }, null, 2));
-console.log(`\nbackup escrito en ${backupPath}`);
+const countingMatches = matches.filter((m) => !isBeforeCutoff(m.kickoff_at));
+console.log(`\npartidos que van a contar de ahora en mas: ${countingMatches.length}`);
+const nextKickoff = countingMatches.map((m) => new Date(m.kickoff_at).toISOString()).sort()[0];
+console.log(`primero de ellos: ${nextKickoff ?? 'ninguno'}`);
+
+const backupPath = `scripts/backup-reset-${cutoffIso.replace(/[:.]/g, '-')}.json`;
+writeFileSync(backupPath, JSON.stringify({ cutoff: cutoffIso, settlements, snapshots }, null, 2));
+console.log(`\nbackup completo (settlements + snapshots) en ${backupPath}`);
 
 if (!confirm) {
-  console.log('\nDRY RUN. Para ejecutar de verdad: node --env-file=.env.local scripts/reset-table.mjs --confirm');
+  console.log(`\nDRY RUN. Para ejecutar: node --env-file=.env.local scripts/reset-table.mjs --from=${fromArg} --confirm`);
   process.exit(0);
 }
 
-const deleteSettlements = await sb.from('settlements').delete().not('id', 'is', null);
-if (deleteSettlements.error) throw new Error(`borrar settlements: ${deleteSettlements.error.message}`);
+for (const settlement of toDelete) {
+  const { error } = await sb.from('settlements').delete().eq('id', settlement.id);
+  if (error) throw new Error(`borrar settlement ${settlement.id}: ${error.message}`);
+}
 
 const deleteSnapshots = await sb.from('leaderboard_snapshots').delete().not('id', 'is', null);
 if (deleteSnapshots.error) throw new Error(`borrar snapshots: ${deleteSnapshots.error.message}`);
@@ -72,3 +108,4 @@ const remainingSettlements = await fetchAll('settlements', 'id');
 const remainingSnapshots = await fetchAll('leaderboard_snapshots', 'id');
 console.log(`\nlisto. settlements restantes: ${remainingSettlements.length} | snapshots restantes: ${remainingSnapshots.length}`);
 console.log('los match_markets quedan en "settled", asi que el cron no vuelve a liquidar los partidos viejos.');
+console.log('sin snapshots, la tabla lista a todos los usuarios en 0 hasta la primera liquidacion nueva.');
