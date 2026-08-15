@@ -50,17 +50,29 @@ Navy base + cyan accent, no alarm red. Tokens in `app/globals.css :root`: `--gol
 
 ## Config / operational
 
-- `CHAMPION_PICK_LOCK_AT` in `lib/champion.ts` = `2026-08-18` (≈ fecha 4). Champion picks open until then. `champion_market.lock_at` in the DB was PATCHed to match.
+- `CHAMPION_PICK_LOCK_AT` in `lib/champion.ts` = `2026-08-31T02:59:59Z` (= 30/08 23:59 ART), widened from 18/08 on 2026-08-15 so late signups can still pick. `champion_market.lock_at` in the DB was PATCHed to match — **change both or the UI and the DB disagree.**
 - `ADMIN_DISPLAY_NAMES` (Vercel env) gates `/api/admin/*`; default-deny in prod without it.
 - Match/quick-play deck is ordered chronologically by kickoff (`components/quick-play-deck.tsx`).
 - Initial fixture load: `GET /api/cron/sync-fixtures?daysBack=10&daysAhead=95` with `Authorization: Bearer <CRON_SECRET>` (loaded ~210 of the ~240 regular-phase matches; the rest appear as ESPN dates them).
+
+## Saving a pick — the one invariant
+
+**Never put a save behind `await animation.finished`.** In `motion@12.40.0` that promise only resolves from `finish()`; `cancel()` leaves it pending forever and there is no reject path (`motion-dom/.../utils/WithPromise.mjs`). That cost ~150 of Esteban's picks on 2026-08-08: the pick reached neither localStorage nor the API, `isChoosingRef` stayed `true`, and the deck died silently for the rest of the session while the card had already animated away. Use `settleAnimations()` from `lib/motion-settle.ts` (700ms ceiling, never hangs or rejects) and release any in-flight ref in a `finally`.
+
+All pick writes go through `savePick()` in `lib/pick-save.ts` — deck and match detail both. It writes the local draft, POSTs, and marks `saved_remote` or `sync_error`. The interactive path makes one attempt (retries belong in the background); `retryUnconfirmedPicks()` does the backoff ladder, driven by `sync-retry.tsx` on an interval / focus / reconnect. **Do not drive that retry off `ALLOCATION_EVENT`** — a failed retry rewrites the draft, re-fires the event and loops.
+
+Confirmation UI must reflect the server, not the tap: green check + "Guardado" only when confirmed, amber "Sin confirmar" otherwise, and `components/unconfirmed-picks-banner.tsx` (mounted in `app/layout.tsx`, **not** in the deck — `home-page-client.tsx` unmounts the deck at `pendingPicks === 0`) surfaces the count anywhere in the app.
 
 ## Known post-deploy fixes (already applied)
 
 - Login loop: middleware bounced any cookie-present user off `/login` → a stale cookie trapped you. Removed the reverse redirect.
 - Champion save race: trusted a stale client session right after register → saved locally not to DB. Now reads `/api/session` authoritatively first.
+- Picks lost behind a cancelled animation (2026-08-15, commit `963e9ab`) — see the invariant above.
 
 ## Remaining / watch-items
+
+- **`pick_events` is not in the Liga DB yet.** `supabase/migration-pick-events.sql` has to be pasted into the Supabase Studio SQL editor by hand: there is no `psql` / Supabase CLI here, and `.env.production.local` holds the OLD Mundial project's Postgres credentials (`fdquvrqwingrwdghenrm`), not the Liga's (`qohwzsmuihpfaoywsmjv`). Until it runs, `logPickEvent` fails on every save (console.error only) and nothing is recoverable.
+- **Table reset to fecha 6** — `scripts/reset-table.mjs --confirm`, run Monday 2026-08-18. Dry-run by default, backs up to JSON, aborts if fecha 5 is not fully settled.
 
 - Playoffs mapping when they start (ESPN slugs + scoreboard date range in `lib/espn-bracket.ts`).
 - Live in-match scores need Vercel Pro (Hobby cron = daily). The Hobby account already hit "exceeded free resources" once.
