@@ -64,11 +64,33 @@ All pick writes go through `savePick()` in `lib/pick-save.ts` — deck and match
 
 Confirmation UI must reflect the server, not the tap: green check + "Guardado" only when confirmed, amber "Sin confirmar" otherwise, and `components/unconfirmed-picks-banner.tsx` (mounted in `app/layout.tsx`, **not** in the deck — `home-page-client.tsx` unmounts the deck at `pendingPicks === 0`) surfaces the count anywhere in the app.
 
+## Closing a market — the second invariant
+
+**The pick window is a time comparison, never a stored column.** `isPickWindowOpen()` in `lib/market-lifecycle.ts` is the single rule: the market must be `open`, the match must still be `scheduled`, and `lock_at` (which the fixture ingest sets to the kickoff) must be in the future. Both `submitTicket` and the view model's `isEditable` go through it, so a card locks itself at kickoff **with no cron involved**.
+
+Before 2026-08-18 both gated on `match_markets.status`, which only a once-a-day cron advanced, so for up to 24h after kickoff you could still change a pick on a match you had already watched on TV. `submitTicket` was even selecting `lock_at` and never reading it.
+
+## Cron cadence and the egress budget
+
+Vercel **Hobby allows one cron per day**, and that slot belongs to `sync-fixtures` (fixture ingest + full lifecycle). Anything more frequent has to come from outside.
+
+`/api/cron/tick` is the endpoint built for a frequent external scheduler (cron-job.org). It is designed so that **doing nothing costs nothing**:
+- One indexed query on `match_markets` joined to `matches`, filtered `status != settled` and kickoff within `[now - 5h, now + 10min]`. Empty → returns `{idle:true}` with no ESPN call, no write, no leaderboard recompute.
+- A settled market drops out of the window permanently, so terminal matches are never read again.
+- `syncMatchMarket` is a no-op when the derived status and outcome are unchanged (it used to UPDATE unconditionally, over all 210 matches, every run — that is the read pattern that burned 13GB against the 5GB tier in July; `ef1061a` fixed re-settling, not this).
+- `TICK_DISABLED=1` in the Vercel env kills it without a deploy.
+- Any match that errors makes the whole response a 500, so the scheduler's failure alert fires.
+
+`lib/repositories/live-scores.ts` holds the ESPN score sync, shared by the tick and the `sync-scores` route, so a single ping does scores + lifecycle.
+
+**Known gap:** `syncMatchMarket` marks a market `settled` before `settleMatchMarket` runs, so if the settle fails the market is already terminal and neither the tick nor the daily cron will retry it (both guard on `previousStatus !== "settled"`). Detect with `node --env-file=.env.local scripts/diag-liga.mjs` (look for tickets without settlements) and force it with `/api/admin/process-match`.
+
 ## Known post-deploy fixes (already applied)
 
 - Login loop: middleware bounced any cookie-present user off `/login` → a stale cookie trapped you. Removed the reverse redirect.
 - Champion save race: trusted a stale client session right after register → saved locally not to DB. Now reads `/api/session` authoritatively first.
 - Picks lost behind a cancelled animation (2026-08-15, commit `963e9ab`) — see the invariant above.
+- Picks editable after a match finished, and results a day late (2026-08-18, commit `3b84234`) — see the two sections above.
 
 ## Remaining / watch-items
 
