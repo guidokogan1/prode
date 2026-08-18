@@ -1,4 +1,4 @@
-import { deriveMarketStatus, deriveWinningOutcomeCode } from "@/lib/market-lifecycle";
+import { deriveMarketStatus, deriveWinningOutcomeCode, persistableMarketStatus } from "@/lib/market-lifecycle";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 type MatchRow = {
@@ -85,8 +85,10 @@ export async function syncMatchMarket(matchId: string) {
     hasWinningOutcome: Boolean(winningOutcomeCode),
   });
 
+  const persistedStatus = persistableMarketStatus(nextStatus, market.status);
+
   const isUnchanged =
-    nextStatus === market.status && winningOutcomeCode === market.winning_outcome_code;
+    persistedStatus === market.status && winningOutcomeCode === market.winning_outcome_code;
 
   if (isUnchanged) {
     return {
@@ -101,10 +103,10 @@ export async function syncMatchMarket(matchId: string) {
   const updateQuery = await supabase
     .from("match_markets")
     .update({
-      status: nextStatus,
+      status: persistedStatus,
       winning_outcome_code: winningOutcomeCode,
-      reveal_at: nextStatus === "revealed" || nextStatus === "settled" ? new Date().toISOString() : null,
-      settled_at: nextStatus === "settled" ? new Date().toISOString() : null,
+      reveal_at: persistedStatus === "revealed" || persistedStatus === "settled" ? new Date().toISOString() : null,
+      settled_at: persistedStatus === "settled" ? new Date().toISOString() : null,
     })
     .eq("id", market.id);
 

@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { deriveMarketStatus, deriveWinningOutcomeCode, isPickWindowOpen } from "@/lib/market-lifecycle";
+import {
+  deriveMarketStatus,
+  deriveWinningOutcomeCode,
+  isPickWindowOpen,
+  persistableMarketStatus,
+  type MarketLifecycleStatus,
+} from "@/lib/market-lifecycle";
 
 describe("market lifecycle", () => {
   it("keeps market open before kickoff", () => {
@@ -162,5 +168,38 @@ describe("isPickWindowOpen", () => {
     expect(
       isPickWindowOpen({ marketStatus: "open", matchStatus: "scheduled", lockAt: null, now: afterKickoff }),
     ).toBe(true);
+  });
+});
+
+describe("persistableMarketStatus", () => {
+  it("never writes settled from the sync step, so a failed settle stays retryable", () => {
+    expect(persistableMarketStatus("settled", "open")).toBe("revealed");
+    expect(persistableMarketStatus("settled", "locked")).toBe("revealed");
+    expect(persistableMarketStatus("settled", "revealed")).toBe("revealed");
+  });
+
+  it("leaves an already-settled market alone, so deleted settlements are not resurrected", () => {
+    expect(persistableMarketStatus("settled", "settled")).toBe("settled");
+  });
+
+  it("passes every non-settled status through untouched", () => {
+    for (const status of ["open", "locked", "revealed"] as const) {
+      expect(persistableMarketStatus(status, "open")).toBe(status);
+      expect(persistableMarketStatus(status, "settled")).toBe(status);
+    }
+  });
+
+  it("keeps the retry loop converging: revealed is a fixed point until the settle succeeds", () => {
+    const derived = "settled" as const;
+    let current: MarketLifecycleStatus = "open";
+
+    current = persistableMarketStatus(derived, current);
+    expect(current).toBe("revealed");
+
+    current = persistableMarketStatus(derived, current);
+    expect(current).toBe("revealed");
+
+    current = "settled";
+    expect(persistableMarketStatus(derived, current)).toBe("settled");
   });
 });

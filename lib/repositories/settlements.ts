@@ -69,10 +69,31 @@ export async function settleMatchMarket(matchId: string) {
     .eq("ticket.match_market_id", market.id)
     .returns<AllocationRow[]>();
 
-  if (allocationsQuery.error || !allocationsQuery.data?.length) {
+  if (allocationsQuery.error) {
     return {
       ok: false as const,
-      reason: "No hay jugadas para liquidar en este mercado.",
+      reason: "No se pudieron leer las jugadas del mercado.",
+    };
+  }
+
+  if (!allocationsQuery.data?.length) {
+    const closeEmptyMarket = await supabase
+      .from("match_markets")
+      .update({ status: "settled", settled_at: new Date().toISOString() })
+      .eq("id", market.id);
+
+    if (closeEmptyMarket.error) {
+      return {
+        ok: false as const,
+        reason: "No se pudo cerrar un mercado sin jugadas.",
+      };
+    }
+
+    return {
+      ok: true as const,
+      message: "Mercado sin jugadas: cerrado sin liquidar.",
+      totalPool: 0,
+      winningPool: 0,
     };
   }
 

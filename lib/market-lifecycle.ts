@@ -89,3 +89,18 @@ export function isPickWindowOpen(params: {
 
   return lockAt == null || new Date(lockAt).getTime() > now;
 }
+
+// settleMatchMarket owns the transition to "settled". Persisting it from the sync
+// step would strand a failed settle as terminal, because every caller retries on
+// previousStatus !== "settled". An already-settled market is returned untouched:
+// downgrading it would let the next run settle it again.
+export function persistableMarketStatus(
+  derivedStatus: MarketLifecycleStatus,
+  currentStatus: MarketLifecycleStatus,
+): MarketLifecycleStatus {
+  if (derivedStatus === "settled" && currentStatus !== "settled") {
+    return "revealed";
+  }
+
+  return derivedStatus;
+}
