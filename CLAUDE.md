@@ -83,7 +83,16 @@ Vercel **Hobby allows one cron per day**, and that slot belongs to `sync-fixture
 
 `lib/repositories/live-scores.ts` holds the ESPN score sync, shared by the tick and the `sync-scores` route, so a single ping does scores + lifecycle.
 
-**Known gap:** `syncMatchMarket` marks a market `settled` before `settleMatchMarket` runs, so if the settle fails the market is already terminal and neither the tick nor the daily cron will retry it (both guard on `previousStatus !== "settled"`). Detect with `node --env-file=.env.local scripts/diag-liga.mjs` (look for tickets without settlements) and force it with `/api/admin/process-match`.
+## Who owns the "settled" transition
+
+**`settleMatchMarket` is the only thing that may persist `settled`.** The sync step goes to `revealed` at most, via `persistableMarketStatus()` in `lib/market-lifecycle.ts`. Two invariants live in that one function:
+
+- **A failed settle must stay retryable.** Every caller guards on `previousStatus !== "settled"`, so if the sync step marked the market terminal first, a transient settle failure would strand a played match with tickets that silently never reaches the table. Leaving it at `revealed` means the next tick retries and it self-heals. (Fixed 2026-08-18, `f576abb`.)
+- **An already-settled market is never downgraded.** Returning `revealed` for it would let the next run settle it again and resurrect the settlements the fecha-6 reset deleted. `persistableMarketStatus("settled", "settled")` returns `settled`.
+
+**A market with no tickets is settled, not an error.** `settleMatchMarket` closes it and returns ok. Without that, the rule above would park every unplayed match at `revealed` forever, retrying each run and firing the scheduler's failure alert.
+
+Before changing anything here, run `node --env-file=.env.local scripts/diag-lifecycle-sim.mjs`: it replays the derive/persist decision over all 210 markets read-only and must report **210 no-ops and 0 downgrades** on a quiet day. `scripts/diag-playability.mjs` is the companion check that no open match became unplayable.
 
 ## Known post-deploy fixes (already applied)
 
@@ -91,6 +100,7 @@ Vercel **Hobby allows one cron per day**, and that slot belongs to `sync-fixture
 - Champion save race: trusted a stale client session right after register → saved locally not to DB. Now reads `/api/session` authoritatively first.
 - Picks lost behind a cancelled animation (2026-08-15, commit `963e9ab`) — see the invariant above.
 - Picks editable after a match finished, and results a day late (2026-08-18, commit `3b84234`) — see the two sections above.
+- A failed settlement stranding a market as terminal (2026-08-18, commit `f576abb`) — see the ownership section above.
 
 ## Remaining / watch-items
 
