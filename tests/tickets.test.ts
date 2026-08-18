@@ -24,7 +24,16 @@ vi.mock("@/lib/server-session", () => ({
 }));
 
 function makeSupabaseMock(config: {
-  market?: { data: { id: string; status: string; lock_at: string | null } | null; error: unknown | null };
+  market?: {
+    data: {
+      id: string;
+      status: string;
+      lock_at: string | null;
+      market_type?: string;
+      match?: { status: string };
+    } | null;
+    error: unknown | null;
+  };
   outcomes?: { data: Array<{ id: string; label: string }> | null; error: unknown | null };
   ticketUpsert?: { data: { id: string } | null; error: unknown | null };
   deleteError?: unknown | null;
