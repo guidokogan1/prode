@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveMarketStatus, deriveWinningOutcomeCode } from "@/lib/market-lifecycle";
+import { deriveMarketStatus, deriveWinningOutcomeCode, isPickWindowOpen } from "@/lib/market-lifecycle";
 
 describe("market lifecycle", () => {
   it("keeps market open before kickoff", () => {
@@ -118,5 +118,49 @@ describe("market lifecycle", () => {
         status: "scheduled",
       }),
     ).toBeNull();
+  });
+});
+
+describe("isPickWindowOpen", () => {
+  const kickoff = "2026-08-21T17:30:00.000Z";
+  const beforeKickoff = new Date("2026-08-21T17:29:00.000Z").getTime();
+  const afterKickoff = new Date("2026-08-21T17:31:00.000Z").getTime();
+
+  it("stays open until the kickoff", () => {
+    expect(
+      isPickWindowOpen({ marketStatus: "open", matchStatus: "scheduled", lockAt: kickoff, now: beforeKickoff }),
+    ).toBe(true);
+  });
+
+  it("closes at the kickoff even while the stored status still says open", () => {
+    expect(
+      isPickWindowOpen({ marketStatus: "open", matchStatus: "scheduled", lockAt: kickoff, now: afterKickoff }),
+    ).toBe(false);
+  });
+
+  it("closes on a finished match the cron has not caught up with", () => {
+    expect(
+      isPickWindowOpen({ marketStatus: "open", matchStatus: "finished", lockAt: kickoff, now: beforeKickoff }),
+    ).toBe(false);
+  });
+
+  it("closes on a live match", () => {
+    expect(
+      isPickWindowOpen({ marketStatus: "open", matchStatus: "live", lockAt: kickoff, now: beforeKickoff }),
+    ).toBe(false);
+  });
+
+  it("stays closed once the market is locked, revealed or settled", () => {
+    for (const marketStatus of ["locked", "revealed", "settled"] as const) {
+      expect(
+        isPickWindowOpen({ marketStatus, matchStatus: "scheduled", lockAt: kickoff, now: beforeKickoff }),
+      ).toBe(false);
+    }
+  });
+
+  it("stays open when no kickoff is recorded yet", () => {
+    expect(
+      isPickWindowOpen({ marketStatus: "open", matchStatus: "scheduled", lockAt: null, now: afterKickoff }),
+    ).toBe(true);
   });
 });

@@ -1,3 +1,4 @@
+import { isPickWindowOpen } from "@/lib/market-lifecycle";
 import { cache } from "react";
 import type {
   HistoryEntry,
@@ -28,10 +29,12 @@ type MarketRow = {
   market_type: string;
   match:
     | {
+        status: string;
         home: { name: string } | { name: string }[] | null;
         away: { name: string } | { name: string }[] | null;
       }
     | {
+        status: string;
         home: { name: string } | { name: string }[] | null;
         away: { name: string } | { name: string }[] | null;
       }[]
@@ -482,7 +485,7 @@ export class SupabaseProductProvider implements ProductProvider {
 
     const marketQuery = await supabase
       .from("match_markets")
-      .select("id, status, lock_at, market_type, match:matches(home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name))")
+      .select("id, status, lock_at, market_type, match:matches(status, home:teams!matches_home_team_id_fkey(name), away:teams!matches_away_team_id_fkey(name))")
       .eq("match_id", payload.matchId)
       .maybeSingle<MarketRow>();
 
@@ -497,11 +500,19 @@ export class SupabaseProductProvider implements ProductProvider {
     const market = marketQuery.data;
     const marketId = market.id;
     const credit = creditForMarketType(market.market_type);
-    if (market.status !== "open") {
+    const marketMatch = firstRow(market.match);
+
+    if (
+      !isPickWindowOpen({
+        marketStatus: normalizeMarketStatus(market.status),
+        matchStatus: normalizeMatchStatus(marketMatch?.status ?? "scheduled"),
+        lockAt: market.lock_at,
+      })
+    ) {
       return {
         ok: false,
         state: "sync_error",
-        reason: "Este mercado ya cerró y no admite cambios.",
+        reason: "El partido ya empezó y la jugada quedó cerrada.",
       };
     }
 
@@ -521,9 +532,8 @@ export class SupabaseProductProvider implements ProductProvider {
       };
     }
 
-    const matchRow = firstRow(market.match);
-    const home = firstRow(matchRow?.home);
-    const away = firstRow(matchRow?.away);
+    const home = firstRow(marketMatch?.home);
+    const away = firstRow(marketMatch?.away);
 
     const outcomesQuery = await supabase
       .from("market_outcomes")
@@ -927,7 +937,11 @@ const loadCachedMatchViewModels = cache(async (matchId: string | null, includeRe
               : currentTicket
                 ? "saved_remote"
                 : "idle",
-            isEditable: market.status === "open",
+            isEditable: isPickWindowOpen({
+              marketStatus: normalizeMarketStatus(market.status),
+              matchStatus: normalizeMatchStatus(row.status),
+              lockAt: market.lock_at,
+            }),
             home: {
               name: home.name,
               flag: getLigaTeamMeta(home.fifa_code)?.flag ?? "",

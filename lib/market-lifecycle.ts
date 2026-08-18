@@ -70,3 +70,22 @@ export function deriveWinningOutcomeCode(params: {
 
   return null;
 }
+
+export function isPickWindowOpen(params: {
+  marketStatus: MarketLifecycleStatus;
+  matchStatus: MatchLifecycleStatus;
+  lockAt?: string | null;
+  now?: number;
+}) {
+  const { marketStatus, matchStatus, lockAt, now = Date.now() } = params;
+
+  if (marketStatus !== "open") {
+    return false;
+  }
+
+  if (matchStatus !== "scheduled") {
+    return false;
+  }
+
+  return lockAt == null || new Date(lockAt).getTime() > now;
+}

@@ -85,6 +85,19 @@ export async function syncMatchMarket(matchId: string) {
     hasWinningOutcome: Boolean(winningOutcomeCode),
   });
 
+  const isUnchanged =
+    nextStatus === market.status && winningOutcomeCode === market.winning_outcome_code;
+
+  if (isUnchanged) {
+    return {
+      ok: true as const,
+      previousStatus: market.status,
+      nextStatus,
+      winningOutcomeCode,
+      skipped: true as const,
+    };
+  }
+
   const updateQuery = await supabase
     .from("match_markets")
     .update({
@@ -107,5 +120,6 @@ export async function syncMatchMarket(matchId: string) {
     previousStatus: market.status,
     nextStatus,
     winningOutcomeCode,
+    skipped: false as const,
   };
 }

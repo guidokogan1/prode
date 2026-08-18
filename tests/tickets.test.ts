@@ -195,7 +195,40 @@ describe("saveTicket", () => {
     expect(result).toEqual({
       ok: false,
       state: "sync_error",
-      reason: "Este mercado ya cerró y no admite cambios.",
+      reason: "El partido ya empezó y la jugada quedó cerrada.",
+    });
+  });
+
+  it("rejects a pick once the kickoff has passed, even while the market still says open", async () => {
+    getSupabaseServerClientMock.mockReturnValue(
+      makeSupabaseMock({
+        market: {
+          data: {
+            id: "market-1",
+            status: "open",
+            lock_at: new Date(Date.now() - 60_000).toISOString(),
+            market_type: "1x2",
+            match: { status: "scheduled" },
+          },
+          error: null,
+        },
+      }),
+    );
+
+    const result = await saveTicket({
+      matchId: "arg-jpn",
+      displayName: "Guido",
+      allocations: [
+        { label: "Argentina", amount: 10000 },
+        { label: "Empate", amount: 0 },
+        { label: "Japon", amount: 0 },
+      ],
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      state: "sync_error",
+      reason: "El partido ya empezó y la jugada quedó cerrada.",
     });
   });
 
