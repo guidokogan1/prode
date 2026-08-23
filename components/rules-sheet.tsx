@@ -121,81 +121,57 @@ function SheetOverlay({ open, onClose }: { open: boolean; onClose: () => void })
               </RulesSection>
 
               <RulesSection title="Cómo apostás">
-                <p>Tenés <strong>$10.000</strong> por partido. Elegís un lado (local, empate o visitante) y qué tan fuerte le creés. Cuando arranca el partido se cierra la apuesta y se revelan todas.</p>
-                <PresetBlock
-                  label="Si te la jugás por un equipo"
-                  caption="tu pick · empate · el otro equipo"
-                  rows={[
-                    ["Suave", "$5.000 · $3.000 · $2.000"],
-                    ["Media", "$7.000 · $3.000 · $0"],
-                    ["Fuerte", "$9.000 · $1.000 · $0"],
-                  ]}
-                />
-                <PresetBlock
-                  label="Si te jugás por el empate"
-                  caption="empate · un equipo · el otro"
-                  rows={[
-                    ["Suave", "$4.000 · $3.000 · $3.000"],
-                    ["Media", "$6.000 · $2.000 · $2.000"],
-                    ["Fuerte", "$8.000 · $1.000 · $1.000"],
-                  ]}
-                />
-                <PresetBlock
-                  label="Octavos en adelante (solo pasa o no pasa)"
-                  caption="tu pick · el otro"
-                  rows={[
-                    ["Suave", "$6.000 · $4.000"],
-                    ["Media", "$8.000 · $2.000"],
-                    ["Fuerte", "$10.000 · $0"],
-                  ]}
-                />
+                <p>Tenés <strong>$10.000</strong> por partido y van <strong>enteros a una sola opción</strong>: local, empate o visitante. No se reparte, no hay suave ni fuerte. Cuando arranca el partido se cierra la jugada y se revelan todas.</p>
+                <p>De octavos en adelante son dos opciones: pasa uno o pasa el otro.</p>
               </RulesSection>
 
               <RulesSection title="Cómo se calcula tu cobro">
                 <p>No jugás contra la casa, jugás contra el grupo. Al final del partido:</p>
                 <ol style={{ display: "grid", gap: 6, paddingLeft: 20, margin: 0 }}>
-                  <li>Se junta toda la guita de todos en un solo pozo (somos 9 → <strong>$90.000</strong> de pozo).</li>
-                  <li>Ese pozo se reparte <strong>solo</strong> entre los que pusieron algo al resultado ganador.</li>
-                  <li>Cuanto más concentraste vos en el ganador <em>comparado con el resto</em>, más cobrás.</li>
+                  <li>Se junta la guita de todos los que jugaron ese partido en un solo pozo.</li>
+                  <li>Ese pozo se reparte <strong>solo</strong> entre los que le pegaron al resultado.</li>
+                  <li>Mientras menos sean los que le pegaron, más se lleva cada uno.</li>
                 </ol>
                 <p style={{ marginTop: 6, fontSize: ".88rem", color: "var(--text-secondary)" }}>
-                  Fórmula: <code>tu cobro = pozo total × (lo que pusiste al ganador ÷ pozo del ganador)</code>
+                  Fórmula: <code>tu cobro = pozo total ÷ cantidad de los que acertaron</code>
                 </p>
+                <p style={{ marginTop: 6 }}><strong>Si nadie le pegó, nadie cobra.</strong> El pozo de ese partido no se reparte y no se devuelve: todos quedan en $0 en ese partido.</p>
               </RulesSection>
 
               <RulesSection title="Ejemplo concreto">
                 <div className="surface-card-soft" style={{ padding: "14px 16px", display: "grid", gap: 10, background: "rgba(255,255,255,0.035)" }}>
-                  <strong style={{ fontSize: ".95rem" }}>Argentina vs Japón, gana Argentina</strong>
-                  <p style={{ margin: 0 }}>9 jugadores apostaron $10.000 cada uno → pozo total <strong>$90.000</strong>. Al ganador Argentina le fueron <strong>$44.000</strong> en total.</p>
+                  <strong style={{ fontSize: ".95rem" }}>Independiente vs Independiente Rivadavia, terminó 0-0</strong>
+                  <p style={{ margin: 0 }}>Jugaron 3: dos fueron a un equipo y uno al empate → pozo total <strong>$30.000</strong>.</p>
                   <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 4 }}>
-                    <li><strong>Vos pusiste $9.000 fuerte a Argentina</strong> → cobrás $90.000 × ($9.000 ÷ $44.000) = <strong>~$18.400</strong>. Ganaste $8.400.</li>
-                    <li><strong>Pusiste $5.000 suave a Argentina</strong> → cobrás ~$10.200. Casi empate, ganaste apenas.</li>
-                    <li><strong>Pusiste $7.000 al empate</strong> → cobrás $0. Te erraste con tu apuesta principal.</li>
+                    <li><strong>El único que puso al empate</strong> → cobra los $30.000 enteros. Ganó $20.000.</li>
+                    <li><strong>Los dos que pusieron a un equipo</strong> → cobran $0.</li>
                   </ul>
                   <p style={{ margin: 0, fontSize: ".88rem", color: "var(--text-secondary)" }}>
-                    Si todos van fuerte al mismo lado, ese lado paga poco (se reparte entre muchos). Si te animaste a un batacazo y pegaste, te llevás una banda.
+                    Si todos van al mismo lado y ese lado gana, cada uno recupera sus $10.000 y nadie saca ventaja. El batacazo solo paga si te lo jugaste solo.
                   </p>
                 </div>
               </RulesSection>
 
               <RulesSection title="Las dudas más comunes">
-                <p><strong>"Le pegué, ¿por qué cobré tan poco?"</strong><br/>Porque el ganador concentró mucho pozo (todos pusieron al favorito). Cuando muchos aciertan, el pozo se divide entre muchos y a cada uno le toca menos.</p>
-                <p><strong>"¿Dónde fueron mis $10.000?"</strong><br/>Al pozo. Toda la guita que pusiste va al pozo del partido. Si pegaste al ganador, recuperás parte (a veces más, a veces menos de lo que pusiste). Si no, no recuperás nada de ese partido.</p>
-                <p><strong>"Pegué suave y cobré, ¿soy un genio?"</strong><br/>Cobraste pero le erraste con tu apuesta principal. En el ranking eso no cuenta como acierto.</p>
+                <p><strong>"Le pegué, ¿por qué cobré tan poco?"</strong><br/>Porque le pegaron muchos. El pozo se divide entre todos los que acertaron, así que si van todos al favorito a cada uno le toca poco.</p>
+                <p><strong>"¿Dónde fueron mis $10.000?"</strong><br/>Al pozo. Si le pegaste al resultado, recuperás tu parte (a veces más, a veces lo mismo que pusiste). Si no, no recuperás nada de ese partido.</p>
+                <p><strong>"Puse al empate y ganó uno de los dos, ¿cobro algo?"</strong><br/>No. Cobrás solo si le pegás al resultado exacto. El empate es una opción como cualquier otra: si el partido no termina empatado, ese pick no paga nada.</p>
+                <p><strong>"Nadie le pegó a ese partido, ¿nos devuelven?"</strong><br/>No. Si nadie acertó, nadie cobra y el pozo de ese partido queda sin repartir. Errar nunca paga.</p>
                 <p><strong>"¿Puedo quedar negativo?"</strong><br/>No. Lo peor que te puede pasar en un partido es cobrar $0. Tu total nunca baja.</p>
               </RulesSection>
 
               <RulesSection title="Qué cuenta como acierto">
-                <p>Un <strong>acierto</strong> es cuando tu apuesta principal (la del monto más alto) coincide con el resultado ganador.</p>
+                <p>Un <strong>acierto</strong> es cuando la opción que elegiste es la que terminó ganando. Nada más.</p>
                 <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 4 }}>
-                  <li>Pusiste fuerte/media/suave a un lado y ganó ese lado → <strong>acierto</strong>.</li>
-                  <li>Pusiste fuerte al empate y ganó un equipo → <strong>no es acierto</strong>, aunque hayas cobrado algo por los pesitos que le dejaste al equipo que ganó.</li>
+                  <li>Fuiste a un equipo y ganó ese equipo → <strong>acierto</strong>.</li>
+                  <li>Fuiste al empate y empataron → <strong>acierto</strong>.</li>
+                  <li>Fuiste al empate y ganó alguno de los dos → <strong>no es acierto</strong>, y no cobrás nada.</li>
                 </ul>
               </RulesSection>
 
               <RulesSection title="Cómo se lee la tabla">
                 <p><strong>Total</strong> — la plata que cobraste en todos los partidos del torneo. Ordena la tabla. Nunca baja.</p>
-                <p><strong>Aciertos</strong> — cuántos partidos leíste bien con tu apuesta principal.</p>
+                <p><strong>Aciertos</strong> — en cuántos partidos elegiste la opción que ganó.</p>
                 <p><strong>Mejor</strong> — el cobro más grande que pegaste en un solo partido.</p>
               </RulesSection>
 
@@ -231,21 +207,3 @@ function RulesSection({ title, children }: { title: string; children: React.Reac
   );
 }
 
-function PresetBlock({ label, caption, rows }: { label: string; caption: string; rows: [string, string][] }) {
-  return (
-    <div className="surface-card-soft" style={{ padding: "12px 14px", display: "grid", gap: 8, background: "rgba(255,255,255,0.035)" }}>
-      <div style={{ display: "grid", gap: 2 }}>
-        <strong style={{ fontSize: ".92rem" }}>{label}</strong>
-        <span className="micro-copy" style={{ color: "var(--text-secondary)" }}>{caption}</span>
-      </div>
-      <div style={{ display: "grid", gap: 4 }}>
-        {rows.map(([k, v]) => (
-          <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: ".9rem" }}>
-            <span style={{ color: "var(--text-secondary)" }}>{k}</span>
-            <span style={{ fontFamily: "var(--font-accent)", letterSpacing: "-0.02em" }}>{v}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
