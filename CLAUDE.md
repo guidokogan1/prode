@@ -51,7 +51,7 @@ Navy base + cyan accent, no alarm red. Tokens in `app/globals.css :root`: `--gol
 
 ## Config / operational
 
-- `CHAMPION_PICK_LOCK_AT` in `lib/champion.ts` = `2026-08-31T02:59:59Z` (= 30/08 23:59 ART), widened from 18/08 on 2026-08-15 so late signups can still pick. `champion_market.lock_at` in the DB was PATCHed to match — **change both or the UI and the DB disagree.**
+- `CHAMPION_PICK_LOCK_AT` in `lib/champion.ts` = `2026-09-10T02:59:59Z` (= 09/09 23:59 ART), widened from 18/08 on 2026-08-15 and again from 30/08 on 2026-08-23 so late signups can still pick. `champion_market.lock_at` in the DB is PATCHed to match — **change both or the UI and the DB disagree.** Note the API only gates on the constant (`app/api/champion/route.ts` reads `id, status` and never `lock_at`), so the DB column is the one that drifts silently.
 - `ADMIN_DISPLAY_NAMES` (Vercel env) gates `/api/admin/*`; default-deny in prod without it.
 - Match/quick-play deck is ordered chronologically by kickoff (`components/quick-play-deck.tsx`).
 - Initial fixture load: `GET /api/cron/sync-fixtures?daysBack=10&daysAhead=95` with `Authorization: Bearer <CRON_SECRET>` (loaded ~210 of the ~240 regular-phase matches; the rest appear as ESPN dates them).
