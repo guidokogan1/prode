@@ -83,6 +83,26 @@ Vercel **Hobby allows one cron per day**, and that slot belongs to `sync-fixture
 
 `lib/repositories/live-scores.ts` holds the ESPN score sync, shared by the tick and the `sync-scores` route, so a single ping does scores + lifecycle.
 
+## Scoring — points only for a literal hit
+
+**Errar nunca paga.** A ticket whose pick is not the winning outcome gets `gross 0 / net -credit`, and that includes the case where **nobody** picked the winner: the pool is not refunded, it simply is not paid out. Before 2026-08-22 `computeMarketSettlements` refunded the full credit to everyone when `winningPool <= 0`, which meant a draw pick on a 2-3 match came out even — the exact thing the players complained about ("puse empate, no fue empate, y no perdí nada"). The table is gross-based and never goes down, so "nobody cobra" moves nobody, which is the intended reading of the rules sheet: *"Ese pozo se reparte solo entre los que le pegaron al resultado."*
+
+`settleTicket` still throws on `winningPool <= 0` on purpose: it is only reachable through the winners path, and `computeMarketSettlements` returns before calling it. Do not "fix" that throw.
+
+**The table sorts by gross (total cobrado), not by net.** That is by design and matches the rules sheet ("Total — la plata que cobraste... Nunca baja"). `getRanking` and `recomputeLeaderboardSnapshots` must sort by the same key or the position and the number shown disagree. A genuine tie (same gross + same aciertos + same best single hit) gets a **shared position** via `assignSharedPositions` — the rules sheet promises "empate compartido", and an alphabetical fallback was silently putting Mariano above oso on identical numbers.
+
+**Aciertos has one definition: you got something back.** Since the soft/medium/hard split was removed (2026-07-28) every ticket is all-in, so a ticket either takes its share of the pool or takes zero — `gross > 0` is exactly "your pick won". `loadGrossAggregates.hitsCount` checks the pick against the winning code (what the UI shows) and the snapshot passes `isHit: gross_return_amount > 0` into `computeLeaderboard`; the two agree. Before that, the snapshot counted `net > 0`, which **undercounts the case where everyone hits**: Newell's 2-1 Banfield on 2026-08-23 had all four players on `home`, so every net was exactly 0 and the snapshot recorded zero aciertos for a match nobody got wrong.
+
+`computeLeaderboard` still falls back to `net > 0` when `isHit` is absent, and that fallback is what the tie-break test exercises: in a **partial-allocation** world `gross > 0` would also mean "cobré algo aunque le erré con la principal", which is explicitly not an acierto. Do not hardcode `gross > 0` inside the engine — pass the flag from the caller that knows the market is all-in.
+
+## A match that never kicked off has no score
+
+ESPN returns `score: "0"` for a `pre` fixture, so the ingest used to store `0-0` on every unplayed match. That is a loaded gun: `deriveWinningOutcomeCode` reads the scores as soon as the status is `finished`, so any path that flips a match terminal before real scores land derives **`draw`** out of nothing — and draw pickers get paid for a match nobody played. `ingestLigaFixtures` now writes scores only when `state !== "pre"`, and `scripts/repair-no-winner-and-phantom-scores.mjs` cleared the 128 rows that already had the phantom 0-0.
+
+**The winning outcome is re-derived, not remembered.** `syncMatchMarket` used `market.winning_outcome_code ?? derive(...)`, so a wrong code — once written — was permanent even after the real score arrived. It now prefers the derived value while the market is **not** settled, and leaves a settled market untouched (changing it there would desync the settlements). A settled market whose stored code disagrees with the score is reported as `settledOutcomeMismatch` instead of being silently rewritten; that case needs a re-settle, not a patch.
+
+**The fixture backfill can advance a live match.** The condition was `existing.status === "scheduled"`, so a match the daily cron caught mid-game stayed `live` with a frozen score forever — `ingestLigaFixtures` would never touch it again, and once it fell out of `syncLiveScores`'s 6h window nothing else would either. That is a market stuck at `revealed` with tickets that never reach the table. Now anything not `finished` can be advanced.
+
 ## Who owns the "settled" transition
 
 **`settleMatchMarket` is the only thing that may persist `settled`.** The sync step goes to `revealed` at most, via `persistableMarketStatus()` in `lib/market-lifecycle.ts`. Two invariants live in that one function:

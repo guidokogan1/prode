@@ -25,21 +25,21 @@ export function computeMarketSettlements(
     .reduce((sum, row) => sum + row.amount, 0);
 
   if (winningPool <= 0) {
-    const refundedTicketIds: string[] = [];
+    const missedTicketIds: string[] = [];
     for (const row of allocations) {
-      if (!refundedTicketIds.includes(row.ticketId)) {
-        refundedTicketIds.push(row.ticketId);
+      if (!missedTicketIds.includes(row.ticketId)) {
+        missedTicketIds.push(row.ticketId);
       }
     }
 
     return {
       totalPool,
       winningPool,
-      rows: refundedTicketIds.map((ticketId) => ({
+      rows: missedTicketIds.map((ticketId) => ({
         ticketId,
         winningBetAmount: 0,
-        grossReturnAmount: credit,
-        netResultAmount: 0,
+        grossReturnAmount: 0,
+        netResultAmount: -credit,
       })),
     };
   }
@@ -85,6 +85,7 @@ export type LeaderboardInputRow = {
   displayName: string;
   netResultAmount: number;
   stakeAmount?: number;
+  isHit?: boolean;
 };
 
 export function computeLeaderboard(rows: LeaderboardInputRow[]) {
@@ -126,7 +127,7 @@ export function computeLeaderboard(rows: LeaderboardInputRow[]) {
 
     current.totalNetAmount += row.netResultAmount;
     current.totalGrossAmount += grossThis;
-    if (row.netResultAmount > 0) {
+    if (row.isHit ?? row.netResultAmount > 0) {
       current.positiveTicketsCount += 1;
     }
     current.bestSingleNetAmount = Math.max(current.bestSingleNetAmount, row.netResultAmount);
@@ -153,4 +154,17 @@ export function computeLeaderboard(rows: LeaderboardInputRow[]) {
       bestHit: formatNetAmount(row.bestSingleNetAmount),
       bestHitGross: formatGross(row.bestSingleGrossAmount),
     }));
+}
+
+export function assignSharedPositions<T>(orderedRows: T[], tieKey: (row: T) => string) {
+  let lastPosition = 0;
+  let lastKey: string | null = null;
+
+  return orderedRows.map((row, index) => {
+    const key = tieKey(row);
+    const position = key === lastKey ? lastPosition : index + 1;
+    lastKey = key;
+    lastPosition = position;
+    return { row, position };
+  });
 }

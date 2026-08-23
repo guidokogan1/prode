@@ -36,16 +36,20 @@ describe("settlement engine", () => {
     ]);
   });
 
-  it("fails when nobody bet the winning outcome", () => {
-    expect(() =>
-      computeMarketSettlements(
-        [
-          { ticketId: "t1", outcomeCode: "home", amount: 6000 },
-          { ticketId: "t2", outcomeCode: "away", amount: 4000 },
-        ],
-        "draw",
-      ),
-    ).toThrow("No hay credito apostado al outcome ganador.");
+  it("pays nobody when nobody bet the winning outcome", () => {
+    const result = computeMarketSettlements(
+      [
+        { ticketId: "t1", outcomeCode: "home", amount: 10000 },
+        { ticketId: "t2", outcomeCode: "draw", amount: 10000 },
+      ],
+      "away",
+    );
+
+    expect(result.winningPool).toBe(0);
+    expect(result.rows).toEqual([
+      { ticketId: "t1", winningBetAmount: 0, grossReturnAmount: 0, netResultAmount: -10000 },
+      { ticketId: "t2", winningBetAmount: 0, grossReturnAmount: 0, netResultAmount: -10000 },
+    ]);
   });
 
   it("preserves decimal precision in uneven pool splits", () => {
@@ -79,8 +83,18 @@ describe("settlement engine", () => {
     ]);
 
     expect(leaderboard.map((row) => row.name)).toEqual(["Bato", "Guido", "Mari"]);
-    expect(leaderboard[0].netLabel).toBe("+4.000");
-    expect(leaderboard[1].bestHit).toBe("+5.000");
+    expect(leaderboard[0].netLabel).toBe("+$4.000");
+    expect(leaderboard[1].bestHit).toBe("+$5.000");
+  });
+
+  it("counts a hit that paid exactly the credit back", () => {
+    const leaderboard = computeLeaderboard([
+      { userId: "u1", displayName: "Todos", netResultAmount: 0, stakeAmount: 10000, isHit: true },
+      { userId: "u2", displayName: "Erro", netResultAmount: -10000, stakeAmount: 10000, isHit: false },
+    ]);
+
+    expect(leaderboard.find((row) => row.name === "Todos")?.positiveTicketsCount).toBe(1);
+    expect(leaderboard.find((row) => row.name === "Erro")?.positiveTicketsCount).toBe(0);
   });
 
   it("breaks ties first by positive tickets and then by best single hit", () => {
@@ -95,6 +109,6 @@ describe("settlement engine", () => {
 
     expect(leaderboard.map((row) => row.name)).toEqual(["Caro", "Ana", "Bruno"]);
     expect(leaderboard[0]?.positiveTicketsCount).toBe(2);
-    expect(leaderboard[1]?.bestHit).toBe("+3.000");
+    expect(leaderboard[1]?.bestHit).toBe("+$3.000");
   });
 });

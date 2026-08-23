@@ -68,15 +68,24 @@ export async function syncMatchMarket(matchId: string) {
           ? "away"
           : null;
 
+  const derivedOutcomeCode = deriveWinningOutcomeCode({
+    marketType: market.market_type,
+    homeScore90: match.home_score_90,
+    awayScore90: match.away_score_90,
+    winnerTeamSide,
+    status: match.status,
+  });
+
   const winningOutcomeCode =
-    market.winning_outcome_code ??
-    deriveWinningOutcomeCode({
-      marketType: market.market_type,
-      homeScore90: match.home_score_90,
-      awayScore90: match.away_score_90,
-      winnerTeamSide,
-      status: match.status,
-    });
+    market.status === "settled"
+      ? market.winning_outcome_code
+      : derivedOutcomeCode ?? market.winning_outcome_code;
+
+  const settledOutcomeMismatch =
+    market.status === "settled" &&
+    derivedOutcomeCode != null &&
+    market.winning_outcome_code != null &&
+    derivedOutcomeCode !== market.winning_outcome_code;
 
   const nextStatus = deriveMarketStatus({
     currentStatus: market.status,
@@ -96,6 +105,7 @@ export async function syncMatchMarket(matchId: string) {
       previousStatus: market.status,
       nextStatus,
       winningOutcomeCode,
+      settledOutcomeMismatch,
       skipped: true as const,
     };
   }
@@ -122,6 +132,7 @@ export async function syncMatchMarket(matchId: string) {
     previousStatus: market.status,
     nextStatus,
     winningOutcomeCode,
+    settledOutcomeMismatch,
     skipped: false as const,
   };
 }

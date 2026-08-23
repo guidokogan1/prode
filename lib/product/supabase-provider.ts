@@ -19,6 +19,7 @@ import { formatGross } from "@/lib/format";
 import { CHAMPION_CREDIT } from "@/lib/champion";
 import { logPickEvent } from "@/lib/pick-events";
 import { getServerSessionState } from "@/lib/product/session-state";
+import { assignSharedPositions } from "@/lib/settlement-engine";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { getLigaTeamMeta, getLigaZoneLabel } from "@/lib/liga-2026";
 
@@ -260,9 +261,12 @@ export class SupabaseProductProvider implements ProductProvider {
         if (b.bestHitGrossAmount !== a.bestHitGrossAmount) return b.bestHitGrossAmount - a.bestHitGrossAmount;
         return a.name.localeCompare(b.name);
       });
-      return merged.map(({ previousRankPosition, ...row }, idx) => ({
-        position: idx + 1,
-        movement: previousRankPosition == null ? null : previousRankPosition - (idx + 1),
+      return assignSharedPositions(
+        merged,
+        (row) => `${row.grossAmount}|${row.positiveTickets}|${row.bestHitGrossAmount}`,
+      ).map(({ row: { previousRankPosition, ...row }, position }) => ({
+        position,
+        movement: previousRankPosition == null ? null : previousRankPosition - position,
         ...row,
       }));
     }

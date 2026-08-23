@@ -64,9 +64,9 @@ describe("game rules", () => {
   });
 
   it("formats net amounts for the UI", () => {
-    expect(formatNetAmount(12222)).toBe("+12.222");
-    expect(formatNetAmount(-5280)).toBe("-5.280");
-    expect(formatNetAmount(0)).toBe("+0");
+    expect(formatNetAmount(12222)).toBe("+$12.222");
+    expect(formatNetAmount(-5280)).toBe("-$5.280");
+    expect(formatNetAmount(0)).toBe("+$0");
   });
 
   it("keeps an open market editable before lock time", () => {

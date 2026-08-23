@@ -18,6 +18,12 @@ function parseScore(value: string | null | undefined): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function lifecycleRank(status: string): number {
+  if (status === "finished") return 2;
+  if (status === "live") return 1;
+  return 0;
+}
+
 function espnDate(offsetDays: number): string {
   const base = Date.now() + offsetDays * 24 * 60 * 60 * 1000;
   return new Date(base).toISOString().slice(0, 10).replace(/-/g, "");
@@ -82,8 +88,9 @@ export async function ingestLigaFixtures({ daysBack = 3, daysAhead = 10 } = {}) 
 
     const id = `cl-${event.id}`;
     const state = event.status?.type?.state ?? "pre";
-    const homeScore = parseScore(homeCompetitor?.score);
-    const awayScore = parseScore(awayCompetitor?.score);
+    const hasStarted = state !== "pre";
+    const homeScore = hasStarted ? parseScore(homeCompetitor?.score) : null;
+    const awayScore = hasStarted ? parseScore(awayCompetitor?.score) : null;
     const status = state === "post" ? "finished" : state === "in" ? "live" : "scheduled";
     let winnerTeamId: string | null = null;
     if (state === "post" && homeScore != null && awayScore != null) {
@@ -95,7 +102,7 @@ export async function ingestLigaFixtures({ daysBack = 3, daysAhead = 10 } = {}) 
     if (existing) {
       const drifted = Math.abs(new Date(existing.kickoff_at).getTime() - new Date(event.date).getTime()) > 60_000;
       if (drifted && existing.status === "scheduled") toReschedule.push({ id, kickoff: event.date });
-      if (existing.status === "scheduled" && status !== "scheduled") {
+      if (lifecycleRank(status) > lifecycleRank(existing.status)) {
         toBackfill.push({ id, status, homeScore, awayScore, winnerTeamId, winnerMode: state === "post" ? "regulation" : null });
       }
       continue;

@@ -48,9 +48,9 @@ describe("match ui helpers", () => {
       right: "away",
       draw: "draw",
     });
-    expect(getQuickPlaySwipeOutcome(match, -80, 0)).toBe("home");
-    expect(getQuickPlaySwipeOutcome(match, 80, 0)).toBe("away");
-    expect(getQuickPlaySwipeOutcome(match, 0, -80)).toBe("draw");
+    expect(getQuickPlaySwipeOutcome(match, -90, 0)).toBe("home");
+    expect(getQuickPlaySwipeOutcome(match, 90, 0)).toBe("away");
+    expect(getQuickPlaySwipeOutcome(match, 0, -90)).toBe("draw");
     expect(getQuickPlaySwipeOutcome(match, 24, 0)).toBeNull();
   });
 
@@ -69,8 +69,8 @@ describe("match ui helpers", () => {
       right: "away_qualifies",
       draw: null,
     });
-    expect(getQuickPlaySwipeOutcome(reordered, -80, 0)).toBe("home_qualifies");
-    expect(getQuickPlaySwipeOutcome(reordered, 80, 0)).toBe("away_qualifies");
+    expect(getQuickPlaySwipeOutcome(reordered, -90, 0)).toBe("home_qualifies");
+    expect(getQuickPlaySwipeOutcome(reordered, 90, 0)).toBe("away_qualifies");
   });
 
   it("derives minimal match state labels", () => {

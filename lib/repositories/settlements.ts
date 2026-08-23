@@ -1,6 +1,6 @@
 import { creditForMarketType, formatNetAmount, settleTicket } from "@/lib/game";
 import { getFallbackRanking } from "@/lib/mock-data";
-import { computeLeaderboard, computeMarketSettlements } from "@/lib/settlement-engine";
+import { assignSharedPositions, computeLeaderboard, computeMarketSettlements } from "@/lib/settlement-engine";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 type MarketRow = {
@@ -233,6 +233,7 @@ export async function recomputeLeaderboardSnapshots() {
         displayName,
         netResultAmount: row.net_result_amount,
         stakeAmount: row.gross_return_amount != null ? row.gross_return_amount - row.net_result_amount : undefined,
+        isHit: row.gross_return_amount != null ? row.gross_return_amount > 0 : row.net_result_amount > 0,
       };
     })
     .filter((row): row is NonNullable<typeof row> => row !== null);
@@ -267,9 +268,14 @@ export async function recomputeLeaderboardSnapshots() {
     (existingSnapshotsQuery.data ?? []).map((row) => [row.user_id, row]),
   );
 
-  const snapshotRows = displayOrdered.map((row, index) => {
+  const positioned = assignSharedPositions(
+    displayOrdered,
+    (row) => `${row.totalGrossAmount}|${row.positiveTicketsCount}|${row.bestSingleGrossAmount}`,
+  );
+
+  const snapshotRows = positioned.map(({ row, position }) => {
     const existing = existingByUser.get(row.userId);
-    const newRankPosition = index + 1;
+    const newRankPosition = position;
     const previousRankPosition = existing?.rank_position ?? null;
 
     return {
@@ -298,8 +304,8 @@ export async function recomputeLeaderboardSnapshots() {
 
   return {
     ok: true as const,
-    preview: displayOrdered.map((row, index) => ({
-      position: index + 1,
+    preview: positioned.map(({ row, position }) => ({
+      position,
       name: row.name,
       netLabel: row.netLabel,
     })),
