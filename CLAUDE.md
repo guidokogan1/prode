@@ -124,9 +124,6 @@ Before changing anything here, run `node --env-file=.env.local scripts/diag-life
 
 ## Remaining / watch-items
 
-- **`pick_events` is not in the Liga DB yet.** `supabase/migration-pick-events.sql` has to be pasted into the Supabase Studio SQL editor by hand: there is no `psql` / Supabase CLI here, and `.env.production.local` holds the OLD Mundial project's Postgres credentials (`fdquvrqwingrwdghenrm`), not the Liga's (`qohwzsmuihpfaoywsmjv`). Until it runs, `logPickEvent` fails on every save (console.error only) and nothing is recoverable.
-- **Table reset to fecha 6** — `scripts/reset-table.mjs --confirm`, run Monday 2026-08-18. Dry-run by default, backs up to JSON, aborts if fecha 5 is not fully settled.
-
 - Playoffs mapping when they start (ESPN slugs + scoreboard date range in `lib/espn-bracket.ts`).
 - Live in-match scores need Vercel Pro (Hobby cron = daily). The Hobby account already hit "exceeded free resources" once.
 - Deck UX: currently all pending matches chronological; options discussed (scope to next fecha / fecha separators) if users find 185-at-once heavy.

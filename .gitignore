@@ -11,3 +11,4 @@ node_modules
 
 # Previews HTML locales (no se comitean)
 previews/
+backups/

@@ -13,18 +13,23 @@ type MatchCardProps = {
 
 export function MatchCard({ match }: MatchCardProps) {
   const cardState = getMatchCardState(match, "compact");
+  const isPending = cardState.mode === "editable-empty";
   const statusTone =
     cardState.mode === "live"
       ? "rgba(244,166,60,0.05)"
       : cardState.mode === "settled"
         ? "rgba(63,227,242,0.04)"
         : "rgba(255,255,255,0.02)";
-  const statusBorder =
-    cardState.mode === "live"
+  const statusBorder = isPending
+    ? "rgba(244,166,60,0.45)"
+    : cardState.mode === "live"
       ? "rgba(244,166,60,0.28)"
       : cardState.mode === "settled"
         ? "rgba(63,227,242,0.2)"
         : "rgba(255,255,255,0.1)";
+  const cardBackground = isPending
+    ? "linear-gradient(155deg, color-mix(in srgb, rgba(10,14,20,0.98) 94%, rgba(244,166,60,0.55) 6%) 0%, color-mix(in srgb, rgba(10,14,20,0.98) 84%, rgba(244,166,60,0.55) 16%) 100%)"
+    : `color-mix(in srgb, rgba(10,14,20,0.98) 92%, ${statusTone} 8%)`;
 
   return (
     <motion.div
@@ -42,8 +47,9 @@ export function MatchCard({ match }: MatchCardProps) {
           borderRadius: 18,
           display: "grid",
           gap: 13,
-          background: `color-mix(in srgb, rgba(10,14,20,0.98) 92%, ${statusTone} 8%)`,
+          background: cardBackground,
           borderColor: statusBorder,
+          borderWidth: isPending ? 1.5 : undefined,
         }}
       >
         <div className="split-row" style={{ alignItems: "center", flexWrap: "wrap", minHeight: 32 }}>

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { GitFork } from "lucide-react";
 import { isDummyMatchId } from "@/lib/dummy-matches";
 import { MatchCard } from "@/components/match-card";
+import { FechaBrowser } from "@/components/fecha-browser";
+import { findCurrentFechaIndex, groupMatchesByFecha } from "@/lib/fechas";
 import { getMatchActionPriority } from "@/lib/match-ui";
 import { getHomeSummary } from "@/lib/repositories/home";
 import { listMatches } from "@/lib/repositories/matches";
@@ -11,7 +13,9 @@ export default async function MatchesPage() {
   await requireSession();
 
   const [matches, summary] = await Promise.all([listMatches(), getHomeSummary()]);
-  const groups = buildCompetitionGroups(matches);
+  const knockoutGroups = buildCompetitionGroups(matches).filter((group) => group.id !== "__regular__");
+  const fechas = groupMatchesByFecha(matches);
+  const currentFechaIndex = findCurrentFechaIndex(fechas);
 
   return (
     <main className="page-shell page-scroll" style={{ display: "grid", gap: 22 }}>
@@ -33,7 +37,9 @@ export default async function MatchesPage() {
         </div>
       </section>
 
-      {groups.map((group) => (
+      <FechaBrowser fechas={fechas} initialIndex={currentFechaIndex} />
+
+      {knockoutGroups.map((group) => (
         <section key={group.id} style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ display: "grid", gap: 4 }}>
@@ -56,20 +62,7 @@ export default async function MatchesPage() {
 }
 
 function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>) {
-  const groupStageMatches = matches.filter((match) => Boolean(match.groupLabel));
   const knockoutMatches = matches.filter((match) => !match.groupLabel);
-
-  const groupStageGroups = [...new Set(groupStageMatches.map((match) => match.groupLabel).filter(Boolean))]
-    .sort((left, right) => {
-      if (left === "Grupo X") return -1;
-      if (right === "Grupo X") return 1;
-      return String(left).localeCompare(String(right));
-    })
-    .map((groupLabel) => ({
-      id: String(groupLabel),
-      title: String(groupLabel),
-      matches: groupStageMatches.filter((match) => match.groupLabel === groupLabel),
-    }));
 
   const knockoutOrder = [
     "Final",
@@ -88,7 +81,7 @@ function buildCompetitionGroups(matches: Awaited<ReturnType<typeof listMatches>>
     }))
     .filter((group) => group.matches.length > 0);
 
-  return [...knockoutGroups, ...groupStageGroups].map((group) => ({
+  return knockoutGroups.map((group) => ({
     ...group,
     pendingCount: group.matches.filter((match) => getMatchActionPriority(match) === 0).length,
     matches: group.matches
