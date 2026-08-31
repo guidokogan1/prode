@@ -9,12 +9,10 @@ import { formatGross } from "@/lib/format";
 
 type HomePageClientProps = {
   initialSummary: HomeSummary;
-  featuredMatches: MatchViewModel[];
+  nearPendingMatches: MatchViewModel[];
   todayMatches: MatchViewModel[];
   nextDayMatches: MatchViewModel[];
   nextDayLabel: string | null;
-  dayAfterMatches: MatchViewModel[];
-  dayAfterLabel: string | null;
   needsChampionPick: boolean;
 };
 
@@ -47,48 +45,29 @@ function DaySection({ title, subtitle, matches }: DaySectionProps) {
 
 export function HomePageClient({
   initialSummary,
-  featuredMatches,
+  nearPendingMatches,
   todayMatches,
   nextDayMatches,
   nextDayLabel,
-  dayAfterMatches,
-  dayAfterLabel,
   needsChampionPick,
 }: HomePageClientProps) {
-  const [pendingPicks, setPendingPicks] = useState(initialSummary.pendingPicks);
+  const [pendingCount, setPendingCount] = useState(nearPendingMatches.length);
 
   const hasTodayMatches = todayMatches.length > 0;
   const hasNextDayMatches = nextDayMatches.length > 0;
-  const hasDayAfterMatches = dayAfterMatches.length > 0;
-
-  const eyebrow =
-    pendingPicks === 0 && !hasTodayMatches && hasNextDayMatches
-      ? "Próximos partidos"
-      : "Hoy en el pool";
-
-  const headline =
-    pendingPicks > 0
-      ? `${pendingPicks} por jugar`
-      : hasTodayMatches
-        ? "Hoy se juega"
-        : hasNextDayMatches && nextDayLabel
-          ? nextDayLabel
-          : "Sin partidos por ahora";
-
-  const showStats = pendingPicks > 0;
 
   return (
     <>
       <section style={{ display: "grid", gap: 14 }}>
         <div className="split-row" style={{ alignItems: "start" }}>
           <div className="title-stack" style={{ gap: 6 }}>
-            <p className="eyebrow">{eyebrow}</p>
-            <h1 className="display-title">{headline}</h1>
-            {showStats ? (
-              <p className="micro-copy" style={{ maxWidth: 220 }}>
-                Live, pendientes y tu total en una sola vista.
-              </p>
-            ) : null}
+            <p className="eyebrow">Hoy en el pool</p>
+            <h1 className="display-title">Hoy</h1>
+            <p className="micro-copy" style={{ maxWidth: 220 }}>
+              {pendingCount > 0
+                ? `${pendingCount} ${pendingCount === 1 ? "partido" : "partidos"} por cargar esta semana.`
+                : "Estás al día, nada pendiente por ahora."}
+            </p>
           </div>
           <div
             className="surface-card-soft"
@@ -109,59 +88,45 @@ export function HomePageClient({
           </div>
         </div>
 
-        {showStats ? (
-          <div className="compact-grid-2">
-            <div className="surface-card-soft" style={{ padding: 12, borderRadius: 12, display: "grid", gap: 4, background: "rgba(255,255,255,0.03)" }}>
-              <span className="micro-copy" style={{ textTransform: "uppercase", letterSpacing: ".08em" }}>En vivo</span>
-              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.04em", color: "var(--live)" }}>
-                {initialSummary.liveMatches}
-              </strong>
-              <span className="micro-copy">Activos ahora</span>
-            </div>
-            <div className="surface-card-soft" style={{ padding: 12, borderRadius: 12, display: "grid", gap: 4, background: "rgba(255,255,255,0.03)" }}>
-              <span className="micro-copy" style={{ textTransform: "uppercase", letterSpacing: ".08em" }}>Pendientes</span>
-              <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.04em" }}>
-                {pendingPicks}
-              </strong>
-              <span className="micro-copy">Por jugar</span>
-            </div>
+        <div className="compact-grid-2">
+          <div className="surface-card-soft" style={{ padding: 12, borderRadius: 12, display: "grid", gap: 4, background: "rgba(255,255,255,0.03)" }}>
+            <span className="micro-copy" style={{ textTransform: "uppercase", letterSpacing: ".08em" }}>En vivo</span>
+            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.04em", color: "var(--live)" }}>
+              {initialSummary.liveMatches}
+            </strong>
+            <span className="micro-copy">Activos ahora</span>
           </div>
-        ) : null}
+          <div className="surface-card-soft" style={{ padding: 12, borderRadius: 12, display: "grid", gap: 4, background: "rgba(255,255,255,0.03)" }}>
+            <span className="micro-copy" style={{ textTransform: "uppercase", letterSpacing: ".08em" }}>Pendientes</span>
+            <strong style={{ fontFamily: "var(--font-accent)", fontSize: "1.4rem", letterSpacing: "-0.04em" }}>
+              {pendingCount}
+            </strong>
+            <span className="micro-copy">Próximos 7 días</span>
+          </div>
+        </div>
       </section>
 
       <div style={{ display: "grid", gap: 18, alignContent: "start", minHeight: 0 }}>
         {needsChampionPick ? <ChampionHomeCard /> : null}
 
-        {pendingPicks > 0 ? (
+        {pendingCount > 0 ? (
           <QuickPlayDeck
-            matches={featuredMatches}
+            matches={nearPendingMatches}
             onMatchSaved={() => {
-              setPendingPicks((current) => Math.max(0, current - 1));
+              setPendingCount((current) => Math.max(0, current - 1));
             }}
             onPendingCountChange={(count) => {
-              setPendingPicks(count);
+              setPendingCount(count);
             }}
           />
         ) : null}
 
         {hasTodayMatches ? (
-          <DaySection title="Partidos del día" subtitle={null} matches={todayMatches} />
+          <DaySection title="Hoy" subtitle={null} matches={todayMatches} />
         ) : null}
 
         {hasNextDayMatches ? (
-          <DaySection
-            title={hasTodayMatches ? "Próximos partidos" : "Próximo día"}
-            subtitle={nextDayLabel}
-            matches={nextDayMatches}
-          />
-        ) : null}
-
-        {hasDayAfterMatches ? (
-          <DaySection
-            title="Día siguiente"
-            subtitle={dayAfterLabel}
-            matches={dayAfterMatches}
-          />
+          <DaySection title="Mañana" subtitle={nextDayLabel} matches={nextDayMatches} />
         ) : null}
       </div>
     </>
