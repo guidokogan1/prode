@@ -5,11 +5,12 @@ import { useContext, useState } from "react";
 import { motion } from "motion/react";
 import { Check } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
+import { VoteFace } from "@/components/vote-face";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildSinglePickAllocation, creditForMarketType } from "@/lib/game";
 import { buildAllocationScope } from "@/lib/local-store";
-import { getOutcomeColor } from "@/lib/match-ui";
+import { getOutcomeColor, getQuickPlayOutcomeTargets } from "@/lib/match-ui";
 import { savePick } from "@/lib/pick-save";
 import { TeamCrest } from "@/components/team-crest";
 
@@ -28,13 +29,12 @@ export function MatchCard({ match }: MatchCardProps) {
   const allocationScope = buildAllocationScope(session);
   const [pickedLabel, setPickedLabel] = useState<string | null>(null);
 
-  async function handleInlinePick(event: React.MouseEvent, code: MatchOutcomeCode, label: string) {
-    event.preventDefault();
-    event.stopPropagation();
+  async function handleInlinePick(code: MatchOutcomeCode) {
     if (pickState === "saving" || pickState === "saved") {
       return;
     }
 
+    const label = match.allocation.find((item) => item.code === code)?.label ?? code;
     setPickState("saving");
     setPickedLabel(label);
 
@@ -69,6 +69,48 @@ export function MatchCard({ match }: MatchCardProps) {
     ? "linear-gradient(155deg, color-mix(in srgb, rgba(10,14,20,0.98) 94%, rgba(244,166,60,0.55) 6%) 0%, color-mix(in srgb, rgba(10,14,20,0.98) 84%, rgba(244,166,60,0.55) 16%) 100%)"
     : `color-mix(in srgb, rgba(10,14,20,0.98) 92%, ${statusTone} 8%)`;
 
+  const cardStyle = {
+    padding: "16px 16px 14px",
+    borderRadius: 18,
+    display: "grid" as const,
+    gap: 13,
+    background: cardBackground,
+    borderColor: statusBorder,
+    borderWidth: showAlarm ? 1.5 : undefined,
+  };
+
+  if (showAlarm) {
+    const outcomeTargets = getQuickPlayOutcomeTargets(match);
+    const topRightLabel = match.groupLabel ? `${match.groupLabel} · ${cardState.scoreOrKickoffLabel}` : cardState.scoreOrKickoffLabel;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: "spring", stiffness: 240, damping: 24 }}
+      >
+        <div className="surface-card-soft" style={cardStyle}>
+          <div style={{ opacity: pickState === "saving" ? 0.55 : 1, pointerEvents: pickState === "saving" ? "none" : "auto" }}>
+            <VoteFace
+              match={match}
+              showDrawGesture={match.marketType === "1x2"}
+              topRightLabel={topRightLabel}
+              outcomeTargets={outcomeTargets}
+              onSelectOutcome={(code) => {
+                void handleInlinePick(code);
+              }}
+            />
+          </div>
+          {pickState === "error" ? (
+            <span className="micro-copy" style={{ color: "var(--negative)", textAlign: "center" }}>
+              No se pudo guardar, probá de nuevo.
+            </span>
+          ) : null}
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16, scale: 0.985 }}
@@ -77,19 +119,7 @@ export function MatchCard({ match }: MatchCardProps) {
       whileTap={{ scale: 0.985 }}
       transition={{ type: "spring", stiffness: 240, damping: 24 }}
     >
-      <Link
-        href={`/matches/${match.id}`}
-        className="surface-card-soft"
-        style={{
-          padding: "16px 16px 14px",
-          borderRadius: 18,
-          display: "grid",
-          gap: 13,
-          background: cardBackground,
-          borderColor: statusBorder,
-          borderWidth: showAlarm ? 1.5 : undefined,
-        }}
-      >
+      <Link href={`/matches/${match.id}`} className="surface-card-soft" style={cardStyle}>
         <div className="split-row" style={{ alignItems: "center", flexWrap: "wrap", minHeight: 32 }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <span className="pill">{cardState.secondaryStatusLabel ?? cardState.primaryStatusLabel}</span>
@@ -166,104 +196,59 @@ export function MatchCard({ match }: MatchCardProps) {
             </div>
           </div>
 
-          {showAlarm ? (
-            <div style={{ display: "grid", gap: 6, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 11 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 8 }}>
-                {match.allocation.map((outcome) => {
-                  const isChosen = pickedLabel === outcome.label && pickState === "saving";
-                  const label = outcome.code === "draw" ? "Empate" : outcome.code === "home" ? match.home.name : match.away.name;
-                  const outcomeColor = getOutcomeColor(outcome.code);
-                  return (
-                    <button
-                      key={outcome.code}
-                      type="button"
-                      disabled={pickState === "saving"}
-                      onClick={(event) => handleInlinePick(event, outcome.code, outcome.label)}
-                      style={{
-                        padding: "9px 6px",
-                        borderRadius: 10,
-                        border: `1px solid ${isChosen ? outcomeColor : "rgba(255,255,255,0.14)"}`,
-                        background: isChosen ? `color-mix(in srgb, ${outcomeColor} 18%, transparent)` : "rgba(255,255,255,0.03)",
-                        color: isChosen ? outcomeColor : "var(--text-secondary)",
-                        fontFamily: "var(--font-body)",
-                        fontSize: ".8rem",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: ".01em",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        cursor: pickState === "saving" ? "default" : "pointer",
-                        opacity: pickState === "saving" && !isChosen ? 0.4 : 1,
-                        transition: "background .15s, border-color .15s, opacity .15s",
-                      }}
-                    >
-                      {isChosen ? "Guardando…" : label}
-                    </button>
-                  );
-                })}
-              </div>
-              {pickState === "error" ? (
-                <span className="micro-copy" style={{ color: "var(--negative)" }}>
-                  No se pudo guardar, probá de nuevo.
-                </span>
-              ) : null}
-            </div>
-          ) : (
-            <div className="split-row" style={{ alignItems: "end", gap: 12, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 11 }}>
-              <div style={{ display: "grid", gap: 3 }}>
-                <span className="micro-copy">Tu jugada</span>
-                <strong
-                  style={{
-                    fontSize: "1rem",
-                    letterSpacing: "-0.02em",
-                    textTransform: "uppercase",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    color:
-                      pickState === "saved"
+          <div className="split-row" style={{ alignItems: "end", gap: 12, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 11 }}>
+            <div style={{ display: "grid", gap: 3 }}>
+              <span className="micro-copy">Tu jugada</span>
+              <strong
+                style={{
+                  fontSize: "1rem",
+                  letterSpacing: "-0.02em",
+                  textTransform: "uppercase",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  color:
+                    pickState === "saved"
+                      ? "var(--gold)"
+                      : cardState.heroTone === "positive"
                         ? "var(--gold)"
-                        : cardState.heroTone === "positive"
-                          ? "var(--gold)"
-                          : cardState.heroTone === "negative"
-                            ? "var(--negative)"
-                            : undefined,
-                  }}
-                >
-                  {pickState === "saved" ? (
-                    <>
-                      <Check size={15} strokeWidth={2.5} />
-                      {pickedLabel}
-                    </>
-                  ) : (
-                    cardState.heroValue
-                  )}
-                </strong>
-              </div>
-              {pickState === "saved" ? (
-                <span className="micro-copy" style={{ color: "var(--gold)" }}>Guardado</span>
-              ) : cardState.mode !== "editable-empty" ? (
-                <span
-                  className="micro-copy"
-                  style={{
-                    color:
-                      cardState.mode === "settled"
-                        ? cardState.heroTone === "positive"
-                          ? "var(--gold)"
-                          : cardState.heroTone === "negative"
-                            ? "var(--negative)"
-                            : undefined
-                        : cardState.leadingUserOutcome
-                          ? getOutcomeColor(cardState.leadingUserOutcome.code)
+                        : cardState.heroTone === "negative"
+                          ? "var(--negative)"
                           : undefined,
-                  }}
-                >
-                  {cardState.heroDescription}
-                </span>
-              ) : null}
+                }}
+              >
+                {pickState === "saved" ? (
+                  <>
+                    <Check size={15} strokeWidth={2.5} />
+                    {pickedLabel}
+                  </>
+                ) : (
+                  cardState.heroValue
+                )}
+              </strong>
             </div>
-          )}
+            {pickState === "saved" ? (
+              <span className="micro-copy" style={{ color: "var(--gold)" }}>Guardado</span>
+            ) : cardState.mode !== "editable-empty" ? (
+              <span
+                className="micro-copy"
+                style={{
+                  color:
+                    cardState.mode === "settled"
+                      ? cardState.heroTone === "positive"
+                        ? "var(--gold)"
+                        : cardState.heroTone === "negative"
+                          ? "var(--negative)"
+                          : undefined
+                      : cardState.leadingUserOutcome
+                        ? getOutcomeColor(cardState.leadingUserOutcome.code)
+                        : undefined,
+                }}
+              >
+                {cardState.heroDescription}
+              </span>
+            ) : null}
+          </div>
         </div>
       </Link>
     </motion.div>
