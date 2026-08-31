@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { useContext, useState } from "react";
 import { motion } from "motion/react";
-import { Check } from "lucide-react";
 import { SessionContext } from "@/components/session-provider";
-import { VoteFace } from "@/components/vote-face";
 import { getMatchCardState } from "@/lib/match-card";
 import type { MatchOutcomeCode, MatchViewModel } from "@/lib/domain";
 import { buildSinglePickAllocation, creditForMarketType } from "@/lib/game";
 import { buildAllocationScope } from "@/lib/local-store";
-import { getOutcomeColor, getQuickPlayOutcomeTargets } from "@/lib/match-ui";
+import { getOutcomeColor } from "@/lib/match-ui";
 import { savePick } from "@/lib/pick-save";
 import { TeamCrest } from "@/components/team-crest";
 
@@ -18,27 +16,38 @@ type MatchCardProps = {
   match: MatchViewModel;
 };
 
-type InlinePickState = "idle" | "saving" | "saved" | "error";
+type InlinePickState = "idle" | "saving" | "error";
+
+function withLocalPick(match: MatchViewModel, code: MatchOutcomeCode, credit: number): MatchViewModel {
+  return {
+    ...match,
+    draftState: "saved_remote",
+    allocation: match.allocation.map((item) => ({
+      ...item,
+      amount: item.code === code ? credit : 0,
+      percentage: item.code === code ? 100 : 0,
+    })),
+  };
+}
 
 export function MatchCard({ match }: MatchCardProps) {
-  const cardState = getMatchCardState(match, "compact");
-  const isPending = cardState.mode === "editable-empty";
   const [pickState, setPickState] = useState<InlinePickState>("idle");
-  const showAlarm = isPending && pickState !== "saved";
+  const [localPickCode, setLocalPickCode] = useState<MatchOutcomeCode | null>(null);
   const session = useContext(SessionContext);
   const allocationScope = buildAllocationScope(session);
-  const [pickedLabel, setPickedLabel] = useState<string | null>(null);
+
+  const credit = creditForMarketType(match.marketType);
+  const displayMatch = localPickCode ? withLocalPick(match, localPickCode, credit) : match;
+  const cardState = getMatchCardState(displayMatch, "compact");
+  const showAlarm = cardState.mode === "editable-empty";
 
   async function handleInlinePick(code: MatchOutcomeCode) {
-    if (pickState === "saving" || pickState === "saved") {
+    if (pickState === "saving") {
       return;
     }
 
-    const label = match.allocation.find((item) => item.code === code)?.label ?? code;
     setPickState("saving");
-    setPickedLabel(label);
 
-    const credit = creditForMarketType(match.marketType);
     const payload = buildSinglePickAllocation(
       match.allocation.map((item) => item.code),
       code,
@@ -50,8 +59,15 @@ export function MatchCard({ match }: MatchCardProps) {
     }));
 
     const result = await savePick(allocationScope, match.id, payload);
-    setPickState(result.confirmed ? "saved" : "error");
+
+    if (result.confirmed) {
+      setLocalPickCode(code);
+      setPickState("idle");
+    } else {
+      setPickState("error");
+    }
   }
+
   const statusTone =
     cardState.mode === "live"
       ? "rgba(244,166,60,0.05)"
@@ -79,10 +95,74 @@ export function MatchCard({ match }: MatchCardProps) {
     borderWidth: showAlarm ? 1.5 : undefined,
   };
 
-  if (showAlarm) {
-    const outcomeTargets = getQuickPlayOutcomeTargets(match);
-    const topRightLabel = match.groupLabel ? `${match.groupLabel} · ${cardState.scoreOrKickoffLabel}` : cardState.scoreOrKickoffLabel;
+  const header = (
+    <div className="split-row" style={{ alignItems: "center", flexWrap: "wrap", minHeight: 32 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="pill">{cardState.secondaryStatusLabel ?? cardState.primaryStatusLabel}</span>
+        {match.groupLabel ? (
+          <span
+            className="micro-copy"
+            style={{ textTransform: "uppercase", letterSpacing: ".08em", color: "var(--text-tertiary)", fontWeight: 600 }}
+          >
+            {match.groupLabel}
+          </span>
+        ) : null}
+      </div>
+      <span className="micro-copy">{cardState.scoreOrKickoffLabel}</span>
+    </div>
+  );
 
+  const teamsRow = (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 10, alignItems: "center" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+        <span style={{ flexShrink: 0, width: 28, display: "flex", justifyContent: "center" }}>
+          <TeamCrest url={match.home.logo} alt={match.home.name} size={26} />
+        </span>
+        <strong
+          style={{ fontFamily: "var(--font-body)", fontSize: ".98rem", fontStyle: "normal", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis" }}
+        >
+          {match.home.name}
+        </strong>
+      </div>
+
+      {cardState.mode === "live" || cardState.mode === "settled" ? (
+        <strong
+          style={{
+            fontFamily: "var(--font-accent)",
+            fontSize: "1.3rem",
+            color: cardState.mode === "live" ? "var(--live)" : "var(--text-primary)",
+            letterSpacing: "-0.06em",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {match.home.score} - {match.away.score}
+        </strong>
+      ) : (
+        <span style={{ color: "var(--text-tertiary)", textAlign: "center", fontFamily: "var(--font-display)", fontSize: ".95rem", letterSpacing: ".08em" }}>VS</span>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, minWidth: 0 }}>
+        <strong
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: ".98rem",
+            fontStyle: "normal",
+            fontWeight: 700,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            textAlign: "right",
+          }}
+        >
+          {match.away.name}
+        </strong>
+        <span style={{ flexShrink: 0, width: 28, display: "flex", justifyContent: "center" }}>
+          <TeamCrest url={match.away.logo} alt={match.away.name} size={26} />
+        </span>
+      </div>
+    </div>
+  );
+
+  if (showAlarm) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.985 }}
@@ -90,22 +170,68 @@ export function MatchCard({ match }: MatchCardProps) {
         transition={{ type: "spring", stiffness: 240, damping: 24 }}
       >
         <div className="surface-card-soft" style={cardStyle}>
-          <div style={{ opacity: pickState === "saving" ? 0.55 : 1, pointerEvents: pickState === "saving" ? "none" : "auto" }}>
-            <VoteFace
-              match={match}
-              showDrawGesture={match.marketType === "1x2"}
-              topRightLabel={topRightLabel}
-              outcomeTargets={outcomeTargets}
-              onSelectOutcome={(code) => {
-                void handleInlinePick(code);
+          {header}
+
+          <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
+            {teamsRow}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: 8,
+                borderTop: "1px solid rgba(255,255,255,0.08)",
+                paddingTop: 11,
+                opacity: pickState === "saving" ? 0.55 : 1,
+                pointerEvents: pickState === "saving" ? "none" : "auto",
               }}
-            />
+            >
+              {match.allocation.map((outcome) => {
+                const outcomeColor = getOutcomeColor(outcome.code);
+                const label = outcome.code === "draw" ? "Empate" : outcome.code === "home" ? match.home.name : match.away.name;
+                const crestMatch = outcome.code === "home" ? match.home : outcome.code === "away" ? match.away : null;
+                return (
+                  <button
+                    key={outcome.code}
+                    type="button"
+                    disabled={pickState === "saving"}
+                    onClick={() => handleInlinePick(outcome.code)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      padding: "10px 6px",
+                      minHeight: 40,
+                      borderRadius: 12,
+                      border: `1px solid color-mix(in srgb, ${outcomeColor} 50%, transparent)`,
+                      background: `color-mix(in srgb, ${outcomeColor} 8%, transparent)`,
+                      color: outcomeColor,
+                      fontFamily: "var(--font-body)",
+                      fontSize: ".78rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: ".01em",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      cursor: pickState === "saving" ? "default" : "pointer",
+                      transition: "background .15s, border-color .15s",
+                    }}
+                  >
+                    {crestMatch ? <TeamCrest url={crestMatch.logo} alt={crestMatch.name} size={16} /> : null}
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {pickState === "error" ? (
+              <span className="micro-copy" style={{ color: "var(--negative)", textAlign: "center" }}>
+                No se pudo guardar, probá de nuevo.
+              </span>
+            ) : null}
           </div>
-          {pickState === "error" ? (
-            <span className="micro-copy" style={{ color: "var(--negative)", textAlign: "center" }}>
-              No se pudo guardar, probá de nuevo.
-            </span>
-          ) : null}
         </div>
       </motion.div>
     );
@@ -120,81 +246,10 @@ export function MatchCard({ match }: MatchCardProps) {
       transition={{ type: "spring", stiffness: 240, damping: 24 }}
     >
       <Link href={`/matches/${match.id}`} className="surface-card-soft" style={cardStyle}>
-        <div className="split-row" style={{ alignItems: "center", flexWrap: "wrap", minHeight: 32 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <span className="pill">{cardState.secondaryStatusLabel ?? cardState.primaryStatusLabel}</span>
-            {match.groupLabel ? (
-              <span
-                className="micro-copy"
-                style={{
-                  textTransform: "uppercase",
-                  letterSpacing: ".08em",
-                  color: "var(--text-tertiary)",
-                  fontWeight: 600,
-                }}
-              >
-                {match.groupLabel}
-              </span>
-            ) : null}
-          </div>
-          <span className="micro-copy">{cardState.scoreOrKickoffLabel}</span>
-        </div>
+        {header}
 
         <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 10, alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <span style={{ flexShrink: 0, width: 28, display: "flex", justifyContent: "center" }}>
-                <TeamCrest url={match.home.logo} alt={match.home.name} size={26} />
-              </span>
-              <strong
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: ".98rem",
-                  fontStyle: "normal",
-                  fontWeight: 700,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {match.home.name}
-              </strong>
-            </div>
-
-            {cardState.mode === "live" || cardState.mode === "settled" ? (
-              <strong
-                style={{
-                  fontFamily: "var(--font-accent)",
-                  fontSize: "1.3rem",
-                  color: cardState.mode === "live" ? "var(--live)" : "var(--text-primary)",
-                  letterSpacing: "-0.06em",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {match.home.score} - {match.away.score}
-              </strong>
-            ) : (
-              <span style={{ color: "var(--text-tertiary)", textAlign: "center", fontFamily: "var(--font-display)", fontSize: ".95rem", letterSpacing: ".08em" }}>VS</span>
-            )}
-
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, minWidth: 0 }}>
-              <strong
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: ".98rem",
-                  fontStyle: "normal",
-                  fontWeight: 700,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  textAlign: "right",
-                }}
-              >
-                {match.away.name}
-              </strong>
-              <span style={{ flexShrink: 0, width: 28, display: "flex", justifyContent: "center" }}>
-                <TeamCrest url={match.away.logo} alt={match.away.name} size={26} />
-              </span>
-            </div>
-          </div>
+          {teamsRow}
 
           <div className="split-row" style={{ alignItems: "end", gap: 12, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 11 }}>
             <div style={{ display: "grid", gap: 3 }}>
@@ -204,50 +259,34 @@ export function MatchCard({ match }: MatchCardProps) {
                   fontSize: "1rem",
                   letterSpacing: "-0.02em",
                   textTransform: "uppercase",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
                   color:
-                    pickState === "saved"
+                    cardState.heroTone === "positive"
                       ? "var(--gold)"
-                      : cardState.heroTone === "positive"
-                        ? "var(--gold)"
-                        : cardState.heroTone === "negative"
-                          ? "var(--negative)"
-                          : undefined,
-                }}
-              >
-                {pickState === "saved" ? (
-                  <>
-                    <Check size={15} strokeWidth={2.5} />
-                    {pickedLabel}
-                  </>
-                ) : (
-                  cardState.heroValue
-                )}
-              </strong>
-            </div>
-            {pickState === "saved" ? (
-              <span className="micro-copy" style={{ color: "var(--gold)" }}>Guardado</span>
-            ) : cardState.mode !== "editable-empty" ? (
-              <span
-                className="micro-copy"
-                style={{
-                  color:
-                    cardState.mode === "settled"
-                      ? cardState.heroTone === "positive"
-                        ? "var(--gold)"
-                        : cardState.heroTone === "negative"
-                          ? "var(--negative)"
-                          : undefined
-                      : cardState.leadingUserOutcome
-                        ? getOutcomeColor(cardState.leadingUserOutcome.code)
+                      : cardState.heroTone === "negative"
+                        ? "var(--negative)"
                         : undefined,
                 }}
               >
-                {cardState.heroDescription}
-              </span>
-            ) : null}
+                {cardState.heroValue}
+              </strong>
+            </div>
+            <span
+              className="micro-copy"
+              style={{
+                color:
+                  cardState.mode === "settled"
+                    ? cardState.heroTone === "positive"
+                      ? "var(--gold)"
+                      : cardState.heroTone === "negative"
+                        ? "var(--negative)"
+                        : undefined
+                    : cardState.leadingUserOutcome
+                      ? getOutcomeColor(cardState.leadingUserOutcome.code)
+                      : undefined,
+              }}
+            >
+              {cardState.heroDescription}
+            </span>
           </div>
         </div>
       </Link>
