@@ -14,20 +14,26 @@ export default function MatchesLoading() {
         </div>
       </section>
 
-      {Array.from({ length: 2 }).map((_, groupIndex) => (
-        <section key={`matches-loading-group-${groupIndex}`} style={{ display: "grid", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div className="loading-block" style={{ width: 40, height: 40, borderRadius: 12 }} />
+        <div style={{ display: "grid", gap: 6, justifyItems: "center" }}>
+          <div className="loading-block" style={{ width: 64, height: 10 }} />
+          <div className="loading-block" style={{ width: 96, height: 18, borderRadius: 8 }} />
+          <div className="loading-block" style={{ width: 84, height: 10 }} />
+        </div>
+        <div className="loading-block" style={{ width: 40, height: 40, borderRadius: 12 }} />
+      </div>
+
+      {Array.from({ length: 2 }).map((_, dayIndex) => (
+        <section key={`matches-loading-day-${dayIndex}`} style={{ display: "grid", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "grid", gap: 4 }}>
-              <div className="loading-block" style={{ width: 112, height: 18, borderRadius: 10 }} />
-              <div className="loading-block" style={{ width: 92, height: 10 }} />
-            </div>
+            <div className="loading-block" style={{ width: 80, height: 12 }} />
             <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
-            <div className="loading-block" style={{ width: 76, height: 22, borderRadius: 999 }} />
           </div>
 
           <div style={{ display: "grid", gap: 10 }}>
-            {Array.from({ length: 3 }).map((__, cardIndex) => (
-              <MatchCardSkeleton key={`matches-loading-card-${groupIndex}-${cardIndex}`} />
+            {Array.from({ length: dayIndex === 0 ? 3 : 2 }).map((__, cardIndex) => (
+              <MatchCardSkeleton key={`matches-loading-card-${dayIndex}-${cardIndex}`} />
             ))}
           </div>
         </section>

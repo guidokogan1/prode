@@ -16,8 +16,6 @@ type MatchCardProps = {
   match: MatchViewModel;
 };
 
-type InlinePickState = "idle" | "saving" | "error";
-
 function withLocalPick(match: MatchViewModel, code: MatchOutcomeCode, credit: number): MatchViewModel {
   return {
     ...match,
@@ -31,7 +29,6 @@ function withLocalPick(match: MatchViewModel, code: MatchOutcomeCode, credit: nu
 }
 
 export function MatchCard({ match }: MatchCardProps) {
-  const [pickState, setPickState] = useState<InlinePickState>("idle");
   const [localPickCode, setLocalPickCode] = useState<MatchOutcomeCode | null>(null);
   const session = useContext(SessionContext);
   const allocationScope = buildAllocationScope(session);
@@ -41,12 +38,14 @@ export function MatchCard({ match }: MatchCardProps) {
   const cardState = getMatchCardState(displayMatch, "compact");
   const showAlarm = cardState.mode === "editable-empty";
 
-  async function handleInlinePick(code: MatchOutcomeCode) {
-    if (pickState === "saving") {
+  function handleInlinePick(code: MatchOutcomeCode) {
+    if (localPickCode === code) {
       return;
     }
 
-    setPickState("saving");
+    // Optimistic: flip the card to "saved" instantly, save in the background.
+    // A failed save falls back to the app's existing unconfirmed-picks banner + retry.
+    setLocalPickCode(code);
 
     const payload = buildSinglePickAllocation(
       match.allocation.map((item) => item.code),
@@ -58,14 +57,7 @@ export function MatchCard({ match }: MatchCardProps) {
       amount: item.amount,
     }));
 
-    const result = await savePick(allocationScope, match.id, payload);
-
-    if (result.confirmed) {
-      setLocalPickCode(code);
-      setPickState("idle");
-    } else {
-      setPickState("error");
-    }
+    void savePick(allocationScope, match.id, payload);
   }
 
   const statusTone =
@@ -164,87 +156,67 @@ export function MatchCard({ match }: MatchCardProps) {
 
   if (showAlarm) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 16, scale: 0.985 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 240, damping: 24 }}
-      >
-        <div className="surface-card-soft" style={cardStyle}>
-          {header}
+      <div className="surface-card-soft" style={cardStyle}>
+        {header}
 
-          <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
-            {teamsRow}
+        <div style={{ display: "grid", gap: 10, minWidth: 0 }}>
+          {teamsRow}
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr",
-                gap: 8,
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                paddingTop: 11,
-                opacity: pickState === "saving" ? 0.55 : 1,
-                pointerEvents: pickState === "saving" ? "none" : "auto",
-              }}
-            >
-              {match.allocation.map((outcome) => {
-                const outcomeColor = getOutcomeColor(outcome.code);
-                const label = outcome.code === "draw" ? "Empate" : outcome.code === "home" ? match.home.name : match.away.name;
-                const crestMatch = outcome.code === "home" ? match.home : outcome.code === "away" ? match.away : null;
-                return (
-                  <button
-                    key={outcome.code}
-                    type="button"
-                    disabled={pickState === "saving"}
-                    onClick={() => handleInlinePick(outcome.code)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 6,
-                      padding: "10px 6px",
-                      minHeight: 40,
-                      borderRadius: 12,
-                      border: `1px solid color-mix(in srgb, ${outcomeColor} 50%, transparent)`,
-                      background: `color-mix(in srgb, ${outcomeColor} 8%, transparent)`,
-                      color: outcomeColor,
-                      fontFamily: "var(--font-body)",
-                      fontSize: ".78rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: ".01em",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      cursor: pickState === "saving" ? "default" : "pointer",
-                      transition: "background .15s, border-color .15s",
-                    }}
-                  >
-                    {crestMatch ? <TeamCrest url={crestMatch.logo} alt={crestMatch.name} size={16} /> : null}
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {pickState === "error" ? (
-              <span className="micro-copy" style={{ color: "var(--negative)", textAlign: "center" }}>
-                No se pudo guardar, probá de nuevo.
-              </span>
-            ) : null}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+              gap: 8,
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              paddingTop: 11,
+            }}
+          >
+            {match.allocation.map((outcome) => {
+              const outcomeColor = getOutcomeColor(outcome.code);
+              const label = outcome.code === "draw" ? "Empate" : outcome.code === "home" ? match.home.name : match.away.name;
+              const crestMatch = outcome.code === "home" ? match.home : outcome.code === "away" ? match.away : null;
+              return (
+                <motion.button
+                  key={outcome.code}
+                  type="button"
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ duration: 0.1 }}
+                  onClick={() => handleInlinePick(outcome.code)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    padding: "10px 6px",
+                    minHeight: 40,
+                    borderRadius: 12,
+                    border: `1px solid color-mix(in srgb, ${outcomeColor} 50%, transparent)`,
+                    background: `color-mix(in srgb, ${outcomeColor} 8%, transparent)`,
+                    color: outcomeColor,
+                    fontFamily: "var(--font-body)",
+                    fontSize: ".78rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: ".01em",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    cursor: "pointer",
+                  }}
+                >
+                  {crestMatch ? <TeamCrest url={crestMatch.logo} alt={crestMatch.name} size={16} /> : null}
+                  {label}
+                </motion.button>
+              );
+            })}
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16, scale: 0.985 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ scale: 1.015, y: -2 }}
-      whileTap={{ scale: 0.985 }}
-      transition={{ type: "spring", stiffness: 240, damping: 24 }}
-    >
+    <motion.div whileHover={{ scale: 1.015, y: -2 }} whileTap={{ scale: 0.985 }} transition={{ type: "spring", stiffness: 300, damping: 26 }}>
       <Link href={`/matches/${match.id}`} className="surface-card-soft" style={cardStyle}>
         {header}
 
